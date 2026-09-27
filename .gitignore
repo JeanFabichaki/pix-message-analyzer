@@ -1,0 +1,34 @@
+# Environments & Secrets
+.env
+.env.local
+.venv/
+env/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Databases & Volumes
+*.db
+*.sqlite3
+pgdata/
+ollaya_models/
+
+# Node & Frontend
+node_modules/
+dist/
+.npm
+.eslintcache
+
+# OS & Logs
+.DS_Store
+Thumbs.db
+*.log
+
+# Tool Caches
+.hallmark/
+.impeccable/

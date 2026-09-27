@@ -1,0 +1,122 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pix-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pix_guard_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    container_name: user-service
+    ports:
+      - "8002:8002"
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/pix_guard_db
+    volumes:
+      - ./services/user-service/src:/app/services/user-service/src
+      - ./libs/common:/app/libs/common
+    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  gemini-investigation-agent:
+    build:
+      context: .
+      dockerfile: agents/gemini-investigation-agent/Dockerfile
+    container_name: gemini-investigation-agent
+    ports:
+      - "8003:8003"
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/pix_guard_db
+      - USER_SERVICE_URL=http://user-service:8002
+      - THREAT_INTEL_SERVICE_URL=http://threat-intelligence-service:8004
+    depends_on:
+      postgres:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+
+  threat-intelligence-service:
+    build:
+      context: .
+      dockerfile: services/threat-intelligence-service/Dockerfile
+    container_name: threat-intelligence-service
+    ports:
+      - "8004:8004"
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/pix_guard_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ollaya:
+    image: ghcr.io/ollaya-dev/ollaya:latest
+    container_name: pix-ollaya
+    ports:
+      - "11435:11435"
+    volumes:
+      - ollaya_models:/home/ollaya/.ollaya
+    restart: unless-stopped
+
+  pix-gateway-service:
+    build:
+      context: .
+      dockerfile: services/pix-gateway-service/Dockerfile
+    container_name: pix-gateway-service
+    ports:
+      - "8001:8001"
+    env_file: .env
+    environment:
+      - USER_SERVICE_URL=http://user-service:8002
+      - GEMINI_AGENT_URL=http://gemini-investigation-agent:8003
+      - OLLAYA_BASE_URL=http://ollaya:11435
+      - THREAT_INTEL_SERVICE_URL=http://threat-intelligence-service:8004
+    volumes:
+      - ./services/pix-gateway-service/src:/app/services/pix-gateway-service/src
+      - ./libs/common:/app/libs/common
+    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+    depends_on:
+      - user-service
+      - gemini-investigation-agent
+      - threat-intelligence-service
+      - ollaya
+
+  frontend-service:
+    build:
+      context: ./services/frontend-service
+      dockerfile: Dockerfile
+    container_name: pix-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_GATEWAY_URL=http://pix-gateway-service:8001
+      - VITE_USER_SERVICE_URL=http://user-service:8002
+      - VITE_GEMINI_AGENT_URL=http://gemini-investigation-agent:8003
+      - VITE_THREAT_INTEL_URL=http://threat-intelligence-service:8004
+    volumes:
+      - ./services/frontend-service:/app
+      - /app/node_modules
+    depends_on:
+      - pix-gateway-service
+      - threat-intelligence-service
+
+volumes:
+  pgdata:
+  ollaya_models:

@@ -1,0 +1,1 @@
+"""Biblioteca compartilhada Pix Guard."""

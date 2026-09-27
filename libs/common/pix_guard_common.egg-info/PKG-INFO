@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: pix-guard-common
+Version: 0.1.0
+Requires-Dist: pydantic>=2.7.0
+Requires-Dist: pydantic-settings>=2.2.0
+Requires-Dist: sqlalchemy>=2.0.0
+Requires-Dist: asyncpg>=0.29.0
+Requires-Dist: aiosqlite>=0.20.0
+Dynamic: requires-dist
