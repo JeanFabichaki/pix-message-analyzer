@@ -126,10 +126,12 @@ class OllayaClient:
 
     def _payload(self, text: str) -> dict:
         # Contrato TypeSafe /v1/systemone do Ollaya
+        # Trava comprimento máximo (max_seq_length = 64): mensagens de Pix têm limite regulatório de 140 chars
+        safe_text = (text or "").strip()[:200]
         question = {"type": "choice", "criteria": self.criteria}
         if self.instructions:
             question = {"type": "choice", "instructions": self.instructions, "criteria": self.criteria}
-        return {"model": self.model, "state": text, "questions": {"threat": question}}
+        return {"model": self.model, "state": safe_text, "questions": {"threat": question}}
 
     async def is_available(self) -> bool:
         """Verifica se o modelo está registrado no Ollaya consultando /v1/models (leve, sem carregar pesos)."""

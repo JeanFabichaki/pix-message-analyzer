@@ -133,19 +133,46 @@ def main():
         calib_file = tmp_path / f"sha256-{calib_digest}"
         calib_file.write_bytes(calib_data)
 
+        # 5b. Blobs de configuração e decisão com max_len = 64 (otimização para Pix < 140 chars)
+        print("Configurando max_seq_length = 64 para inferência ultrarrápida em borda (<60ms)...")
+        raw_dec = subprocess.check_output(
+            ["docker", "exec", CONTAINER_NAME, "cat", "/home/ollaya/.ollaya/models/blobs/sha256-70fd2a20d3e0f259063958071637b2047a01f4d8dd5681ab2f3d647ee9193fac"]
+        )
+        dec_data = json.loads(raw_dec)
+        dec_data["max_len"] = 64
+        dec_data["head_max_len"] = 64
+        dec_bytes = json.dumps(dec_data, indent=2).encode("utf-8")
+        dec_digest = hashlib.sha256(dec_bytes).hexdigest()
+        dec_file = tmp_path / f"sha256-{dec_digest}"
+        dec_file.write_bytes(dec_bytes)
+
+        raw_cfg = subprocess.check_output(
+            ["docker", "exec", CONTAINER_NAME, "cat", "/home/ollaya/.ollaya/models/blobs/sha256-05b7fd1e50a9bfc27e9547783b382f2bb2769cb4adc0eebb85bb57ae3060f06d"]
+        )
+        cfg_data = json.loads(raw_cfg)
+        cfg_data["context_length"] = 64
+        cfg_bytes = json.dumps(cfg_data, indent=2).encode("utf-8")
+        cfg_digest = hashlib.sha256(cfg_bytes).hexdigest()
+        cfg_file = tmp_path / f"sha256-{cfg_digest}"
+        cfg_file.write_bytes(cfg_bytes)
+
         # 6. Copia blobs para o container
         print(f"Copiando pesos e grafos para o container {CONTAINER_NAME}...")
         subprocess.run(["docker", "cp", str(MODEL_PATH), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/{weights_blob}"], check=True)
         subprocess.run(["docker", "cp", str(patched_fp32), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{fp32_digest}"], check=True)
         subprocess.run(["docker", "cp", str(patched_fp16), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{fp16_digest}"], check=True)
         subprocess.run(["docker", "cp", str(calib_file), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{calib_digest}"], check=True)
+        subprocess.run(["docker", "cp", str(dec_file), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{dec_digest}"], check=True)
+        subprocess.run(["docker", "cp", str(cfg_file), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{cfg_digest}"], check=True)
 
         # 7. Cria o manifesto do modelo nativo `laya:pix-threats`
-        print("Registrando manifesto do modelo laya:pix-threats...")
+        print("Registrando manifesto do modelo laya:pix-threats com max_len=64...")
         manifest_raw = subprocess.check_output(
             ["docker", "exec", CONTAINER_NAME, "cat", "/home/ollaya/.ollaya/models/manifests/ollaya.dev/library/laya/multilingual"]
         ).decode()
         manifest = json.loads(manifest_raw)
+        manifest["config"]["digest"] = f"sha256:{cfg_digest}"
+        manifest["config"]["size"] = len(cfg_bytes)
         for layer in manifest["layers"]:
             mtype = layer.get("mediaType")
             if mtype == "application/vnd.ollaya.weights":
@@ -162,6 +189,9 @@ def main():
             elif mtype == "application/vnd.ollaya.calibration":
                 layer["digest"] = f"sha256:{calib_digest}"
                 layer["size"] = len(calib_data)
+            elif mtype == "application/vnd.ollaya.decision":
+                layer["digest"] = f"sha256:{dec_digest}"
+                layer["size"] = len(dec_bytes)
 
         manifest_file = tmp_path / "pix-threats-manifest.json"
         manifest_file.write_text(json.dumps(manifest, indent=2))
