@@ -6,24 +6,40 @@ com tensores externos (data_location=1). Esses grafos contêm referências relat
 o blob de pesos (location) e os deslocamentos em bytes (offset/length).
 
 Este script:
-1. Extrai os grafos originais FP32 e FP16 do Laya multilíngue no Ollaya.
+1. Extrai o grafo original FP32 do Laya multilíngue no Ollaya.
 2. Recalcula os offsets em bytes com base no cabeçalho do `model.safetensors` retreinado.
-3. Patcha os grafos ONNX para apontar diretamente para o hash do blob retreinado.
-4. Gera o blob de calibração de temperatura a partir de `rl_agent_config.json`.
-5. Publica os grafos, pesos e manifesto `laya:pix-threats` diretamente no Ollaya.
+3. Patcha o grafo ONNX intermediário para vincular aos tensores retreinados.
+4. Aplica o Transformer Optimizer do ONNX Runtime (fusão de atenção, layer norm e ativações),
+   eliminando centenas de nós redundantes (Cast, Transpose, Identity).
+5. Empacota os tensores externos consolidados no formato de dados externos do ONNX Runtime.
+6. Configura `max_seq_length = 64` (context_length, max_len, head_max_len) para inferência < 50ms.
+7. Gera o blob de calibração de temperatura a partir de `rl_agent_config.json`.
+8. Publica os grafos otimizados, pesos e manifesto `laya:pix-threats` diretamente no Ollaya.
 """
 import hashlib
 import json
 import os
+import shutil
 import struct
 import subprocess
 import sys
 import tempfile
+import types
 from pathlib import Path
 
-# Garante que roda com o Python do .venv caso o python do sistema não tenha dependências (como onnx)
+# Mock do módulo torch caso não esteja instalado no ambiente (necessário para onnxruntime.transformers.optimizer)
+if "torch" not in sys.modules:
+    torch_mod = types.ModuleType("torch")
+    torch_mod.version = types.SimpleNamespace(cuda="12.1", hip=None)
+    sys.modules["torch"] = torch_mod
+
+# Garante que roda com o Python do .venv caso o python do sistema não tenha dependências
 try:
     import onnx  # noqa: F401
+    import onnxruntime  # noqa: F401
+    import sympy  # noqa: F401
+    from onnxruntime.transformers import optimizer  # noqa: F401
+    from onnxruntime.transformers.fusion_options import FusionOptions  # noqa: F401
 except ImportError:
     venv_python = Path(__file__).resolve().parent.parent / ".venv" / "bin" / "python"
     if venv_python.is_file() and sys.executable != str(venv_python):
@@ -74,11 +90,7 @@ def main():
         print("Para treinar, siga o tutorial em finetune/README.md.")
         return 0
 
-    print(f"Calculando SHA-256 de {MODEL_PATH}...")
-    weights_digest = compute_sha256(MODEL_PATH)
-    weights_size = MODEL_PATH.stat().st_size
-    weights_blob = f"sha256-{weights_digest}"
-    print(f"Pesos retreinados: {weights_digest} ({weights_size} bytes)")
+    print(f"Verificando pesos retreinados em {MODEL_PATH}...")
 
     # 1. Verifica se o container do Ollaya está rodando
     res = subprocess.run(
@@ -96,34 +108,68 @@ def main():
         st_header = json.loads(f.read(h_len))
     base_data_start = 8 + h_len
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    # Cria diretório temporário dentro de MODEL_PATH.parent para permitir hardlinks e evitar
+    # erro do ONNX Runtime "External data path escapes model directory"
+    tmpdir = tempfile.mkdtemp(dir=MODEL_PATH.parent)
+    try:
         tmp_path = Path(tmpdir)
+        weights_name = "retrained_weights.bin"
+        local_weights = tmp_path / weights_name
+        os.link(MODEL_PATH, local_weights)
 
-        # 3. Extrai grafos base do Laya multilíngue no container
+        # 3. Extrai grafo base FP32 do Laya multilíngue no container
         base_fp32 = tmp_path / "graph_fp32.onnx"
-        base_fp16 = tmp_path / "graph_fp16.onnx"
+        print(f"Extraindo grafo FP32 base do container {CONTAINER_NAME}...")
         subprocess.run(
             ["docker", "cp", f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-ace962240e4cf7c69c0e65ea7224aa791777880003950a81347a206f6bfbed45", str(base_fp32)],
             check=True,
         )
-        subprocess.run(
-            ["docker", "cp", f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-236fbdec33bd2aa44ee4dae43a83173ef3351c4eed6afd073df387c9486ec7d6", str(base_fp16)],
-            check=True,
+
+        # 4. Patcha o grafo base com os offsets dos pesos retreinados
+        print("Adaptando offsets do grafo ONNX para os tensores retreinados...")
+        patched_base = tmp_path / "patched_base.onnx"
+        patch_onnx_graph(base_fp32, patched_base, st_header, base_data_start, weights_name)
+
+        # 5. Otimização de grafo com o Transformer Optimizer do ONNX Runtime
+        print("Executando Transformer Optimizer do ONNX Runtime (fusão de atenção, layer norm e ativações)...")
+        opt_options = FusionOptions("bert")
+        opt_model = optimizer.optimize_model(
+            str(patched_base),
+            "bert",
+            num_heads=12,
+            hidden_size=768,
+            optimization_options=opt_options,
         )
+        nodes_before = len(onnx.load(str(patched_base), load_external_data=False).graph.node)
+        nodes_after = len(opt_model.model.graph.node)
+        print(f"Otimização concluída: Grafo reduzido de {nodes_before} para {nodes_after} nós!")
 
-        # 4. Patcha os grafos ONNX para apontar para os offsets dos pesos retreinados
-        print("Adaptando grafos ONNX (FP32 e FP16) para os tensores retreinados...")
-        patched_fp32 = tmp_path / "patched_fp32.onnx"
-        patched_fp16 = tmp_path / "patched_fp16.onnx"
-        patch_onnx_graph(base_fp32, patched_fp32, st_header, base_data_start, weights_blob)
-        patch_onnx_graph(base_fp16, patched_fp16, st_header, base_data_start, weights_blob)
+        # 6. Salva modelo otimizado com dados externos consolidados
+        opt_graph_path = tmp_path / "opt_graph.onnx"
+        opt_model.save_model_to_file(str(opt_graph_path), use_external_data_format=True, all_tensors_to_one_file=True)
 
-        fp32_digest = compute_sha256(patched_fp32)
-        fp32_size = patched_fp32.stat().st_size
-        fp16_digest = compute_sha256(patched_fp16)
-        fp16_size = patched_fp16.stat().st_size
+        opt_data_path = tmp_path / "opt_graph.onnx.data"
+        weights_digest = compute_sha256(opt_data_path)
+        weights_size = opt_data_path.stat().st_size
+        weights_blob = f"sha256-{weights_digest}"
+        print(f"Novos pesos consolidados: {weights_blob} ({weights_size} bytes)")
 
-        # 5. Blob de calibração (temperatura)
+        # 7. Atualiza o local dos tensores externos para o blob de hash do Ollaya
+        m = onnx.load(str(opt_graph_path), load_external_data=False)
+        for init in m.graph.initializer:
+            for entry in init.external_data:
+                if entry.key == "location":
+                    entry.value = weights_blob
+
+        final_graph_path = tmp_path / "final_opt.onnx"
+        onnx.save(m, str(final_graph_path))
+
+        graph_digest = compute_sha256(final_graph_path)
+        graph_size = final_graph_path.stat().st_size
+        graph_blob = f"sha256-{graph_digest}"
+        print(f"Grafo otimizado final: {graph_blob} ({graph_size} bytes)")
+
+        # 8. Blob de calibração (temperatura)
         temperatures = [1.0, 1.0, 1.0]
         if CFG_PATH.is_file():
             cfg_data = json.loads(CFG_PATH.read_text())
@@ -133,8 +179,8 @@ def main():
         calib_file = tmp_path / f"sha256-{calib_digest}"
         calib_file.write_bytes(calib_data)
 
-        # 5b. Blobs de configuração e decisão com max_len = 64 (otimização para Pix < 140 chars)
-        print("Configurando max_seq_length = 64 para inferência ultrarrápida em borda (<60ms)...")
+        # 9. Blobs de configuração e decisão com max_len = 64 (otimização para Pix < 140 chars)
+        print("Configurando max_seq_length = 64 para inferência ultrarrápida em borda (<50ms)...")
         raw_dec = subprocess.check_output(
             ["docker", "exec", CONTAINER_NAME, "cat", "/home/ollaya/.ollaya/models/blobs/sha256-70fd2a20d3e0f259063958071637b2047a01f4d8dd5681ab2f3d647ee9193fac"]
         )
@@ -156,56 +202,84 @@ def main():
         cfg_file = tmp_path / f"sha256-{cfg_digest}"
         cfg_file.write_bytes(cfg_bytes)
 
-        # 6. Copia blobs para o container
-        print(f"Copiando pesos e grafos para o container {CONTAINER_NAME}...")
-        subprocess.run(["docker", "cp", str(MODEL_PATH), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/{weights_blob}"], check=True)
-        subprocess.run(["docker", "cp", str(patched_fp32), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{fp32_digest}"], check=True)
-        subprocess.run(["docker", "cp", str(patched_fp16), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{fp16_digest}"], check=True)
+        # 10. Copia blobs para o container
+        print(f"Copiando pesos e grafos otimizados para o container {CONTAINER_NAME}...")
+        subprocess.run(["docker", "cp", str(opt_data_path), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/{weights_blob}"], check=True)
+        subprocess.run(["docker", "cp", str(final_graph_path), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/{graph_blob}"], check=True)
         subprocess.run(["docker", "cp", str(calib_file), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{calib_digest}"], check=True)
         subprocess.run(["docker", "cp", str(dec_file), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{dec_digest}"], check=True)
         subprocess.run(["docker", "cp", str(cfg_file), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{cfg_digest}"], check=True)
 
-        # 7. Cria o manifesto do modelo nativo `laya:pix-threats`
-        print("Registrando manifesto do modelo laya:pix-threats com max_len=64...")
+        # Garante permissões de leitura para o usuário não-root `ollaya` no container
+        subprocess.run(
+            ["docker", "exec", "-u", "0", CONTAINER_NAME, "chmod", "666",
+             f"/home/ollaya/.ollaya/models/blobs/{weights_blob}",
+             f"/home/ollaya/.ollaya/models/blobs/{graph_blob}",
+             f"/home/ollaya/.ollaya/models/blobs/sha256-{calib_digest}",
+             f"/home/ollaya/.ollaya/models/blobs/sha256-{dec_digest}",
+             f"/home/ollaya/.ollaya/models/blobs/sha256-{cfg_digest}"],
+            check=True,
+        )
+
+        # 11. Cria o manifesto do modelo nativo `laya:pix-threats`
+        print("Registrando manifesto do modelo laya:pix-threats otimizado...")
         manifest_raw = subprocess.check_output(
             ["docker", "exec", CONTAINER_NAME, "cat", "/home/ollaya/.ollaya/models/manifests/ollaya.dev/library/laya/multilingual"]
         ).decode()
         manifest = json.loads(manifest_raw)
         manifest["config"]["digest"] = f"sha256:{cfg_digest}"
         manifest["config"]["size"] = len(cfg_bytes)
+
+        # Filtra camadas: removemos qualquer camada fp16 e atualizamos fp32 com o grafo otimizado
+        new_layers = []
         for layer in manifest["layers"]:
             mtype = layer.get("mediaType")
             if mtype == "application/vnd.ollaya.weights":
                 layer["digest"] = f"sha256:{weights_digest}"
                 layer["size"] = weights_size
+                new_layers.append(layer)
             elif mtype == "application/vnd.ollaya.graph.onnx":
                 prec = layer.get("annotations", {}).get("org.ollaya.precision")
                 if prec == "fp32":
-                    layer["digest"] = f"sha256:{fp32_digest}"
-                    layer["size"] = fp32_size
-                elif prec == "fp16":
-                    layer["digest"] = f"sha256:{fp16_digest}"
-                    layer["size"] = fp16_size
+                    layer["digest"] = f"sha256:{graph_digest}"
+                    layer["size"] = graph_size
+                    new_layers.append(layer)
+                # omite fp16
             elif mtype == "application/vnd.ollaya.calibration":
                 layer["digest"] = f"sha256:{calib_digest}"
                 layer["size"] = len(calib_data)
+                new_layers.append(layer)
             elif mtype == "application/vnd.ollaya.decision":
                 layer["digest"] = f"sha256:{dec_digest}"
                 layer["size"] = len(dec_bytes)
+                new_layers.append(layer)
+            else:
+                new_layers.append(layer)
 
+        manifest["layers"] = new_layers
         manifest_file = tmp_path / "pix-threats-manifest.json"
         manifest_file.write_text(json.dumps(manifest, indent=2))
         subprocess.run(
             ["docker", "cp", str(manifest_file), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/manifests/ollaya.dev/library/laya/pix-threats"],
             check=True,
         )
+        subprocess.run(
+            ["docker", "exec", "-u", "0", CONTAINER_NAME, "chmod", "666", "/home/ollaya/.ollaya/models/manifests/ollaya.dev/library/laya/pix-threats"],
+            check=True,
+        )
 
-    # 8. Reinicia o runner do laya:pix-threats para recarregar o grafo
-    print("Recarregando modelo no Ollaya...")
-    for c in [CONTAINER_NAME, "pix-ollaya-tuned-1", "pix-ollaya-tuned-2", "pix-ollaya-2"]:
-        subprocess.run(["docker", "exec", c, "/usr/bin/ollaya", "stop", "laya:pix-threats"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+    # 12. Reinicia o runner do laya:pix-threats em todas as réplicas ativas para recarregar o grafo
+    print("Recarregando modelo em todas as instâncias ativas do Ollaya...")
+    for c in [CONTAINER_NAME, "pix-ollaya-tuned-1", "pix-ollaya-tuned-2"]:
+        chk = subprocess.run(["docker", "inspect", "-f", "{{.State.Running}}", c], capture_output=True, text=True)
+        if chk.returncode == 0 and chk.stdout.strip() == "true":
+            subprocess.run(["docker", "exec", c, "/usr/bin/ollaya", "stop", "laya:pix-threats"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
     subprocess.run(["docker", "exec", CONTAINER_NAME, "/usr/bin/ollaya", "list"], check=True)
-    print("Sucesso! Modelo laya:pix-threats registrado com pesos retreinados e aceleração ONNX.")
+    print("Sucesso! Modelo laya:pix-threats registrado com otimização Transformer Optimizer ONNX e max_seq_length=64.")
     return 0
 
 
