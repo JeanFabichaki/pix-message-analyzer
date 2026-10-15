@@ -384,10 +384,11 @@ O comando executa:
 2. Extração do grafo ONNX base (FP32) do container `pix-ollaya`.
 3. Patching automático de todos os tensores externos com os novos offsets de bytes do checkpoint retreinado.
 4. **Otimização de Grafo com o Transformer Optimizer do ONNX Runtime:** Fusão de operadores de atenção multi-cabeça, *layer normalization* e ativações, eliminando centenas de nós redundantes (Cast, Transpose, Identity) e reduzindo o grafo de 1.536 para 1.126 nós.
-5. **Configuração de Sequência Curta (`max_seq_length = 64`):** Ajuste de `context_length`, `max_len` e `head_max_len` para mensagens Pix (< 140 caracteres), eliminando alocação de tensores de padding desnecessários.
-6. Geração do blob de calibração de temperatura (`application/vnd.ollaya.calibration`) calibrado na validação.
-7. Injeção de todos os novos blobs no volume do Ollaya e criação do manifesto `laya:pix-threats`.
-8. Reinicialização a quente do runner no Ollaya (`ollaya stop laya:pix-threats`) em todas as réplicas ativas.
+5. **Quantização Dinâmica INT8 (`per_channel=True`):** Quantização dos operadores `MatMul` (GEMM de atenção e MLP) para inteiros de 8 bits, ativando aceleração vetorial nativa (ARM NEON / AVX-512) e preservando a cabeça de classificação final em FP32 para fidelidade probabilística máxima.
+6. **Configuração de Sequência Curta (`max_seq_length = 64`):** Ajuste de `context_length`, `max_len` e `head_max_len` para mensagens Pix (< 140 caracteres), eliminando alocação de tensores de padding desnecessários.
+7. Geração do blob de calibração de temperatura (`application/vnd.ollaya.calibration`) calibrado na validação.
+8. Injeção de todos os novos blobs no volume do Ollaya e criação do manifesto `laya:pix-threats`.
+9. Reinicialização a quente do runner no Ollaya (`ollaya stop laya:pix-threats`) em todas as réplicas ativas.
 
 ---
 
@@ -446,6 +447,7 @@ Através da inspeção do binário `/usr/bin/ollaya` e dos processos em `/proc/`
 | **3. Laya Nativo (Tentativa 1 - sem patch ONNX)** | 2 de 16 | 11 em 184 | 12.5% | 16.7% | ~500 ms | **Bug:** Grafo ONNX continuava lendo o modelo base |
 | **4. Laya Nativo (Definitivo - com patch ONNX)** | **14 de 16** | **7 em 184** | **87.5%** | **75.7%** | **~502 ms** | **Resolvido:** Alta assertividade + Alta velocidade |
 | **5. Laya Otimizado (Transformer Optimizer + max_len=64)** | **14 de 16** | **7 em 184** | **87.5%** | **75.7%** | **~46-55 ms** | **Atenção Fundida:** Nós reduzidos de 1.536 para 1.126 nós, sub-50ms |
+| **6. Laya Quantizado INT8 (Dynamic Quant + per_channel)** | **14 de 16** | **7 em 184** | **87.5%** | **75.7%** | **~24-32 ms** | **Ultra Baixa Latência:** 20x mais rápido que original, SIMD 8-bit nativo |
 
 > **No Conjunto Desafio (50 mensagens escritas à mão):**
 > - **Laya Original:** 7 de 20 ameaças detectadas (9 falsos alarmes em 30).
