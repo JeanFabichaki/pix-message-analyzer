@@ -1,34 +1,39 @@
-import React, { useRef } from 'react';
-import { ShieldCheck, Smartphone, Activity, FileText } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
+import { Activity, GitCompare, History, Route, ShieldCheck, Sparkles, TriangleAlert } from 'lucide-react';
+import { getGatewayHealth } from '../services/api';
+import EngineSwitch from './EngineSwitch';
+import { useMotionPrefs } from '../motion/MotionProvider';
+import { spring } from '../motion/tokens';
 
-export default function Navbar({ activeTab, setActiveTab }) {
-  const tabsRef = useRef({});
+export const TABS = [
+  { id: 'journey', label: 'Jornada', Icon: Route },
+  { id: 'live', label: 'Ao vivo', Icon: Activity },
+  { id: 'history', label: 'Histórico', Icon: History },
+  { id: 'compare', label: 'Comparar', Icon: GitCompare },
+];
 
-  const handleKeyDown = (e, currentTab) => {
-    const tabs = ['simulator', 'matrix', 'audit'];
-    const currentIndex = tabs.indexOf(currentTab);
+export default function Navbar({ activeTab, onChange }) {
+  const { reduced, manualReduced, toggle } = useMotionPrefs();
+  const [health, setHealth] = useState(null);
 
-    let nextIndex = null;
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-      e.preventDefault();
-      nextIndex = (currentIndex + 1) % tabs.length;
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
-    } else if (e.key === 'Home') {
-      e.preventDefault();
-      nextIndex = 0;
-    } else if (e.key === 'End') {
-      e.preventDefault();
-      nextIndex = tabs.length - 1;
-    }
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      const h = await getGatewayHealth();
+      if (!cancelled) setHealth(h);
+    };
+    check();
+    const id = setInterval(check, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
 
-    if (nextIndex !== null) {
-      const nextTab = tabs[nextIndex];
-      setActiveTab(nextTab);
-      tabsRef.current[nextTab]?.focus();
-    }
-  };
+  const online = health === null ? null : health.reachable;
+  const aiDown = Boolean(health?.reachable && health.ollaya?.status === 'degraded');
+  const pill = online === null ? ['', 'Verificando…'] : !online ? ['status--off', 'Gateway fora do ar'] : aiDown ? ['status--warn', 'IA rápida fora do ar'] : ['status--on', 'Gateway online'];
 
   return (
     <>
@@ -36,77 +41,77 @@ export default function Navbar({ activeTab, setActiveTab }) {
         Pular para o conteúdo principal
       </a>
       <div className="navbar-shell">
-        <header className="navbar-container" role="banner">
-          <div className="brand-badge">
-            <div className="brand-icon-wrapper" aria-hidden="true">
-              <ShieldCheck size={20} color="var(--color-accent)" strokeWidth={2.4} />
-            </div>
+        <header className="navbar" role="banner">
+          <div className="brand">
+            <span className="brand__icon" aria-hidden="true">
+              <ShieldCheck size={20} strokeWidth={2.4} />
+            </span>
             <div>
-              <h1 className="brand-title">Pix Guard</h1>
-              <p className="brand-subtitle">Triagem Híbrida Ollaya (&lt;15ms) + Gemini 2.5 Flash</p>
+              <h1 className="brand__title">Pix Guard</h1>
+              <p className="brand__sub">Como uma mensagem de Pix é verificada antes de chegar</p>
             </div>
           </div>
 
-          <nav aria-label="Painel de navegação de telas">
-            <div className="nav-tabs" role="tablist" aria-label="Etapas do fluxo do sistema">
-              <button
-                ref={(el) => (tabsRef.current['simulator'] = el)}
-                id="tab-simulator"
-                role="tab"
-                aria-selected={activeTab === 'simulator'}
-                aria-controls="panel-simulator"
-                tabIndex={activeTab === 'simulator' ? 0 : -1}
-                className={`nav-tab-btn ${activeTab === 'simulator' ? 'active' : ''}`}
-                onClick={() => setActiveTab('simulator')}
-                onKeyDown={(e) => handleKeyDown(e, 'simulator')}
-              >
-                <Smartphone size={15} aria-hidden="true" />
-                <span>1. Simulador & Pipeline</span>
-              </button>
-
-              <button
-                ref={(el) => (tabsRef.current['matrix'] = el)}
-                id="tab-matrix"
-                role="tab"
-                aria-selected={activeTab === 'matrix'}
-                aria-controls="panel-matrix"
-                tabIndex={activeTab === 'matrix' ? 0 : -1}
-                className={`nav-tab-btn ${activeTab === 'matrix' ? 'active' : ''}`}
-                onClick={() => setActiveTab('matrix')}
-                onKeyDown={(e) => handleKeyDown(e, 'matrix')}
-              >
-                <Activity size={15} aria-hidden="true" />
-                <span>2. Telemetria de Vazão</span>
-              </button>
-
-              <button
-                ref={(el) => (tabsRef.current['audit'] = el)}
-                id="tab-audit"
-                role="tab"
-                aria-selected={activeTab === 'audit'}
-                aria-controls="panel-audit"
-                tabIndex={activeTab === 'audit' ? 0 : -1}
-                className={`nav-tab-btn ${activeTab === 'audit' ? 'active' : ''}`}
-                onClick={() => setActiveTab('audit')}
-                onKeyDown={(e) => handleKeyDown(e, 'audit')}
-              >
-                <FileText size={15} aria-hidden="true" />
-                <span>3. Auditoria & Risco</span>
-              </button>
+          <nav aria-label="Telas">
+            <div className="tabs" role="tablist">
+              {TABS.map(({ id, label, Icon }, i) => {
+                const active = activeTab === id;
+                return (
+                  <button
+                    key={id}
+                    id={`tab-${id}`}
+                    role="tab"
+                    type="button"
+                    aria-selected={active}
+                    aria-controls={`panel-${id}`}
+                    className={`tab ${active ? 'is-active' : ''}`}
+                    onClick={() => onChange(id)}
+                  >
+                    {active && <motion.span layoutId="tab-pill" className="tab__pill" transition={spring.soft} />}
+                    <span className="tab__content">
+                      <Icon size={16} aria-hidden="true" />
+                      <span>{label}</span>
+                      <kbd className="tab__key" aria-hidden="true">
+                        {i + 1}
+                      </kbd>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </nav>
 
-          <div
-            className="status-indicator"
-            role="status"
-            aria-live="polite"
-            aria-label="Status do motor de defesa: Defesa Ativa em Borda e Nuvem"
-          >
-            <span className="pulsing-dot" aria-hidden="true"></span>
-            <span>Defesa Ativa</span>
+          <div className="navbar__right">
+            <EngineSwitch />
+            <button
+              type="button"
+              className="btn btn--ghost btn--xs"
+              onClick={toggle}
+              aria-pressed={manualReduced}
+              title="Reduz as animações, útil em projetores e para quem prefere menos movimento"
+            >
+              <Sparkles size={14} aria-hidden="true" /> Animações: {reduced ? 'reduzidas' : 'ligadas'}
+            </button>
+            <span className={`status ${pill[0]}`} role="status">
+              <span className="status__dot" aria-hidden="true" />
+              {pill[1]}
+            </span>
           </div>
         </header>
       </div>
+      {aiDown && (
+        <div className="alert-banner" role="alert">
+          <TriangleAlert size={18} aria-hidden="true" />
+          <div>
+            <strong>A IA rápida (Ollaya) não está respondendo.</strong> Os Pix estão sendo aprovados <u>sem análise</u>{' '}
+            até ela voltar.
+            {health.ollaya.last_error && <span className="alert-banner__detail"> Detalhe: {health.ollaya.last_error}</span>}
+            {/MODEL_NOT_FOUND|not found/i.test(health.ollaya.last_error || '') && (
+              <span className="alert-banner__detail"> Rode <code>make pull-model</code> para baixar o modelo.</span>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

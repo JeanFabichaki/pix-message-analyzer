@@ -1,0 +1,50 @@
+{"id": "ch-t0", "split": "challenge", "text": "Paga os 800 até amanhã ou todo mundo vai ver aquelas fotos suas", "label": "threat", "category": "manual"}
+{"id": "ch-t1", "split": "challenge", "text": "Se você contar pra polícia eu acabo com a tua família", "label": "threat", "category": "manual"}
+{"id": "ch-t2", "split": "challenge", "text": "Sei que você tem família aqui perto, seria uma pena se acontecesse algo", "label": "threat", "category": "manual"}
+{"id": "ch-t3", "split": "challenge", "text": "Me manda 300 que eu apago a conversa, senão vai pro seu marido", "label": "threat", "category": "manual"}
+{"id": "ch-t4", "split": "challenge", "text": "Fica esperto, a gente sabe o teu horário de saída", "label": "threat", "category": "manual"}
+{"id": "ch-t5", "split": "challenge", "text": "Deposita logo, não quero ter que ir na tua casa", "label": "threat", "category": "manual"}
+{"id": "ch-t6", "split": "challenge", "text": "Vou postar teu nome e foto como golpista se não me pagar hoje", "label": "threat", "category": "manual"}
+{"id": "ch-t7", "split": "challenge", "text": "Tu some com meu dinheiro e eu sumo contigo", "label": "threat", "category": "manual"}
+{"id": "ch-t8", "split": "challenge", "text": "Tenho acesso aos seus vídeos. 500 reais e eu esqueço", "label": "threat", "category": "manual"}
+{"id": "ch-t9", "split": "challenge", "text": "Você vai ver o que acontece com quem me deve", "label": "threat", "category": "manual"}
+{"id": "ch-t10", "split": "challenge", "text": "Não precisa de polícia pra isso, a gente resolve na bala", "label": "threat", "category": "manual"}
+{"id": "ch-t11", "split": "challenge", "text": "Mais um dia sem pagar e eu apareço na tua porta com os meus irmãos", "label": "threat", "category": "manual"}
+{"id": "ch-t12", "split": "challenge", "text": "Pix de 1000 e teu segredo morre comigo", "label": "threat", "category": "manual"}
+{"id": "ch-t13", "split": "challenge", "text": "Eu sei com quem você anda e onde seu filho estuda", "label": "threat", "category": "manual"}
+{"id": "ch-t14", "split": "challenge", "text": "Responde logo ou eu faço você se arrepender amargamente", "label": "threat", "category": "manual"}
+{"id": "ch-t15", "split": "challenge", "text": "Quer que eu conte pro teu patrão o que você fez? Então paga 400", "label": "threat", "category": "manual"}
+{"id": "ch-t16", "split": "challenge", "text": "Vou te destruir publicamente, você vai perder o emprego", "label": "threat", "category": "manual"}
+{"id": "ch-t17", "split": "challenge", "text": "Quem mexe comigo acaba no hospital", "label": "threat", "category": "manual"}
+{"id": "ch-t18", "split": "challenge", "text": "Teu carro vai amanhecer pegando fogo se não pagar", "label": "threat", "category": "manual"}
+{"id": "ch-t19", "split": "challenge", "text": "vc tem ate hj p mandar 200, depois disso vai ficar feio pra vc", "label": "threat", "category": "manual"}
+{"id": "ch-s0", "split": "challenge", "text": "Obrigado pelo churrasco de ontem, segue a minha parte", "label": "safe", "category": "manual"}
+{"id": "ch-s1", "split": "challenge", "text": "Pagamento da consulta, valeu doutora", "label": "safe", "category": "manual"}
+{"id": "ch-s2", "split": "challenge", "text": "Tô morrendo de rir com o vídeo que você mandou", "label": "safe", "category": "manual"}
+{"id": "ch-s3", "split": "challenge", "text": "Esse prato tava de matar de bom!", "label": "safe", "category": "manual"}
+{"id": "ch-s4", "split": "challenge", "text": "Divisão da conta do Uber", "label": "safe", "category": "manual"}
+{"id": "ch-s5", "split": "challenge", "text": "Feliz aniversário, amigo! Toma um chopp por minha conta", "label": "safe", "category": "manual"}
+{"id": "ch-s6", "split": "challenge", "text": "Você me salvou hoje, fico devendo uma", "label": "safe", "category": "manual"}
+{"id": "ch-s7", "split": "challenge", "text": "Fui assaltado semana passada, mas tô bem. Segue o pix do conserto do celular", "label": "safe", "category": "manual"}
+{"id": "ch-s8", "split": "challenge", "text": "Pode me mandar o valor do aluguel até o dia 10, por favor?", "label": "safe", "category": "manual"}
+{"id": "ch-s9", "split": "challenge", "text": "Comprei o ingresso pra gente, me paga depois", "label": "safe", "category": "manual"}
+{"id": "ch-s10", "split": "challenge", "text": "Se você não vier amanhã, vou sentir sua falta", "label": "safe", "category": "manual"}
+{"id": "ch-s11", "split": "challenge", "text": "Meu chefe vai me matar se eu atrasar de novo, kkk", "label": "safe", "category": "manual"}
+{"id": "ch-s12", "split": "challenge", "text": "Quebrei o vidro do seu carro sem querer, desculpa! Aqui o valor do conserto", "label": "safe", "category": "manual"}
+{"id": "ch-s13", "split": "challenge", "text": "Passei mal ontem, o hospital foi uma loucura. Obrigado por ficar comigo", "label": "safe", "category": "manual"}
+{"id": "ch-s14", "split": "challenge", "text": "Vou te dar uma surra no truco sábado", "label": "safe", "category": "manual"}
+{"id": "ch-s15", "split": "challenge", "text": "Sua mãe me ligou, tá preocupada com você, liga pra ela", "label": "safe", "category": "manual"}
+{"id": "ch-s16", "split": "challenge", "text": "Adorei seu trabalho, mandou muito bem", "label": "safe", "category": "manual"}
+{"id": "ch-s17", "split": "challenge", "text": "Reembolso da vaquinha do presente do chefe", "label": "safe", "category": "manual"}
+{"id": "ch-s18", "split": "challenge", "text": "Doação para a família que perdeu a casa no incêndio", "label": "safe", "category": "manual"}
+{"id": "ch-s19", "split": "challenge", "text": "Seu boleto vence amanhã; pague para evitar multa", "label": "safe", "category": "manual"}
+{"id": "ch-s20", "split": "challenge", "text": "O jogo de ontem foi um massacre, parabéns pelo seu time", "label": "safe", "category": "manual"}
+{"id": "ch-s21", "split": "challenge", "text": "Compra de verdura da feira", "label": "safe", "category": "manual"}
+{"id": "ch-s22", "split": "challenge", "text": "Te encontro na esquina da padaria às 8h", "label": "safe", "category": "manual"}
+{"id": "ch-s23", "split": "challenge", "text": "Vou aí buscar você no aeroporto, me manda o voo", "label": "safe", "category": "manual"}
+{"id": "ch-s24", "split": "challenge", "text": "Pagamento do curso de inglês de outubro", "label": "safe", "category": "manual"}
+{"id": "ch-s25", "split": "challenge", "text": "A banda tocou tão bem que explodiu o teatro de aplausos", "label": "safe", "category": "manual"}
+{"id": "ch-s26", "split": "challenge", "text": "Deus abençoe, obrigada pela ajuda com a reforma", "label": "safe", "category": "manual"}
+{"id": "ch-s27", "split": "challenge", "text": "Cuidado com a chuva hoje, a estrada tá perigosa", "label": "safe", "category": "manual"}
+{"id": "ch-s28", "split": "challenge", "text": "Sinto muito pelo seu pai, estou com você", "label": "safe", "category": "manual"}
+{"id": "ch-s29", "split": "challenge", "text": "Preciso do valor ainda hoje pra fechar a compra, consegue?", "label": "safe", "category": "manual"}

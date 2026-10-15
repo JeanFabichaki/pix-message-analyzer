@@ -7,9 +7,9 @@ from common.config.settings import settings
 from common.database.models import User, UserStatus, ThreatLog, TransactionDirection
 from common.schemas.pix import PixTransactionRequest
 from common.schemas.threat import GeminiThreatAnalysis
+from tests.fakes import HeuristicOllaya, FakeGeminiAnalyzer
 from tests.modules import (
     UserService,
-    JevClient,
     InvestigationClient,
     PixInterceptor,
     GeminiThreatAnalyzer,
@@ -21,11 +21,11 @@ from tests.modules import (
 @pytest.mark.asyncio
 async def test_scenario_1_amount_above_threshold():
     """Cenário 1: Valor Acima do Limite (amount: 50.00, texto ameaçador).
-    Não deve acionar JEV nem Gemini; mensagem deve ser preservada.
+    Não deve acionar Ollaya nem Gemini; mensagem deve ser preservada.
     """
-    jev = JevClient(use_mock=True)
+    ollaya = HeuristicOllaya()
     investigation = InvestigationClient()
-    interceptor = PixInterceptor(jev=jev, investigation=investigation)
+    interceptor = PixInterceptor(ollaya=ollaya, investigation=investigation)
 
     tx = PixTransactionRequest(
         transaction_id="tx_test_01",
@@ -49,9 +49,9 @@ async def test_scenario_2_blank_message():
     """Cenário 2: Mensagem em Branco (amount: 1.00, texto vazio).
     Não aciona triagem; transação é processada normalmente.
     """
-    jev = JevClient(use_mock=True)
+    ollaya = HeuristicOllaya()
     investigation = InvestigationClient()
-    interceptor = PixInterceptor(jev=jev, investigation=investigation)
+    interceptor = PixInterceptor(ollaya=ollaya, investigation=investigation)
 
     tx = PixTransactionRequest(
         transaction_id="tx_test_02",
@@ -73,11 +73,11 @@ async def test_scenario_2_blank_message():
 @pytest.mark.asyncio
 async def test_scenario_3_benign_message():
     """Cenário 3: Mensagem Benigna (amount: 5.00, 'Pagamento do cafe').
-    JEV retorna is_threat=False; mensagem é preservada.
+    Ollaya retorna is_threat=False; mensagem é preservada.
     """
-    jev = JevClient(use_mock=True)
+    ollaya = HeuristicOllaya()
     investigation = InvestigationClient()
-    interceptor = PixInterceptor(jev=jev, investigation=investigation)
+    interceptor = PixInterceptor(ollaya=ollaya, investigation=investigation)
 
     tx = PixTransactionRequest(
         transaction_id="tx_test_03",
@@ -99,13 +99,13 @@ async def test_scenario_3_benign_message():
 @pytest.mark.asyncio
 async def test_scenario_4_threat_detected_under_5_times(db_session):
     """Cenário 4: Ameaça Detectada (< 5x) (amount: 0.05, 'Vou te achar').
-    JEV detecta; mensagem é mascarada; Gemini avalia e registra; usuário permanece ACTIVE.
+    Ollaya detecta; mensagem é mascarada; Gemini avalia e registra; usuário permanece ACTIVE.
     """
     user_id = "usr_abc123"
-    jev = JevClient(use_mock=True)
-    analyzer = GeminiThreatAnalyzer()
+    ollaya = HeuristicOllaya()
+    analyzer = FakeGeminiAnalyzer()
 
-    # 1. Triagem JEV
+    # 1. Triagem Ollaya
     tx = PixTransactionRequest(
         transaction_id="tx_test_04",
         sender_id=user_id,
@@ -117,8 +117,8 @@ async def test_scenario_4_threat_detected_under_5_times(db_session):
         description="Vou te pegar na saida do trabalho se nao me responder",
     )
 
-    jev_res = await jev.classify(tx.description)
-    assert jev_res.is_threat is True
+    ollaya_res = await ollaya.classify(tx.description)
+    assert ollaya_res.is_threat is True
 
     # 2. Investigação semântica Gemini
     analysis: GeminiThreatAnalysis = await analyzer.analyze(tx.description)
@@ -132,8 +132,8 @@ async def test_scenario_4_threat_detected_under_5_times(db_session):
         transaction_id=tx.transaction_id,
         direction=tx.direction,
         original_message=tx.description,
-        jev_score=jev_res.score,
-        jev_category=jev_res.category,
+        ollaya_score=ollaya_res.score,
+        ollaya_category=ollaya_res.category,
         gemini_criticality=analysis.criticidade,
         gemini_category=analysis.categoria,
         gemini_rationale=analysis.resumo_analise,
@@ -175,7 +175,7 @@ async def test_scenario_5_and_6_blocking_trigger_and_governance(db_session):
     user_svc = UserService(db_session)
     await user_svc.ensure_user(user_id=user_id, cpf_cnpj="99988877766", name="Infrator Reincidente")
 
-    analyzer = GeminiThreatAnalyzer()
+    analyzer = FakeGeminiAnalyzer()
 
     class MockUserClient:
         async def block_user(self, user_id, reason, total_threats, triggered_by_tx=None, details=None):
@@ -194,7 +194,7 @@ async def test_scenario_5_and_6_blocking_trigger_and_governance(db_session):
             transaction_id=f"tx_loop_{i}",
             direction=TransactionDirection.CASH_OUT,
             original_message="Vou te pegar na saida",
-            jev_score=0.95,
+            ollaya_score=0.95,
             gemini_criticality=analysis.criticidade,
             gemini_category=analysis.categoria,
             gemini_rationale=analysis.resumo_analise,
@@ -220,7 +220,7 @@ async def test_scenario_5_and_6_blocking_trigger_and_governance(db_session):
         transaction_id="tx_trigger_5",
         direction=TransactionDirection.CASH_OUT,
         original_message="Vou te quebrar se nao me pagar",
-        jev_score=0.98,
+        ollaya_score=0.98,
         gemini_criticality=analysis.criticidade,
         gemini_category=analysis.categoria,
         gemini_rationale=analysis.resumo_analise,
@@ -238,3 +238,17 @@ async def test_scenario_5_and_6_blocking_trigger_and_governance(db_session):
     # Verifica status atualizado no banco
     user = await user_svc.get_by_id(user_id)
     assert user.status == UserStatus.BLOCKED_SUSPICIOUS
+
+
+@pytest.mark.asyncio
+async def test_gemini_bypass_mode_without_heuristics():
+    """Valida que quando o Gemini não pode ser chamado, o sistema faz BYPASS
+    e NÃO inventa classificação por fallback heurístico."""
+    analyzer = GeminiThreatAnalyzer(api_key=None, use_mock=True)
+    res = await analyzer.analyze("Se você não pagar vou quebrar sua cara")
+
+    assert res.bypassed is True
+    assert res.is_valid_threat is False
+    assert res.criticidade == "BAIXA"
+    assert "Bypass" in res.resumo_analise
+

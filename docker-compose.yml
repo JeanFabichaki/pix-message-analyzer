@@ -45,32 +45,50 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/pix_guard_db
       - USER_SERVICE_URL=http://user-service:8002
-      - THREAT_INTEL_SERVICE_URL=http://threat-intelligence-service:8004
+    volumes:
+      - ./agents/gemini-investigation-agent/src:/app/agents/gemini-investigation-agent/src
+      - ./libs/common:/app/libs/common
+    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8003", "--reload"]
     depends_on:
       postgres:
         condition: service_healthy
       user-service:
         condition: service_started
 
-  threat-intelligence-service:
-    build:
-      context: .
-      dockerfile: services/threat-intelligence-service/Dockerfile
-    container_name: threat-intelligence-service
-    ports:
-      - "8004:8004"
-    env_file: .env
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/pix_guard_db
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   ollaya:
     image: ghcr.io/ollaya-dev/ollaya:latest
     container_name: pix-ollaya
+    environment:
+      # Descarrega o modelo base após 5 min ocioso para economizar RAM quando o benchmark não estiver ativo
+      - OLLAYA_KEEP_ALIVE=5m
+      - OLLAYA_MAX_LOADED_MODELS=1
     ports:
       - "11435:11435"
+    volumes:
+      - ollaya_models:/home/ollaya/.ollaya
+    restart: unless-stopped
+
+  ollaya-tuned-1:
+    image: ghcr.io/ollaya-dev/ollaya:latest
+    container_name: pix-ollaya-tuned-1
+    environment:
+      # Mantém o modelo retreinado sempre residente em RAM para inferência ultrarrápida (<35ms)
+      - OLLAYA_KEEP_ALIVE=-1
+      - OLLAYA_MAX_LOADED_MODELS=1
+    ports:
+      - "11436:11435"
+    volumes:
+      - ollaya_models:/home/ollaya/.ollaya
+    restart: unless-stopped
+
+  ollaya-tuned-2:
+    image: ghcr.io/ollaya-dev/ollaya:latest
+    container_name: pix-ollaya-tuned-2
+    environment:
+      - OLLAYA_KEEP_ALIVE=-1
+      - OLLAYA_MAX_LOADED_MODELS=1
+    ports:
+      - "11437:11435"
     volumes:
       - ollaya_models:/home/ollaya/.ollaya
     restart: unless-stopped
@@ -87,16 +105,23 @@ services:
       - USER_SERVICE_URL=http://user-service:8002
       - GEMINI_AGENT_URL=http://gemini-investigation-agent:8003
       - OLLAYA_BASE_URL=http://ollaya:11435
-      - THREAT_INTEL_SERVICE_URL=http://threat-intelligence-service:8004
+      - OLLAYA_CLUSTER_URLS=http://ollaya:11435
+      - LAYA_TUNED_BASE_URL=http://ollaya-tuned-1:11435
+      - LAYA_TUNED_CLUSTER_URLS=http://ollaya-tuned-1:11435,http://ollaya-tuned-2:11435
+      - LAYA_TUNED_MODEL=laya:pix-threats
+      - OLLAYA_TIMEOUT_SECONDS=25.0
+
     volumes:
       - ./services/pix-gateway-service/src:/app/services/pix-gateway-service/src
+      - ./finetune/data:/data:ro
       - ./libs/common:/app/libs/common
     command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
     depends_on:
       - user-service
       - gemini-investigation-agent
-      - threat-intelligence-service
       - ollaya
+      - ollaya-tuned-1
+      - ollaya-tuned-2
 
   frontend-service:
     build:
@@ -106,16 +131,14 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - VITE_GATEWAY_URL=http://pix-gateway-service:8001
-      - VITE_USER_SERVICE_URL=http://user-service:8002
-      - VITE_GEMINI_AGENT_URL=http://gemini-investigation-agent:8003
-      - VITE_THREAT_INTEL_URL=http://threat-intelligence-service:8004
+      - BACKEND_GATEWAY_URL=http://pix-gateway-service:8001
+      - BACKEND_USER_SERVICE_URL=http://user-service:8002
+      - BACKEND_GEMINI_AGENT_URL=http://gemini-investigation-agent:8003
     volumes:
       - ./services/frontend-service:/app
       - /app/node_modules
     depends_on:
       - pix-gateway-service
-      - threat-intelligence-service
 
 volumes:
   pgdata:

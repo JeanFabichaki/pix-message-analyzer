@@ -1,0 +1,318 @@
+{
+  "repo": "convaiinnovations/laya/multilingual",
+  "epochs": 5,
+  "threshold": 0.4,
+  "baseline": {
+    "test": {
+      "name": "test",
+      "n": 1000,
+      "n_threat": 75,
+      "latency_ms_per_msg": 3.36,
+      "th_0.3": {
+        "acc": 0.892,
+        "precision": 0.2295,
+        "recall": 0.1867,
+        "f1": 0.2059,
+        "tp": 14,
+        "fp": 47,
+        "fn": 61,
+        "tn": 878
+      },
+      "th_0.4": {
+        "acc": 0.899,
+        "precision": 0.2292,
+        "recall": 0.1467,
+        "f1": 0.1789,
+        "tp": 11,
+        "fp": 37,
+        "fn": 64,
+        "tn": 888
+      },
+      "th_0.5": {
+        "acc": 0.902,
+        "precision": 0.2195,
+        "recall": 0.12,
+        "f1": 0.1552,
+        "tp": 9,
+        "fp": 32,
+        "fn": 66,
+        "tn": 893
+      },
+      "th_0.7": {
+        "acc": 0.906,
+        "precision": 0.2121,
+        "recall": 0.0933,
+        "f1": 0.1296,
+        "tp": 7,
+        "fp": 26,
+        "fn": 68,
+        "tn": 899
+      }
+    },
+    "challenge": {
+      "name": "challenge",
+      "n": 50,
+      "n_threat": 20,
+      "latency_ms_per_msg": 1.73,
+      "th_0.3": {
+        "acc": 0.58,
+        "precision": 0.4545,
+        "recall": 0.25,
+        "f1": 0.3226,
+        "tp": 5,
+        "fp": 6,
+        "fn": 15,
+        "tn": 24
+      },
+      "th_0.4": {
+        "acc": 0.6,
+        "precision": 0.5,
+        "recall": 0.25,
+        "f1": 0.3333,
+        "tp": 5,
+        "fp": 5,
+        "fn": 15,
+        "tn": 25
+      },
+      "th_0.5": {
+        "acc": 0.6,
+        "precision": 0.5,
+        "recall": 0.25,
+        "f1": 0.3333,
+        "tp": 5,
+        "fp": 5,
+        "fn": 15,
+        "tn": 25
+      },
+      "th_0.7": {
+        "acc": 0.62,
+        "precision": 0.5556,
+        "recall": 0.25,
+        "f1": 0.3448,
+        "tp": 5,
+        "fp": 4,
+        "fn": 15,
+        "tn": 26
+      }
+    }
+  },
+  "tuned": {
+    "test": {
+      "name": "test",
+      "n": 1000,
+      "n_threat": 75,
+      "latency_ms_per_msg": 2.06,
+      "th_0.3": {
+        "acc": 0.972,
+        "precision": 0.7582,
+        "recall": 0.92,
+        "f1": 0.8313,
+        "tp": 69,
+        "fp": 22,
+        "fn": 6,
+        "tn": 903
+      },
+      "th_0.4": {
+        "acc": 0.971,
+        "precision": 0.7556,
+        "recall": 0.9067,
+        "f1": 0.8242,
+        "tp": 68,
+        "fp": 22,
+        "fn": 7,
+        "tn": 903
+      },
+      "th_0.5": {
+        "acc": 0.975,
+        "precision": 0.7907,
+        "recall": 0.9067,
+        "f1": 0.8447,
+        "tp": 68,
+        "fp": 18,
+        "fn": 7,
+        "tn": 907
+      },
+      "th_0.7": {
+        "acc": 0.977,
+        "precision": 0.8095,
+        "recall": 0.9067,
+        "f1": 0.8553,
+        "tp": 68,
+        "fp": 16,
+        "fn": 7,
+        "tn": 909
+      }
+    },
+    "challenge": {
+      "name": "challenge",
+      "n": 50,
+      "n_threat": 20,
+      "latency_ms_per_msg": 1.85,
+      "th_0.3": {
+        "acc": 0.8,
+        "precision": 0.7273,
+        "recall": 0.8,
+        "f1": 0.7619,
+        "tp": 16,
+        "fp": 6,
+        "fn": 4,
+        "tn": 24
+      },
+      "th_0.4": {
+        "acc": 0.8,
+        "precision": 0.7273,
+        "recall": 0.8,
+        "f1": 0.7619,
+        "tp": 16,
+        "fp": 6,
+        "fn": 4,
+        "tn": 24
+      },
+      "th_0.5": {
+        "acc": 0.78,
+        "precision": 0.7143,
+        "recall": 0.75,
+        "f1": 0.7317,
+        "tp": 15,
+        "fp": 6,
+        "fn": 5,
+        "tn": 24
+      },
+      "th_0.7": {
+        "acc": 0.78,
+        "precision": 0.7143,
+        "recall": 0.75,
+        "f1": 0.7317,
+        "tp": 15,
+        "fp": 6,
+        "fn": 5,
+        "tn": 24
+      }
+    },
+    "val": {
+      "name": "val",
+      "n": 554,
+      "n_threat": 140,
+      "latency_ms_per_msg": 2.33,
+      "th_0.3": {
+        "acc": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp": 140,
+        "fp": 0,
+        "fn": 0,
+        "tn": 414
+      },
+      "th_0.4": {
+        "acc": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp": 140,
+        "fp": 0,
+        "fn": 0,
+        "tn": 414
+      },
+      "th_0.5": {
+        "acc": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp": 140,
+        "fp": 0,
+        "fn": 0,
+        "tn": 414
+      },
+      "th_0.7": {
+        "acc": 0.9964,
+        "precision": 1.0,
+        "recall": 0.9857,
+        "f1": 0.9928,
+        "tp": 138,
+        "fp": 0,
+        "fn": 2,
+        "tn": 414
+      }
+    }
+  },
+  "train_history": [
+    {
+      "epoch": 1,
+      "avg_loss": -0.0699,
+      "sec": 33
+    },
+    {
+      "epoch": 2,
+      "avg_loss": -0.3849,
+      "sec": 66
+    },
+    {
+      "epoch": 3,
+      "avg_loss": -0.4014,
+      "sec": 105
+    },
+    {
+      "epoch": 4,
+      "avg_loss": -0.4058,
+      "sec": 139
+    },
+    {
+      "epoch": 5,
+      "avg_loss": -0.3203,
+      "sec": 174
+    }
+  ],
+  "challenge_errors": [
+    {
+      "text": "Você vai ver o que acontece com quem me deve",
+      "label": "threat",
+      "p_threat": 0.282
+    },
+    {
+      "text": "Pix de 1000 e teu segredo morre comigo",
+      "label": "threat",
+      "p_threat": 0.024
+    },
+    {
+      "text": "Eu sei com quem você anda e onde seu filho estuda",
+      "label": "threat",
+      "p_threat": 0.034
+    },
+    {
+      "text": "Quem mexe comigo acaba no hospital",
+      "label": "threat",
+      "p_threat": 0.022
+    },
+    {
+      "text": "Pode me mandar o valor do aluguel até o dia 10, por favor?",
+      "label": "safe",
+      "p_threat": 0.807
+    },
+    {
+      "text": "Se você não vier amanhã, vou sentir sua falta",
+      "label": "safe",
+      "p_threat": 0.974
+    },
+    {
+      "text": "Vou te dar uma surra no truco sábado",
+      "label": "safe",
+      "p_threat": 0.974
+    },
+    {
+      "text": "Sua mãe me ligou, tá preocupada com você, liga pra ela",
+      "label": "safe",
+      "p_threat": 0.959
+    },
+    {
+      "text": "Vou aí buscar você no aeroporto, me manda o voo",
+      "label": "safe",
+      "p_threat": 0.981
+    },
+    {
+      "text": "Cuidado com a chuva hoje, a estrada tá perigosa",
+      "label": "safe",
+      "p_threat": 0.972
+    }
+  ]
+}

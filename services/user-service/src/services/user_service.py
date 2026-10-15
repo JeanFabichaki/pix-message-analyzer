@@ -97,14 +97,11 @@ class UserService:
         return result.rowcount
 
     async def clear_all_history(self) -> dict:
-        from common.database.models import ThreatLog, ConfirmedThreat, User
+        from common.database.models import ThreatLog, User
         from sqlalchemy import delete, update
 
         stmt_threats = delete(ThreatLog)
         res_threats = await self.db.execute(stmt_threats)
-
-        stmt_confirmed = delete(ConfirmedThreat)
-        res_confirmed = await self.db.execute(stmt_confirmed)
 
         stmt_users = update(User).values(status=UserStatus.ACTIVE)
         res_users = await self.db.execute(stmt_users)
@@ -112,12 +109,10 @@ class UserService:
         await self.db.commit()
         logger.info(
             f"BASE HISTÓRICA ZERADA: {res_threats.rowcount} logs excluídos, "
-            f"{res_confirmed.rowcount} assinaturas excluídas, "
             f"{res_users.rowcount} usuários reativados."
         )
         return {
             "deleted_threat_logs": res_threats.rowcount,
-            "deleted_confirmed_threats": res_confirmed.rowcount,
             "reactivated_users": res_users.rowcount,
         }
 

@@ -101,8 +101,7 @@ async def test_interceptor_anti_bypass_detection():
             )
 
     interceptor = PixInterceptor(
-        ollaya=MockOllayaClient(use_mock=False),
-        threat_intel=None,
+        ollaya=MockOllayaClient(),
     )
 
     tx = PixTransactionRequest(

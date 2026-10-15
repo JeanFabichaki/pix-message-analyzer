@@ -1,5 +1,4 @@
 import re
-import hashlib
 import unicodedata
 from typing import Tuple, Optional
 
@@ -62,9 +61,3 @@ def normalize_threat_text(text: str) -> str:
     # 4. Colapsar espaços múltiplos
     t = re.sub(r"\s+", " ", t).strip()
     return t
-
-
-def compute_threat_hash(normalized_text: str) -> str:
-    """Calcula o hash SHA-256 de 64 caracteres do texto normalizado."""
-    return hashlib.sha256(normalized_text.encode("utf-8")).hexdigest()
-

@@ -49,30 +49,11 @@ class ThreatLog(Base):
     transaction_id = Column(String(64), nullable=False, index=True)
     direction = Column(SQLEnum(TransactionDirection), nullable=False)
     original_message = Column(Text, nullable=False)
-    jev_score = Column(Float, nullable=True)
-    jev_category = Column(String(64), nullable=True)
+    ollaya_score = Column(Float, nullable=True)
+    ollaya_category = Column(String(64), nullable=True)
     gemini_criticality = Column(SQLEnum(CriticalityLevel), nullable=True)
     gemini_category = Column(String(64), nullable=True)
     gemini_rationale = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False, index=True)
 
     user = relationship("User", back_populates="threats")
-
-
-class ConfirmedThreat(Base):
-    """Base de conhecimento de ameaças confirmadas por consenso entre Laya e Gemini.
-    Usada como cache de ultra-alta velocidade (<1-2ms) para proteção de pagamentos Pix.
-    """
-    __tablename__ = "confirmed_threats"
-
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    text_hash = Column(String(64), unique=True, nullable=False, index=True)
-    normalized_text = Column(Text, nullable=False, index=True)
-    raw_text = Column(Text, nullable=False)
-    laya_score = Column(Float, nullable=True)
-    gemini_score = Column(Float, nullable=True)
-    category = Column(String(64), nullable=True)
-    gemini_rationale = Column(Text, nullable=True)
-    occurrences_count = Column(Float, default=1.0, nullable=False)
-    first_detected_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
-    last_detected_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)

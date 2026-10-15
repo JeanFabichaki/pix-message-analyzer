@@ -1,91 +1,63 @@
-import React, { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
-import Screen1Simulator from './components/Screen1Simulator';
-import Screen2Matrix from './components/Screen2Matrix';
-import Screen3Audit from './components/Screen3Audit';
+import React, { useCallback, useEffect, useState } from 'react';
+import { motion } from 'motion/react';
+import Navbar, { TABS } from './components/Navbar';
+import Screen1Journey from './components/Screen1Journey';
+import ScreenLive from './components/ScreenLive';
+import ScreenHistory from './components/ScreenHistory';
+import ScreenCompare from './components/ScreenCompare';
+import { dur, ease } from './motion/tokens';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('simulator');
-  const [announcement, setAnnouncement] = useState('');
-
-  const tabTitles = {
-    simulator: 'Tela 1: Simulador de Transferência & Pipeline de Análise carregada',
-    matrix: 'Tela 2: Telemetria de Alta Vazão carregada',
-    audit: 'Tela 3: Painel de Auditoria & Governança carregada',
-  };
-
-  const handleTabChange = (newTab) => {
-    setActiveTab(newTab);
-    setAnnouncement(tabTitles[newTab] || '');
-  };
+  const [tab, setTab] = useState('journey');
+  const [replay, setReplay] = useState(null);
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const onKey = (e) => {
       const tag = document.activeElement?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
-      if (e.key === '1') handleTabChange('simulator');
-      else if (e.key === '2') handleTabChange('matrix');
-      else if (e.key === '3') handleTabChange('audit');
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const idx = Number(e.key) - 1;
+      if (Number.isInteger(idx) && TABS[idx]) setTab(TABS[idx].id);
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // Um Pix escolhido no Ao vivo ou no Histórico é reproduzido na Jornada.
+  const handleInspect = useCallback((payload) => {
+    setReplay(payload);
+    setTab('journey');
+  }, []);
+
+  const panel = (id, node) => (
+    <motion.div
+      key={id}
+      id={`panel-${id}`}
+      role="tabpanel"
+      aria-labelledby={`tab-${id}`}
+      hidden={tab !== id}
+      initial={false}
+      animate={tab === id ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+      transition={{ duration: dur.base, ease }}
+    >
+      {node}
+    </motion.div>
+  );
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Live Region for Screen Reader Announcements */}
-      <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {announcement}
-      </div>
-
-      <Navbar activeTab={activeTab} setActiveTab={handleTabChange} />
-
-      <main
-        id="main-content"
-        tabIndex={-1}
-        style={{ flex: 1, paddingBottom: '3rem', outline: 'none' }}
-      >
-        <div
-          id="panel-simulator"
-          role="tabpanel"
-          aria-labelledby="tab-simulator"
-          hidden={activeTab !== 'simulator'}
-        >
-          {activeTab === 'simulator' && <Screen1Simulator />}
-        </div>
-
-        <div
-          id="panel-matrix"
-          role="tabpanel"
-          aria-labelledby="tab-matrix"
-          hidden={activeTab !== 'matrix'}
-        >
-          {activeTab === 'matrix' && <Screen2Matrix />}
-        </div>
-
-        <div
-          id="panel-audit"
-          role="tabpanel"
-          aria-labelledby="tab-audit"
-          hidden={activeTab !== 'audit'}
-        >
-          {activeTab === 'audit' && <Screen3Audit />}
-        </div>
+    <div className="app">
+      <Navbar activeTab={tab} onChange={setTab} />
+      <main id="main-content" tabIndex={-1} className="app__main">
+        {panel('journey', <Screen1Journey replay={replay} onReplayConsumed={() => setReplay(null)} active={tab === 'journey'} />)}
+        {panel('live', <ScreenLive active={tab === 'live'} onInspect={handleInspect} />)}
+        {panel('history', <ScreenHistory active={tab === 'history'} onInspect={handleInspect} />)}
+        {panel('compare', <ScreenCompare active={tab === 'compare'} />)}
       </main>
-
-      <footer
-        role="contentinfo"
-        style={{
-          borderTop: '1px solid var(--border-subtle)',
-          padding: '1rem 2rem',
-          textAlign: 'center',
-          fontSize: '0.75rem',
-          color: 'var(--text-muted)',
-          background: 'var(--bg-primary)',
-          fontFamily: 'var(--font-mono)',
-        }}
-      >
-        <span>Pix Guard • Defesa Híbrida: Ollaya (laya &lt;15ms) + Google Gemini 2.5 Flash Structured Outputs</span>
+      <footer className="app__footer" role="contentinfo">
+        <span>
+          Pix Guard · prova de conceito · Regra de análise: mensagens de Pix de até R$ 10,00 · Teclas 1 a 4 trocam de
+          tela
+        </span>
       </footer>
     </div>
   );

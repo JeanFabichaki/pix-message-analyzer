@@ -1,8 +1,10 @@
 import logging
 import uuid
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, status
+from pydantic import BaseModel
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -15,16 +17,13 @@ from common.schemas.threat import (
 )
 from src.analyzer import GeminiThreatAnalyzer
 from src.clients.user_client import UserClient
-from src.clients.threat_intel_client import ThreatIntelClient
 from src.rules.threshold import record_and_evaluate_limit
-from common.schemas.threat import ConfirmedThreatCreate
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("gemini-investigation-agent")
 
 analyzer = GeminiThreatAnalyzer()
 user_client = UserClient()
-threat_intel_client = ThreatIntelClient()
 
 
 @asynccontextmanager
@@ -84,11 +83,11 @@ async def investigate(
     gemini_duration_ms = round((time.perf_counter() - t_gemini_start) * 1000, 2)
 
     # 2. Construção do registro de auditoria
-    jev_score = payload.jev_data.get("score") if payload.jev_data else None
-    jev_category = payload.jev_data.get("category") if payload.jev_data else None
+    ollaya_score = payload.ollaya_data.get("score") if payload.ollaya_data else None
+    ollaya_category = payload.ollaya_data.get("category") if payload.ollaya_data else None
 
     rationale = analysis.resumo_analise
-    if payload.evasion_detected and payload.canonical_text:
+    if payload.evasion_detected and payload.canonical_text and not analysis.bypassed:
         rationale = f"[Anti-Bypass: Evasão Detectada | Canônico: '{payload.canonical_text}']: {rationale}"
 
     threat_log = ThreatLog(
@@ -97,10 +96,10 @@ async def investigate(
         transaction_id=payload.transaction_id,
         direction=payload.direction,
         original_message=payload.text,
-        jev_score=jev_score,
-        jev_category=jev_category,
-        gemini_criticality=analysis.criticidade,
-        gemini_category=analysis.categoria,
+        ollaya_score=ollaya_score,
+        ollaya_category=ollaya_category,
+        gemini_criticality=None if analysis.bypassed else analysis.criticidade,
+        gemini_category="bypass" if analysis.bypassed else analysis.categoria,
         gemini_rationale=rationale,
     )
 
@@ -114,44 +113,19 @@ async def investigate(
     )
     governance_duration_ms = round((time.perf_counter() - t_gov_start) * 1000, 2)
 
-    # 4. Consenso Laya + Gemini: catalogar no Threat Intelligence Service para cache rápido
-    laya_confirmed = (payload.jev_data or {}).get("is_threat", True) or ((jev_score or 0) >= 0.40)
-    if analysis.is_valid_threat and laya_confirmed:
-        logger.info(
-            f"Consenso Laya + Gemini confirmado para tx={payload.transaction_id}. "
-            f"Catalogando no Threat Intelligence Service..."
-        )
-        canonical_to_save = payload.canonical_text or payload.text
-        await threat_intel_client.record_confirmed_threat(
-            ConfirmedThreatCreate(
-                raw_text=canonical_to_save,
-                laya_score=jev_score,
-                gemini_score=0.98,
-                category=analysis.categoria,
-                gemini_rationale=analysis.resumo_analise,
-            )
-        )
-        if payload.evasion_detected and payload.canonical_text and payload.text != payload.canonical_text:
-            await threat_intel_client.record_confirmed_threat(
-                ConfirmedThreatCreate(
-                    raw_text=payload.text,
-                    laya_score=jev_score,
-                    gemini_score=0.98,
-                    category=analysis.categoria,
-                    gemini_rationale=f"[Variante Evasiva]: {analysis.resumo_analise}",
-                )
-            )
-
     total_investigation_ms = round((time.perf_counter() - t_start) * 1000, 2)
 
     result_payload = {
-        "status": "PROCESSED",
+        "status": "BYPASS" if analysis.bypassed else "PROCESSED",
         "threat_log_id": threat_log.id,
         "transaction_id": payload.transaction_id,
         "user_id": payload.user_id,
         "analysis": analysis.model_dump(),
+        "bypassed": analysis.bypassed,
+        "bypass_reason": analysis.bypass_reason,
         "total_threats": total_threats,
         "account_blocked": blocked,
+        "block_limit": settings.THREAT_BLOCK_LIMIT,
         "timing": {
             "gemini_ms": gemini_duration_ms,
             "governance_ms": max(governance_duration_ms, 0.5),
@@ -182,21 +156,28 @@ async def get_threat_by_transaction(transaction_id: str, db: AsyncSession = Depe
             detail="Investigação em andamento ou não encontrada",
         )
 
+    is_bypass = log.gemini_category == "bypass" or log.gemini_criticality is None
     return {
-        "status": "PROCESSED",
+        "status": "BYPASS" if is_bypass else "PROCESSED",
         "threat_log_id": log.id,
         "transaction_id": log.transaction_id,
         "user_id": log.user_id,
+        "bypassed": is_bypass,
+        "bypass_reason": log.gemini_rationale if is_bypass else None,
         "analysis": {
-            "is_valid_threat": True,
-            "criticidade": log.gemini_criticality.value if hasattr(log.gemini_criticality, "value") else str(log.gemini_criticality),
-            "categoria": log.gemini_category,
+            "is_valid_threat": not is_bypass,
+            "criticidade": log.gemini_criticality.value if hasattr(log.gemini_criticality, "value") else (str(log.gemini_criticality) if log.gemini_criticality else "BAIXA"),
+            "categoria": log.gemini_category or "bypass",
             "resumo_analise": log.gemini_rationale,
+            "acao_imediata_recomendada": False if is_bypass else (log.gemini_criticality == "CRITICA"),
+            "bypassed": is_bypass,
+            "bypass_reason": log.gemini_rationale if is_bypass else None,
         },
+        "block_limit": settings.THREAT_BLOCK_LIMIT,
         "timing": {
-            "gemini_ms": 750.0,
+            "gemini_ms": 0.0 if is_bypass else 750.0,
             "governance_ms": 2.5,
-            "total_ms": 752.5,
+            "total_ms": 2.5 if is_bypass else 752.5,
         },
     }
 
@@ -211,7 +192,7 @@ async def get_user_threats(user_id: str, db: AsyncSession = Depends(get_db)):
             "id": r.id,
             "transaction_id": r.transaction_id,
             "original_message": r.original_message,
-            "jev_score": r.jev_score,
+            "ollaya_score": r.ollaya_score,
             "gemini_criticality": r.gemini_criticality,
             "gemini_category": r.gemini_category,
             "gemini_rationale": r.gemini_rationale,
@@ -219,4 +200,26 @@ async def get_user_threats(user_id: str, db: AsyncSession = Depends(get_db)):
         }
         for r in records
     ]
+
+
+class GenerateDatasetRequest(BaseModel):
+    count: int = 50
+    prompt_override: Optional[str] = None
+
+
+@app.post("/benchmark/generate-dataset")
+async def generate_benchmark_dataset(req: GenerateDatasetRequest = GenerateDatasetRequest()):
+    """Gera um conjunto de mensagens de teste com o Gemini para benchmark comparativo."""
+    count = min(max(req.count, 10), 100)
+    messages = await analyzer.generate_test_dataset(count=count)
+    threats_cnt = sum(1 for m in messages if m.get("label") == "threat")
+    safe_cnt = sum(1 for m in messages if m.get("label") != "threat")
+    return {
+        "status": "ok",
+        "count": len(messages),
+        "threats_count": threats_cnt,
+        "safe_count": safe_cnt,
+        "model": analyzer.model_name,
+        "messages": messages,
+    }
 

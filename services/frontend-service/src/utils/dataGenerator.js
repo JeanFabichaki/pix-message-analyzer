@@ -32,7 +32,7 @@ const THREAT_MESSAGES = [
   'Ultimo aviso: me devolve o dinheiro ou vai dar ruim pra voce',
 ];
 
-const SENDERS = [
+export const SENDERS = [
   { id: 'usr_abc123', name: 'Alice Sender', cpf: '12345678901' },
   { id: 'usr_repeat_01', name: 'Carlos Infrator', cpf: '11122233344' },
   { id: 'usr_repeat_02', name: 'Marcos Cobrador', cpf: '55566677788' },
@@ -62,8 +62,11 @@ export function generateSyntheticPix() {
     amount = isMicro ? parseFloat((Math.random() * 9.9 + 0.05).toFixed(2)) : parseFloat((Math.random() * 250 + 15).toFixed(2));
     description = THREAT_MESSAGES[Math.floor(Math.random() * THREAT_MESSAGES.length)];
   } else {
-    // Transações normais
-    amount = parseFloat((Math.random() * 450 + 1.5).toFixed(2));
+    // Transações normais: a maioria é micro-Pix (passa pela análise completa), o resto é Pix comum acima do limite
+    amount =
+      Math.random() < 0.65
+        ? parseFloat((Math.random() * 9.4 + 0.5).toFixed(2))
+        : parseFloat((Math.random() * 450 + 10.5).toFixed(2));
     description = BENIGN_MESSAGES[Math.floor(Math.random() * BENIGN_MESSAGES.length)];
   }
 

@@ -19,7 +19,7 @@ class InvestigationClient:
         text: str,
         canonical_text: str = None,
         evasion_detected: bool = False,
-        jev_data: dict = None,
+        ollaya_data: dict = None,
     ):
         """Dispara investigação assíncrona para o gemini-investigation-agent."""
         url = f"{self.agent_url}/investigate"
@@ -30,7 +30,7 @@ class InvestigationClient:
             text=text,
             canonical_text=canonical_text,
             evasion_detected=evasion_detected,
-            jev_data=jev_data,
+            ollaya_data=ollaya_data,
         )
 
         try:

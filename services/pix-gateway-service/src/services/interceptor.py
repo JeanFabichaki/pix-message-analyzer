@@ -1,14 +1,12 @@
 import logging
 import time
-from typing import Tuple, Optional, Any, Dict
+from typing import List, Optional, Any, Dict
 from fastapi import BackgroundTasks
 from common.config.settings import settings
-from common.schemas.pix import PixTransactionRequest
+from common.schemas.pix import PixTransactionRequest, TraceStep
 from common.schemas.threat import OllayaClassificationResult
 from common.utils.deobfuscator import deobfuscate_text
-from common.utils.normalizer import check_explicit_threat_patterns
 from src.clients.ollaya_client import OllayaClient
-from src.clients.threat_intel_client import ThreatIntelClient
 from src.clients.investigation import InvestigationClient
 
 logger = logging.getLogger("gateway.interceptor")
@@ -17,7 +15,7 @@ logger = logging.getLogger("gateway.interceptor")
 class InterceptorResult:
     """Resultado da interceptação do Pix com suporte a compatibilidade retroativa.
     Permite tanto desempacotamento tradicional `msg, masked = res` quanto acesso rico
-    `res.canonical_message`, `res.evasion_detected` e `res.timing`.
+    `res.canonical_message`, `res.evasion_detected`, `res.timing`, `res.decided_by` e `res.trace`.
     """
     def __init__(
         self,
@@ -26,12 +24,16 @@ class InterceptorResult:
         canonical_message: Optional[str] = None,
         evasion_detected: bool = False,
         timing: Optional[Dict[str, float]] = None,
+        decided_by: str = "none",
+        trace: Optional[List[TraceStep]] = None,
     ):
         self.message = message
         self.is_masked = is_masked
         self.canonical_message = canonical_message
         self.evasion_detected = evasion_detected
         self.timing = timing or {}
+        self.decided_by = decided_by
+        self.trace = trace or []
 
     def __iter__(self):
         # Permite unpack de 2 elementos: final_message, is_masked
@@ -49,18 +51,49 @@ class InterceptorResult:
         raise IndexError(f"Index {idx} out of range for InterceptorResult")
 
 
+def _skipped_steps(detail: str) -> List[TraceStep]:
+    return [
+        TraceStep(step="anti_evasion", status="skip", ms=0.0, detail=detail),
+        TraceStep(step="ollaya", status="skip", ms=0.0, detail=detail),
+    ]
+
+
 class PixInterceptor:
     def __init__(
         self,
         ollaya: Optional[OllayaClient] = None,
         investigation: Optional[InvestigationClient] = None,
-        threat_intel: Optional[ThreatIntelClient] = None,
-        jev: Optional[OllayaClient] = None,
+        ollaya_tuned: Optional[OllayaClient] = None,
     ):
-        self.ollaya = ollaya or jev
-        self.jev = self.ollaya
+        self.ollaya = ollaya or OllayaClient()
+        self.ollaya_tuned = ollaya_tuned
         self.investigation = investigation
-        self.threat_intel = threat_intel or ThreatIntelClient()
+
+    async def _dispatch(
+        self,
+        tx: PixTransactionRequest,
+        canonical_text: str,
+        evasion_detected: bool,
+        ollaya_data: Dict[str, Any],
+        background_tasks: Optional[BackgroundTasks],
+        await_without_background: bool,
+    ) -> None:
+        """Despacha a investigação assíncrona (em segundo plano quando possível)."""
+        if not self.investigation:
+            return
+        kwargs = dict(
+            user_id=tx.sender_id,
+            transaction_id=tx.transaction_id,
+            direction=tx.direction,
+            text=tx.description,
+            canonical_text=canonical_text,
+            evasion_detected=evasion_detected,
+            ollaya_data=ollaya_data,
+        )
+        if background_tasks:
+            background_tasks.add_task(self.investigation.dispatch, **kwargs)
+        elif await_without_background:
+            await self.investigation.dispatch(**kwargs)
 
     async def inspect_and_filter(
         self,
@@ -69,9 +102,9 @@ class PixInterceptor:
     ) -> InterceptorResult:
         """Avalia mensagem do Pix aplicando defesas multicamadas:
         - Camada 0 (<0.05ms): Desofuscação Canônica Anti-Bypass (leetspeak, separadores, zero-width)
-        - Fast-path 1 (<1-2ms): Threat Intelligence Cache de ameaças confirmadas
-        - Fallback 2 (<15ms): Classificação em tempo real pelo modelo Ollaya (laya)
+        - Camada 1 (<15ms): Classificação em tempo real pelo modelo Ollaya (laya), sempre, para toda mensagem analisada
         Se for ameaça sob o threshold, mascara e despacha investigação assíncrona.
+        Além da mensagem final, devolve o `trace` das estações percorridas e `decided_by`.
         """
         timing: Dict[str, float] = {}
 
@@ -83,7 +116,42 @@ class PixInterceptor:
             logger.debug(
                 f"Transação {tx.transaction_id} ignorada da triagem (amount={tx.amount}, has_msg={has_message})"
             )
-            return InterceptorResult(tx.description, False, timing={"anti_evasion_ms": 0.01, "threat_intel_ms": 0.0, "ollaya_ms": 0.0, "masking_ms": 0.01})
+            if not has_message:
+                reason = "A mensagem está vazia, então não há texto para analisar."
+            else:
+                reason = (
+                    f"Valor de R$ {tx.amount:.2f} acima do limite de "
+                    f"R$ {settings.PIX_THRESHOLD_AMOUNT_BRL:.2f} para análise de mensagem."
+                )
+            trace = [
+                TraceStep(
+                    step="amount_rule",
+                    status="skip",
+                    ms=0.01,
+                    detail=reason,
+                    data={"amount": tx.amount, "limit": settings.PIX_THRESHOLD_AMOUNT_BRL, "has_message": has_message},
+                ),
+                *_skipped_steps("Análise dispensada pela regra de valor/mensagem."),
+                TraceStep(step="delivery", status="pass", ms=0.01, detail="Mensagem entregue sem alteração."),
+            ]
+            return InterceptorResult(
+                tx.description,
+                False,
+                timing={"anti_evasion_ms": 0.01, "ollaya_ms": 0.0, "masking_ms": 0.01},
+                decided_by="skipped",
+                trace=trace,
+            )
+
+        amount_step = TraceStep(
+            step="amount_rule",
+            status="pass",
+            ms=0.01,
+            detail=(
+                f"Valor de R$ {tx.amount:.2f} dentro do limite de "
+                f"R$ {settings.PIX_THRESHOLD_AMOUNT_BRL:.2f} e com mensagem: vai para análise."
+            ),
+            data={"amount": tx.amount, "limit": settings.PIX_THRESHOLD_AMOUNT_BRL, "has_message": True},
+        )
 
         # 2. ANTI-EVASION: Desofuscação Canônica Rápida (<0.05ms)
         t_anti_start = time.perf_counter()
@@ -95,107 +163,31 @@ class PixInterceptor:
                 f"⚠️ [ANTI-EVASION DETECTADA] TX {tx.transaction_id}: "
                 f"Mensagem ofuscada '{tx.description}' normalizada para '{canonical_text}'"
             )
+        evasion_step = TraceStep(
+            step="anti_evasion",
+            status="detect" if evasion_detected else "pass",
+            ms=timing["anti_evasion_ms"],
+            detail=(
+                "Disfarce detectado e desfeito antes da análise."
+                if evasion_detected
+                else "Nenhum disfarce encontrado no texto."
+            ),
+            data={"original": tx.description, "canonical": canonical_text, "evasion_detected": evasion_detected},
+        )
 
-        # 3. FAST-PATH: Checagem ultra-rápida (Heurística Determinística <0.01ms + Base de Conhecimento Threat Intel <1-2ms)
-        t_intel_start = time.perf_counter()
-
-        # 3.1 Padrões explícitos determinísticos de perseguição, coação e violência (<0.01ms)
-        is_pattern_threat, pattern_reason = check_explicit_threat_patterns(canonical_text)
-        if not is_pattern_threat and evasion_detected:
-            is_pattern_threat, pattern_reason = check_explicit_threat_patterns(tx.description)
-
-        if is_pattern_threat:
-            threat_intel_ms = round((time.perf_counter() - t_intel_start) * 1000, 2)
-            timing["threat_intel_ms"] = max(threat_intel_ms, 0.05)
-            logger.warning(
-                f"⚡ [FAST-PATH <0.1ms] AMEAÇA EXPLÍCITA IDENTIFICADA NA TX {tx.transaction_id}: "
-                f"motivo='{pattern_reason}', evasion={evasion_detected}. Mascarando mensagem imediatamente."
-            )
-            t_mask_start = time.perf_counter()
-            if background_tasks and self.investigation:
-                background_tasks.add_task(
-                    self.investigation.dispatch,
-                    user_id=tx.sender_id,
-                    transaction_id=tx.transaction_id,
-                    direction=tx.direction,
-                    text=tx.description,
-                    canonical_text=canonical_text,
-                    evasion_detected=evasion_detected,
-                    jev_data={
-                        "is_threat": True,
-                        "score": 0.99,
-                        "category": "ameaca_explicita_perseguicao",
-                        "model": "heuristica_deterministica (fast-path)",
-                        "canonical_text": canonical_text,
-                        "evasion_detected": evasion_detected,
-                        "reason": pattern_reason,
-                    },
-                )
-            masking_ms = round((time.perf_counter() - t_mask_start) * 1000, 3)
-            timing["ollaya_ms"] = 0.0  # Bypassed via fast-path heurístico
-            timing["masking_ms"] = max(masking_ms, 0.05)
-            return InterceptorResult(
-                settings.PIX_MASKED_MESSAGE,
-                True,
-                canonical_message=canonical_text,
-                evasion_detected=evasion_detected,
-                timing=timing,
-            )
-
-        # 3.2 Checagem na Base de Conhecimento de Ameaças Confirmadas (Threat Intel Hash/Regex)
-        intel_res = None
-        if self.threat_intel:
-            # Testa primeiro a forma canônica desofuscada
-            intel_res = await self.threat_intel.check(canonical_text)
-            if not intel_res.is_threat and evasion_detected:
-                # Testa também o texto bruto original caso tenha sido catalogado diretamente
-                intel_res = await self.threat_intel.check(tx.description)
-
-        threat_intel_ms = round((time.perf_counter() - t_intel_start) * 1000, 2)
-        timing["threat_intel_ms"] = max(threat_intel_ms, 0.2)
-
-        if intel_res and intel_res.is_threat:
-            logger.warning(
-                f"⚡ [FAST-PATH <1ms] AMEAÇA CONFIRMADA DETECTADA VIA THREAT INTEL NA TX {tx.transaction_id}: "
-                f"origem={intel_res.source}, cat={intel_res.category}, conf={intel_res.confidence:.2f}, "
-                f"evasion={evasion_detected}. Mascarando mensagem imediatamente (bypass do Laya)."
-            )
-            t_mask_start = time.perf_counter()
-            if background_tasks and self.investigation:
-                background_tasks.add_task(
-                    self.investigation.dispatch,
-                    user_id=tx.sender_id,
-                    transaction_id=tx.transaction_id,
-                    direction=tx.direction,
-                    text=tx.description,
-                    canonical_text=canonical_text,
-                    evasion_detected=evasion_detected,
-                    jev_data={
-                        "is_threat": True,
-                        "score": intel_res.confidence,
-                        "category": intel_res.category,
-                        "model": f"threat_intel_cache ({intel_res.source})",
-                        "canonical_text": canonical_text,
-                        "evasion_detected": evasion_detected,
-                    },
-                )
-            masking_ms = round((time.perf_counter() - t_mask_start) * 1000, 3)
-            timing["ollaya_ms"] = 0.0  # Bypassed via fast-path cache
-            timing["masking_ms"] = max(masking_ms, 0.05)
-            return InterceptorResult(
-                settings.PIX_MASKED_MESSAGE,
-                True,
-                canonical_message=canonical_text,
-                evasion_detected=evasion_detected,
-                timing=timing,
-            )
-
-        # 4. Avaliação pelo Ollaya (Laya) passando o texto canônico desofuscado para máxima acurácia
+        # 3. Avaliação pelo Ollaya (Laya) passando o texto canônico desofuscado para máxima acurácia
         t_ollaya_start = time.perf_counter()
+        ollaya_failed = False
         try:
-            ollaya_response = await self.ollaya.classify(canonical_text)
+            if tx.engine == "laya_tuned" and self.ollaya_tuned is not None:
+                engine_client = self.ollaya_tuned
+            else:
+                engine_client = self.ollaya
+            analysis_text = canonical_text if evasion_detected else tx.description
+            ollaya_response = await engine_client.classify(analysis_text)
         except Exception as ex:
             logger.warning(f"Resiliência de Borda: Ollaya indisponível ou timeout ({ex}). Aprovando com fallback seguro.")
+            ollaya_failed = True
             ollaya_response = OllayaClassificationResult(
                 is_threat=False,
                 score=0.0,
@@ -206,6 +198,12 @@ class PixInterceptor:
         ollaya_ms = round((time.perf_counter() - t_ollaya_start) * 1000, 2)
         timing["ollaya_ms"] = ollaya_ms
 
+        ollaya_data = {
+            "score": ollaya_response.score,
+            "category": ollaya_response.category,
+            "model": ollaya_response.model,
+        }
+
         t_mask_start = time.perf_counter()
         if not ollaya_response.is_threat:
             logger.info(
@@ -214,12 +212,40 @@ class PixInterceptor:
             )
             masking_ms = round((time.perf_counter() - t_mask_start) * 1000, 3)
             timing["masking_ms"] = max(masking_ms, 0.03)
+            if ollaya_failed:
+                ollaya_step = TraceStep(
+                    step="ollaya",
+                    status="error",
+                    ms=ollaya_ms,
+                    detail="A IA rápida não respondeu a tempo. Por segurança do fluxo financeiro, o Pix foi aprovado.",
+                    data=ollaya_data,
+                )
+            else:
+                ollaya_step = TraceStep(
+                    step="ollaya",
+                    status="pass",
+                    ms=ollaya_ms,
+                    detail="A IA rápida avaliou a mensagem como segura.",
+                    data=ollaya_data,
+                )
             return InterceptorResult(
                 tx.description,
                 False,
                 canonical_message=canonical_text,
                 evasion_detected=evasion_detected,
                 timing=timing,
+                decided_by="ollaya_fallback" if ollaya_failed else "none",
+                trace=[
+                    amount_step,
+                    evasion_step,
+                    ollaya_step,
+                    TraceStep(
+                        step="delivery",
+                        status="pass",
+                        ms=timing["masking_ms"],
+                        detail="Mensagem entregue sem alteração.",
+                    ),
+                ],
             )
 
         logger.warning(
@@ -227,34 +253,20 @@ class PixInterceptor:
             f"score={ollaya_response.score:.4f}, cat={ollaya_response.category}, evasion={evasion_detected}. Mascarando mensagem."
         )
 
-        # 5. Disparo assíncrono para o Gemini e auditoria de reincidência
-        jev_payload = ollaya_response.model_dump()
-        jev_payload["canonical_text"] = canonical_text
-        jev_payload["evasion_detected"] = evasion_detected
+        # 4. Disparo assíncrono para o Gemini e auditoria de reincidência
+        ollaya_payload = ollaya_response.model_dump()
+        ollaya_payload["canonical_text"] = canonical_text
+        ollaya_payload["evasion_detected"] = evasion_detected
+        await self._dispatch(
+            tx,
+            canonical_text,
+            evasion_detected,
+            ollaya_payload,
+            background_tasks,
+            await_without_background=True,
+        )
 
-        if background_tasks and self.investigation:
-            background_tasks.add_task(
-                self.investigation.dispatch,
-                user_id=tx.sender_id,
-                transaction_id=tx.transaction_id,
-                direction=tx.direction,
-                text=tx.description,
-                canonical_text=canonical_text,
-                evasion_detected=evasion_detected,
-                jev_data=jev_payload,
-            )
-        elif self.investigation:
-            await self.investigation.dispatch(
-                user_id=tx.sender_id,
-                transaction_id=tx.transaction_id,
-                direction=tx.direction,
-                text=tx.description,
-                canonical_text=canonical_text,
-                evasion_detected=evasion_detected,
-                jev_data=jev_payload,
-            )
-
-        # 6. Substituição imediata pela mensagem padrão de segurança
+        # 5. Substituição imediata pela mensagem padrão de segurança
         masking_ms = round((time.perf_counter() - t_mask_start) * 1000, 3)
         timing["masking_ms"] = max(masking_ms, 0.05)
         return InterceptorResult(
@@ -263,5 +275,22 @@ class PixInterceptor:
             canonical_message=canonical_text,
             evasion_detected=evasion_detected,
             timing=timing,
+            decided_by="ollaya",
+            trace=[
+                amount_step,
+                evasion_step,
+                TraceStep(
+                    step="ollaya",
+                    status="detect",
+                    ms=ollaya_ms,
+                    detail="A IA rápida identificou intimidação ou ameaça na mensagem.",
+                    data=ollaya_data,
+                ),
+                TraceStep(
+                    step="delivery",
+                    status="detect",
+                    ms=timing["masking_ms"],
+                    detail="Mensagem substituída pelo aviso padrão. O dinheiro segue normalmente.",
+                ),
+            ],
         )
-

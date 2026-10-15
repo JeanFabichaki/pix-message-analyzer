@@ -30,8 +30,14 @@ async def test_gateway_endpoint_benign_transaction(db_session):
 
 
 @pytest.mark.asyncio
-async def test_gateway_endpoint_threat_masking(db_session):
+async def test_gateway_endpoint_threat_masking(db_session, monkeypatch):
     """Valida o endpoint POST /pix/transactions do gateway com mascaramento imediato de ameaça."""
+    from tests.fakes import HeuristicOllaya
+    for route in gateway_app.routes:
+        if getattr(route, "path", None) == "/pix/transactions":
+            fake = HeuristicOllaya()
+            monkeypatch.setattr(route.endpoint.__globals__["interceptor"], "ollaya", fake)
+            monkeypatch.setattr(route.endpoint.__globals__["interceptor"], "ollaya_tuned", fake)
     uid = uuid.uuid4().hex[:8]
     transport = ASGITransport(app=gateway_app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

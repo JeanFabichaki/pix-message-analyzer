@@ -153,10 +153,20 @@ def deobfuscate_text(text: str) -> Tuple[str, bool]:
             processed_tokens.append(tok)
             continue
 
+        # Horários e unidades legítimas (ex: "18h", "10kg", "2x") não são leetspeak
+        if re.match(r"^\d+[a-z]{1,3}$", tok):
+            processed_tokens.append(tok)
+            continue
+
+        # Pontuação final é pontuação, não leetspeak (ex: "festa!" não vira "festai")
+        trailing_match = re.search(r"[!?.,;:]+$", tok)
+        trailing = trailing_match.group(0) if trailing_match else ""
+        core = tok[: len(tok) - len(trailing)] if trailing else tok
+
         # Se tiver símbolos leet ou números misturados com letras (ex: "v0u", "p4gu3", "m3")
         new_tok = []
         token_modified = False
-        for char in tok:
+        for char in core:
             if char in leet_map:
                 new_tok.append(leet_map[char])
                 token_modified = True
@@ -165,7 +175,7 @@ def deobfuscate_text(text: str) -> Tuple[str, bool]:
 
         if token_modified:
             evasion_detected = True
-        processed_tokens.append("".join(new_tok))
+        processed_tokens.append("".join(new_tok) + trailing)
 
     t = " ".join(processed_tokens)
 

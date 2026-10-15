@@ -1,6 +1,6 @@
 from common.schemas.pix import PixTransactionRequest, PixTransactionResponse
 from common.schemas.threat import (
-    JevClassificationResult,
+    OllayaClassificationResult,
     GeminiThreatAnalysis,
     InvestigationDispatchPayload,
 )
@@ -14,7 +14,7 @@ from common.schemas.user import (
 __all__ = [
     "PixTransactionRequest",
     "PixTransactionResponse",
-    "JevClassificationResult",
+    "OllayaClassificationResult",
     "GeminiThreatAnalysis",
     "InvestigationDispatchPayload",
     "UserCreate",

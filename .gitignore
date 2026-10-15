@@ -28,7 +28,13 @@ dist/
 .DS_Store
 Thumbs.db
 *.log
+logs/
+.run_pids
 
 # Tool Caches
 .hallmark/
 .impeccable/
+
+# Checkpoints do Laya retreinado (grandes)
+finetune/models/
+finetune/_ref/

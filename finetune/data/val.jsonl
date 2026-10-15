@@ -1,0 +1,554 @@
+{"id": "val-00000", "split": "val", "text": "vou contar pra sua mae que voce passou, parabens! 😊", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00001", "split": "val", "text": "opa, livro que você me emprestou, comprei outro pra você", "label": "safe", "category": "pagamento"}
+{"id": "val-00002", "split": "val", "text": "nunca mais você anda em paz entendeu?", "label": "threat", "category": "violencia"}
+{"id": "val-00003", "split": "val", "text": "boa noite, fechado 🙏", "label": "safe", "category": "neutra"}
+{"id": "val-00004", "split": "val", "text": "bom dia! internet do mês - R$ 5.000 ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00005", "split": "val", "text": "última vez: envia R$ 500 nessa chave ou vou na sua faculdade contar tudo", "label": "threat", "category": "chantagem"}
+{"id": "val-00006", "split": "val", "text": "olá, 👍 😊", "label": "safe", "category": "neutra"}
+{"id": "val-00007", "split": "val", "text": "olá, pagamento do aluguel de outubro - mil reais", "label": "safe", "category": "pagamento"}
+{"id": "val-00008", "split": "val", "text": "bom dia! internet do mês 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00009", "split": "val", "text": "olá, vou contar pra sua mãe que você passou, parabéns!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00010", "split": "val", "text": "ola, reembolso da viagem 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00011", "split": "val", "text": "3ntã0, envia 2 mil nessa ch4v3 ou v0cê p4g4 0u você não 4nd4 m415 tranquilo!!!", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00012", "split": "val", "text": "só lembrando do acerto do aluguel 😂", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00013", "split": "val", "text": "nunca mais você anda em paz!!!", "label": "threat", "category": "violencia"}
+{"id": "val-00014", "split": "val", "text": "envia R$ 5.000 n3554 ch4v3 0u você paga 0u v0cê nã0 4nd4 mais tr4nqu1l0 tô falando 5ér10", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00015", "split": "val", "text": "então, nunca mais você anda em paz...", "label": "threat", "category": "violencia"}
+{"id": "val-00016", "split": "val", "text": "e aí, aviso: cobrança da mensalidade referente a outubro ❤️", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00017", "split": "val", "text": "bom dia! internet do mês - R$ 1.000", "label": "safe", "category": "pagamento"}
+{"id": "val-00018", "split": "val", "text": "olha só: manda 300 e a gente fica quites senão eu acabo com a sua reputação...", "label": "threat", "category": "chantagem"}
+{"id": "val-00019", "split": "val", "text": "boa noite, livro que você me emprestou, comprei outro pra você", "label": "safe", "category": "pagamento"}
+{"id": "val-00020", "split": "val", "text": "olha só: melhor pagar antes que eu perca a paciência entendeu?", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00021", "split": "val", "text": "0lh4 só: t3 v3j0 na 54íd4 e você nã0 v41 gostar vc 54b3 que eu cumpro", "label": "threat", "category": "violencia"}
+{"id": "val-00022", "split": "val", "text": "última vez: sua dívida, seu problema, e eu sei onde você mora.", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00023", "split": "val", "text": "presta atencao. manda 100 reais e a gente fica quites ou voce paga ou voce nao anda mais tranquilo entendeu?", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00024", "split": "val", "text": "melhor pagar antes que eu perca a paciência vc sabe que eu cumpro", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00025", "split": "val", "text": "oi, um cafezinho pra você", "label": "safe", "category": "pagamento"}
+{"id": "val-00026", "split": "val", "text": "e aí, vou te contar um segredo bom: passou no concurso!.", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00027", "split": "val", "text": "e aí, reembolso da viagem", "label": "safe", "category": "pagamento"}
+{"id": "val-00028", "split": "val", "text": "atirei pra todo lado mas fechei a venda, obrigado 😂", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00029", "split": "val", "text": "boa noite, aviso: cobrança da mensalidade referente a outubro 😊", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00030", "split": "val", "text": "bom dia! 👍 🙏", "label": "safe", "category": "neutra"}
+{"id": "val-00031", "split": "val", "text": "OLÁ, INTERNET DO MÊS VALEU!", "label": "safe", "category": "pagamento"}
+{"id": "val-00032", "split": "val", "text": "olá, tô te devendo a vida por esse favor 🙏", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00033", "split": "val", "text": "bom dia! bjs abraco", "label": "safe", "category": "neutra"}
+{"id": "val-00034", "split": "val", "text": "so lembrando do acerto do aluguel 😂", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00035", "split": "val", "text": "oi, reembolso da viagem - mil reais 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00036", "split": "val", "text": "GASOLINA DA VIAGEM KKK", "label": "safe", "category": "pagamento"}
+{"id": "val-00037", "split": "val", "text": "BOM DIA! FECHADO ❤️", "label": "safe", "category": "neutra"}
+{"id": "val-00038", "split": "val", "text": "manda R$ 1.000 e a gente fica quites senão sua mãe vai ver o que você mandou pra mim tô falando sério", "label": "threat", "category": "chantagem"}
+{"id": "val-00039", "split": "val", "text": "conta do bar de sábado - 300 kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00040", "split": "val", "text": "opa, aviso: cobrança da mensalidade referente a outubro 😊", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00041", "split": "val", "text": "olá, aviso: cobrança da mensalidade referente a outubro 😂", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00042", "split": "val", "text": "bjs valeu!", "label": "safe", "category": "neutra"}
+{"id": "val-00043", "split": "val", "text": "matei a aula hoje kkk valeu!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00044", "split": "val", "text": ". 😊", "label": "safe", "category": "neutra"}
+{"id": "val-00045", "split": "val", "text": "olá, internet do mês - R$ 200.", "label": "safe", "category": "pagamento"}
+{"id": "val-00046", "split": "val", "text": "boa noite, livro que voce me emprestou, comprei outro pra voce.", "label": "safe", "category": "pagamento"}
+{"id": "val-00047", "split": "val", "text": "opa, bjs", "label": "safe", "category": "neutra"}
+{"id": "val-00048", "split": "val", "text": "internet do mes - R$ 5.000 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00049", "split": "val", "text": "AVISO: COBRANÇA DA MENSALIDADE REFERENTE A OUTUBRO VALEU!", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00050", "split": "val", "text": "manda R$ 5.000 e a gente fica quites ou vou na sua faculdade contar tudo", "label": "threat", "category": "chantagem"}
+{"id": "val-00051", "split": "val", "text": "OLÁ, CONTA DO BAR DE SÁBADO - 100 REAIS.", "label": "safe", "category": "pagamento"}
+{"id": "val-00052", "split": "val", "text": "opa, conta do bar de sábado - mil reais 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00053", "split": "val", "text": "e aí, pagamento do aluguel de outubro", "label": "safe", "category": "pagamento"}
+{"id": "val-00054", "split": "val", "text": "opa, tô te devendo a vida por esse favor", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00055", "split": "val", "text": "só lembrando do acerto do aluguel valeu!", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00056", "split": "val", "text": "👍 VALEU!", "label": "safe", "category": "neutra"}
+{"id": "val-00057", "split": "val", "text": "te vejo na saída e você não vai gostar!!!", "label": "threat", "category": "violencia"}
+{"id": "val-00058", "split": "val", "text": "só lembrando do acerto do aluguel", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00059", "split": "val", "text": "reembolso da viagem - mil reais 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00060", "split": "val", "text": "bom dia! bati o carro mas tá tudo bem, pix pro conserto 😊", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00061", "split": "val", "text": "gasolina da viagem - R$ 500 abraço", "label": "safe", "category": "pagamento"}
+{"id": "val-00062", "split": "val", "text": "boa noite, gasolina da viagem - 2 mil 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00063", "split": "val", "text": "ultima vez: melhor pagar antes que eu perca a paciencia 😈", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00064", "split": "val", "text": "opa, livro que você me emprestou, comprei outro pra você - R$ 1.000 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00065", "split": "val", "text": "oi, reembolso da viagem - 100 reais valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00066", "split": "val", "text": "um cafezinho pra você 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00067", "split": "val", "text": "bom dia! vou contar pra sua mãe que você passou, parabéns! 🙏", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00068", "split": "val", "text": "pagamento valeu!", "label": "safe", "category": "neutra"}
+{"id": "val-00069", "split": "val", "text": "ei, melhor pagar antes que eu perca a paciência vc sabe que eu cumpro", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00070", "split": "val", "text": "boa noite, internet do mês - r$ 1.000 valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00071", "split": "val", "text": "bom dia! matei a aula hoje kkk 😂", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00072", "split": "val", "text": "e aí, aviso: cobrança da mensalidade referente a outubro kkk", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00073", "split": "val", "text": "manda 2 mil e a gente fica quites ou voce paga ou voce nao anda mais tranquilo!!!", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00074", "split": "val", "text": "conta do bar de sábado - 2 mil 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00075", "split": "val", "text": "aviso: cobrança da mensalidade referente a outubro.", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00076", "split": "val", "text": "boa noite, bjs 🙏", "label": "safe", "category": "neutra"}
+{"id": "val-00077", "split": "val", "text": "olá, um cafezinho pra você ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00078", "split": "val", "text": "p4g4m3nt0 do 4lugu3l de 0utubr0 ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00079", "split": "val", "text": "pagamento do aluguel de outubro - R$ 150 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00080", "split": "val", "text": "boa noite, aviso: cobrança da mensalidade referente a outubro", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00081", "split": "val", "text": "reembolso da viagem.", "label": "safe", "category": "pagamento"}
+{"id": "val-00082", "split": "val", "text": "bati o carro mas tá tudo bem, pix pro conserto ❤️", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00083", "split": "val", "text": "OPA, AVISO: COBRANCA DA MENSALIDADE REFERENTE A OUTUBRO ❤", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00084", "split": "val", "text": "opa, reembolso da viagem 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00085", "split": "val", "text": "bati o carro mas tá tudo bem, pix pro conserto 😊", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00086", "split": "val", "text": "um cafezinho pra você - R$ 50 valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00087", "split": "val", "text": "boa noite, um cafezinho pra você - R$ 5.000 kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00088", "split": "val", "text": "opa, aviso: cobranca da mensalidade referente a outubro 😊", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00089", "split": "val", "text": "pagamento do aluguel de outubro kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00090", "split": "val", "text": "um cafezinho pra voce", "label": "safe", "category": "pagamento"}
+{"id": "val-00091", "split": "val", "text": "boa noite, pagamento do aluguel de outubro - 100 reais ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00092", "split": "val", "text": "ultimo aviso: envia 300 nessa chave senão sua mãe vai ver o que você mandou pra mim 😈", "label": "threat", "category": "chantagem"}
+{"id": "val-00093", "split": "val", "text": "olha só: envia 300 nessa chave senão sua mãe vai ver o que você mandou pra mim 😡", "label": "threat", "category": "chantagem"}
+{"id": "val-00094", "split": "val", "text": "melhor pagar antes que eu perca a paciência 😡", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00095", "split": "val", "text": "sua dívida, seu problema, e eu sei onde você mora tô falando sério", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00096", "split": "val", "text": "bom dia! atirei p todo lado mas fechei a venda, obrigado", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00097", "split": "val", "text": "boa noite, internet do mês - R$ 5.000 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00098", "split": "val", "text": "vou contar pra sua mãe que você passou, parabéns! ❤️", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00099", "split": "val", "text": "boa noite, matei a aula hoje kkk valeu!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00100", "split": "val", "text": "oi, conta do bar de sabado - R$ 5.000 ❤", "label": "safe", "category": "pagamento"}
+{"id": "val-00101", "split": "val", "text": "opa, so lembrando do acerto do aluguel kkk", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00102", "split": "val", "text": "e aí, conta do bar de sábado 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00103", "split": "val", "text": "última vez: manda R$ 5.000 e a gente fica quites ou você nunca mais vai dormir em paz tô falando sério", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00104", "split": "val", "text": "boa noite, bati o carro mas tá tudo bem, pix pro conserto kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00105", "split": "val", "text": "opa, bati o carro mas tá tudo bem, pix pro conserto valeu!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00106", "split": "val", "text": "oi, um cafezinho pra voce - R$ 150.", "label": "safe", "category": "pagamento"}
+{"id": "val-00107", "split": "val", "text": "olá, vou te contar um segredo bom: passou no concurso! abraço", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00108", "split": "val", "text": "eu sei a sua rotina, cuidado", "label": "threat", "category": "violencia"}
+{"id": "val-00109", "split": "val", "text": "última vez: envia R$ 5.000 nessa chave ou você paga ou você não anda mais tranquilo...", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00110", "split": "val", "text": "opa, aviso: cobrança da mensalidade referente a outubro abraço", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00111", "split": "val", "text": "boa noite, só lembrando do acerto do aluguel!", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00112", "split": "val", "text": "envia mil reais nessa chave ou vou na sua faculdade contar tudo entendeu?", "label": "threat", "category": "chantagem"}
+{"id": "val-00113", "split": "val", "text": "bom dia! internet do mês kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00114", "split": "val", "text": "olá, gasolina da viagem - R$ 500 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00115", "split": "val", "text": "ATIREI PRA TODO LADO MAS FECHEI A VENDA, OBRIGADO", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00116", "split": "val", "text": "opa, reembolso da viagem 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00117", "split": "val", "text": "opa, vou te contar um segredo bom: passou no concurso!!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00118", "split": "val", "text": "presta atenção. manda R$ 500 e a gente fica quites ou você paga ou você não anda mais tranquilo...", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00119", "split": "val", "text": "última vez: envia R$ 50 nessa chave ou vou na sua faculdade contar tudo", "label": "threat", "category": "chantagem"}
+{"id": "val-00120", "split": "val", "text": "oi, fechado ❤️", "label": "safe", "category": "neutra"}
+{"id": "val-00121", "split": "val", "text": "LIVRO QUE VOCÊ ME EMPRESTOU, COMPREI OUTRO PRA VOCÊ - R$ 50!", "label": "safe", "category": "pagamento"}
+{"id": "val-00122", "split": "val", "text": "👍", "label": "safe", "category": "neutra"}
+{"id": "val-00123", "split": "val", "text": "oi, conta do bar de sabado - 2 mil", "label": "safe", "category": "pagamento"}
+{"id": "val-00124", "split": "val", "text": "boa noite, um cafezinho pra você 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00125", "split": "val", "text": "opa, livro que vc me emprestou, comprei outro p vc - R$ 150!", "label": "safe", "category": "pagamento"}
+{"id": "val-00126", "split": "val", "text": "nunca mais você anda em paz não me teste", "label": "threat", "category": "violencia"}
+{"id": "val-00127", "split": "val", "text": "l1vr0 qu3 v0cê me emprestou, c0mpr31 0utr0 pra v0cê - 100 r3415 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00128", "split": "val", "text": "gasolina da viagem - R$ 50 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00129", "split": "val", "text": "conta do bar de sabado ❤", "label": "safe", "category": "pagamento"}
+{"id": "val-00130", "split": "val", "text": "só lembrando do acerto do aluguel!", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00131", "split": "val", "text": "aviso: cobrança da mensalidade referente a outubro 😂", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00132", "split": "val", "text": "ei, melhor pagar antes que eu perca a paciencia 😈", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00133", "split": "val", "text": "opa, gasolina da viagem - R$ 1.000 abraço", "label": "safe", "category": "pagamento"}
+{"id": "val-00134", "split": "val", "text": "manda R$ 500 e a gente fica quites ou vou na sua faculdade contar tudo não me teste", "label": "threat", "category": "chantagem"}
+{"id": "val-00135", "split": "val", "text": "atirei pra todo l4d0 m45 f3ch31 a venda, obrigado 😊", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00136", "split": "val", "text": "e aí, gasolina da viagem - r$ 200", "label": "safe", "category": "pagamento"}
+{"id": "val-00137", "split": "val", "text": "escuta bem: melhor pagar antes que eu perca a paciência", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00138", "split": "val", "text": "presta atencao. manda 2 mil e a gente fica quites ou voce nunca mais vai dormir em paz entendeu?", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00139", "split": "val", "text": "opa, conta do bar de sábado - r$ 200", "label": "safe", "category": "pagamento"}
+{"id": "val-00140", "split": "val", "text": "então, envia R$ 150 nessa chave senão sua mãe vai ver o que você mandou pra mim vc sabe que eu cumpro", "label": "threat", "category": "chantagem"}
+{"id": "val-00141", "split": "val", "text": "oi, pagamento do aluguel de outubro 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00142", "split": "val", "text": "vou contar pra sua mãe que você passou, parabéns! kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00143", "split": "val", "text": "então, eu sei a sua rotina, cuidado", "label": "threat", "category": "violencia"}
+{"id": "val-00144", "split": "val", "text": "última vez: envia R$ 50 nessa chave senão eu acabo com a sua reputação tô falando sério", "label": "threat", "category": "chantagem"}
+{"id": "val-00145", "split": "val", "text": "bom dia! vou contar pra sua mãe que você passou, parabéns!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00146", "split": "val", "text": "pagamento do aluguel de outubro - 100 reais", "label": "safe", "category": "pagamento"}
+{"id": "val-00147", "split": "val", "text": "bom dia! gasolina da viagem - mil reais", "label": "safe", "category": "pagamento"}
+{"id": "val-00148", "split": "val", "text": "sua dívida, seu problema, e eu sei onde você mora...", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00149", "split": "val", "text": "internet do mês abraço", "label": "safe", "category": "pagamento"}
+{"id": "val-00150", "split": "val", "text": "presta atenção. vai morrer, desgraçado", "label": "threat", "category": "violencia"}
+{"id": "val-00151", "split": "val", "text": "aviso: cobrança da mensalidade referente a outubro ❤️", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00152", "split": "val", "text": "presta atenção. envia R$ 50 nessa chave senão sua mãe vai ver o que você mandou pra mim entendeu?", "label": "threat", "category": "chantagem"}
+{"id": "val-00153", "split": "val", "text": "internet do mês - 300 ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00154", "split": "val", "text": "escuta bem: envia R$ 500 nessa chave ou você paga ou você não anda mais tranquilo...", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00155", "split": "val", "text": "olá, um cafezinho p vc - R$ 500 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00156", "split": "val", "text": "ultimo aviso: chega perto de mim de novo e eu te arrebento vc sabe que eu cumpro", "label": "threat", "category": "violencia"}
+{"id": "val-00157", "split": "val", "text": "e aí, aviso: cobrança da mensalidade referente a outubro", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00158", "split": "val", "text": "livro que você me emprestou, comprei outro pra você - 2 mil", "label": "safe", "category": "pagamento"}
+{"id": "val-00159", "split": "val", "text": "BOM DIA! INTERNET DO MÊS 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00160", "split": "val", "text": "pagamento 😂", "label": "safe", "category": "neutra"}
+{"id": "val-00161", "split": "val", "text": "oi, to te devendo a vida por esse favor abraco", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00162", "split": "val", "text": "matei a aula hoje kkk ❤️", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00163", "split": "val", "text": "entao, envia 500 conto nessa chave ou vou na sua faculdade contar tudo...", "label": "threat", "category": "chantagem"}
+{"id": "val-00164", "split": "val", "text": "fechado", "label": "safe", "category": "neutra"}
+{"id": "val-00165", "split": "val", "text": "matei a aula hoje kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00166", "split": "val", "text": "oi, atirei pra todo lado mas fechei a venda, obrigado abraço", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00167", "split": "val", "text": "e aí, matei a aula hoje kkk.", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00168", "split": "val", "text": "e aí, atirei pra todo lado mas fechei a venda, obrigado abraço", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00169", "split": "val", "text": "olha so: envia 300 nessa chave ou voce nunca mais vai dormir em paz", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00170", "split": "val", "text": "oi, tô te devendo a vida por esse favor 😂", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00171", "split": "val", "text": "e aí, atirei pra todo lado mas fechei a venda, obrigado 😂", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00172", "split": "val", "text": "escuta bem: te vejo na saída e você não vai gostar", "label": "threat", "category": "violencia"}
+{"id": "val-00173", "split": "val", "text": "boa noite, bati o carro mas tá tudo bem, pix pro conserto", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00174", "split": "val", "text": "internet do mês!", "label": "safe", "category": "pagamento"}
+{"id": "val-00175", "split": "val", "text": ".", "label": "safe", "category": "neutra"}
+{"id": "val-00176", "split": "val", "text": "opa, fechado 🙏", "label": "safe", "category": "neutra"}
+{"id": "val-00177", "split": "val", "text": "ultimo aviso: manda R$ 500 e a gente fica quites senão sua mãe vai ver o que você mandou pra mim", "label": "threat", "category": "chantagem"}
+{"id": "val-00178", "split": "val", "text": "OPA, SÓ LEMBRANDO DO ACERTO DO ALUGUEL 😂", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00179", "split": "val", "text": "BATI O CARRO MAS TÁ TUDO BEM, PIX PRO CONSERTO", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00180", "split": "val", "text": "opa, pagamento do aluguel de outubro", "label": "safe", "category": "pagamento"}
+{"id": "val-00181", "split": "val", "text": "presta atenção. manda 300 e a gente fica quites senão sua mãe vai ver o que você mandou pra mim.", "label": "threat", "category": "chantagem"}
+{"id": "val-00182", "split": "val", "text": "opa, gasolina da viagem 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00183", "split": "val", "text": "escuta bem: manda R$ 200 3 a gente fica quites 0u você nunca mais v41 dormir 3m p4z.", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00184", "split": "val", "text": "boa noite, gasolina da viagem", "label": "safe", "category": "pagamento"}
+{"id": "val-00185", "split": "val", "text": "manda R$ 200 e a gente fica quites ou você nunca mais vai dormir em paz vc sabe que eu cumpro", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00186", "split": "val", "text": "ultimo aviso: sua dívida, seu problema, e eu sei onde você mora vc sabe que eu cumpro", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00187", "split": "val", "text": "oi, pagamento do aluguel de outubro 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00188", "split": "val", "text": "0p4, 4v150: cobrança da mensalidade r3f3r3nt3 a outubro", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00189", "split": "val", "text": "oi, so lembrando do acerto do aluguel 🙏", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00190", "split": "val", "text": "ei, vai morrer, desgraçado.", "label": "threat", "category": "violencia"}
+{"id": "val-00191", "split": "val", "text": "e aí, 👍 ❤️", "label": "safe", "category": "neutra"}
+{"id": "val-00192", "split": "val", "text": "olá, um cafezinho pra você - mil reais.", "label": "safe", "category": "pagamento"}
+{"id": "val-00193", "split": "val", "text": "reembolso da viagem - 500 conto 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00194", "split": "val", "text": "gasolina da viagem - mil reais 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00195", "split": "val", "text": "conta do bar de sábado!", "label": "safe", "category": "pagamento"}
+{"id": "val-00196", "split": "val", "text": "e aí, conta do bar de sábado valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00197", "split": "val", "text": "pagamento do aluguel de outubro - r$ 5.000", "label": "safe", "category": "pagamento"}
+{"id": "val-00198", "split": "val", "text": "oi, atirei pra todo lado mas fechei a venda, obrigado kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00199", "split": "val", "text": "e ai, pagamento do aluguel de outubro - R$ 50 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00200", "split": "val", "text": "boa noite, reembolso da viagem valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00201", "split": "val", "text": "livro que vc me emprestou, comprei outro p vc", "label": "safe", "category": "pagamento"}
+{"id": "val-00202", "split": "val", "text": "última vez: envia mil reais nessa chave ou você paga ou você não anda mais tranquilo 😡", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00203", "split": "val", "text": "bom dia! so lembrando do acerto do aluguel 😊", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00204", "split": "val", "text": "ultimo aviso: envia 500 conto nessa chave senão sua mãe vai ver o que você mandou pra mim 😡", "label": "threat", "category": "chantagem"}
+{"id": "val-00205", "split": "val", "text": "olá, internet do mês - 500 conto", "label": "safe", "category": "pagamento"}
+{"id": "val-00206", "split": "val", "text": "bom dia! gasolina da viagem - R$ 150 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00207", "split": "val", "text": "reembolso da viagem 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00208", "split": "val", "text": "bati o carro mas tá tudo bem, pix pro conserto!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00209", "split": "val", "text": "bom dia! conta do bar de sábado - R$ 200", "label": "safe", "category": "pagamento"}
+{"id": "val-00210", "split": "val", "text": "INTERNET DO MÊS KKK", "label": "safe", "category": "pagamento"}
+{"id": "val-00211", "split": "val", "text": "só lembrando do acerto do aluguel 😊", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00212", "split": "val", "text": "tô te devendo a vida por esse favor", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00213", "split": "val", "text": "oi, internet do mes 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00214", "split": "val", "text": "👍 🙏", "label": "safe", "category": "neutra"}
+{"id": "val-00215", "split": "val", "text": "opa, aviso: cobrança d4 mensalidade referente a outubro", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00216", "split": "val", "text": "vai morrer, desgracado", "label": "threat", "category": "violencia"}
+{"id": "val-00217", "split": "val", "text": "olá, gasolina da viagem 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00218", "split": "val", "text": "olá, pagamento do aluguel de outubro - R$ 150 valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00219", "split": "val", "text": "então, melhor pagar antes que eu perca a paciência.", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00220", "split": "val", "text": "ÚLTIMA VEZ: EU SEI A SUA ROTINA, CUIDADO 😡", "label": "threat", "category": "violencia"}
+{"id": "val-00221", "split": "val", "text": "boa noite, . ❤️", "label": "safe", "category": "neutra"}
+{"id": "val-00222", "split": "val", "text": "olá, aviso: cobrança da mensalidade referente a outubro", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00223", "split": "val", "text": ". ❤", "label": "safe", "category": "neutra"}
+{"id": "val-00224", "split": "val", "text": "e ai, conta do bar de sabado - R$ 500", "label": "safe", "category": "pagamento"}
+{"id": "val-00225", "split": "val", "text": "opa, aviso: cobrança da mensalidade referente a outubro", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00226", "split": "val", "text": "olá, aviso: cobrança da mensalidade referente a outubro!", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00227", "split": "val", "text": "ultimo aviso: te vejo na saída e você não vai gostar 😡", "label": "threat", "category": "violencia"}
+{"id": "val-00228", "split": "val", "text": "E AÍ, AVISO: COBRANÇA DA MENSALIDADE REFERENTE A OUTUBRO 🙏", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00229", "split": "val", "text": ". kkk", "label": "safe", "category": "neutra"}
+{"id": "val-00230", "split": "val", "text": "olha so: chega perto de mim de novo e eu te arrebento", "label": "threat", "category": "violencia"}
+{"id": "val-00231", "split": "val", "text": "um cafezinho pra voce 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00232", "split": "val", "text": "vou te contar um segredo bom: passou no concurso! abraco", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00233", "split": "val", "text": "oi, aviso: cobrança da mensalidade referente a outubro", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00234", "split": "val", "text": "pagamento 😊", "label": "safe", "category": "neutra"}
+{"id": "val-00235", "split": "val", "text": "envia R$ 5.000 nessa chave senão sua mãe vai ver o que você mandou pra mim", "label": "threat", "category": "chantagem"}
+{"id": "val-00236", "split": "val", "text": "opa, bjs ❤️", "label": "safe", "category": "neutra"}
+{"id": "val-00237", "split": "val", "text": "te vejo na saída e você não vai gostar...", "label": "threat", "category": "violencia"}
+{"id": "val-00238", "split": "val", "text": "bom dia! gasolina da viagem - R$ 150", "label": "safe", "category": "pagamento"}
+{"id": "val-00239", "split": "val", "text": "boa noite, aviso: cobrança da mensalidade referente a outubro valeu!", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00240", "split": "val", "text": "livro que você me emprestou, comprei outro pra você - 100 reais 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00241", "split": "val", "text": "olá, pagamento do aluguel de outubro 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00242", "split": "val", "text": "EI, ENVIA 2 MIL NESSA CHAVE SENÃO EU ACABO COM A SUA REPUTAÇÃO 😡", "label": "threat", "category": "chantagem"}
+{"id": "val-00243", "split": "val", "text": "boa noite, conta do bar de sábado - R$ 150!", "label": "safe", "category": "pagamento"}
+{"id": "val-00244", "split": "val", "text": "reembolso da viagem - R$ 5.000 ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00245", "split": "val", "text": "oi, matei a aula hoje kkk 😂", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00246", "split": "val", "text": "olha só: envia R$ 500 nessa chave ou você nunca mais vai dormir em paz vc sabe que eu cumpro", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00247", "split": "val", "text": "pagamento do aluguel de outubro - R$ 200 valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00248", "split": "val", "text": "olá, livro que você me emprestou, comprei outro pra você 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00249", "split": "val", "text": "manda 2 mil e a gente fica quites ou vou na sua faculdade contar tudo entendeu?", "label": "threat", "category": "chantagem"}
+{"id": "val-00250", "split": "val", "text": "última vez: vai morrer, desgraçado", "label": "threat", "category": "violencia"}
+{"id": "val-00251", "split": "val", "text": "última vez: manda 100 reais e a gente fica quites ou vou na sua faculdade contar tudo vc sabe que eu cumpro", "label": "threat", "category": "chantagem"}
+{"id": "val-00252", "split": "val", "text": "oi, bati o carro mas tá tudo bem, pix pro conserto valeu!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00253", "split": "val", "text": "bom dia! bati o carro mas tá tudo bem, pix pro conserto 🙏", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00254", "split": "val", "text": "olá, matei a aula hoje kkk abraço", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00255", "split": "val", "text": "boa noite, conta do bar de sábado - r$ 150 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00256", "split": "val", "text": "manda R$ 50 e a gente fica quites senão sua mãe vai ver o que você mandou pra mim 😈", "label": "threat", "category": "chantagem"}
+{"id": "val-00257", "split": "val", "text": "escuta bem: vai morrer, desgraçado", "label": "threat", "category": "violencia"}
+{"id": "val-00258", "split": "val", "text": "bom dia! só lembrando do acerto do aluguel.", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00259", "split": "val", "text": "última vez: envia R$ 50 nessa chave ou vou na sua faculdade contar tudo.", "label": "threat", "category": "chantagem"}
+{"id": "val-00260", "split": "val", "text": "opa, vou te contar um segredo bom: passou no concurso! 😂", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00261", "split": "val", "text": "última vez: envia mil reais nessa chave ou você paga ou você não anda mais tranquilo", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00262", "split": "val", "text": "opa, reembolso da viagem - R$ 500 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00263", "split": "val", "text": "olá, um cafezinho pra você - 500 conto.", "label": "safe", "category": "pagamento"}
+{"id": "val-00264", "split": "val", "text": "opa, atirei pra todo lado mas fechei a venda, obrigado valeu!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00265", "split": "val", "text": "ENVIA MIL REAIS NESSA CHAVE SENÃO EU ACABO COM A SUA REPUTAÇÃO 😡", "label": "threat", "category": "chantagem"}
+{"id": "val-00266", "split": "val", "text": "e aí, matei a aula hoje kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00267", "split": "val", "text": "e ai, vou contar pra sua mae que voce passou, parabens! 😊", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00268", "split": "val", "text": "AVISO: COBRANÇA DA MENSALIDADE REFERENTE A OUTUBRO", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00269", "split": "val", "text": "OI, SO LEMBRANDO DO ACERTO DO ALUGUEL KKK", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00270", "split": "val", "text": "opa, vou contar pra sua mãe que você passou, parabéns!!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00271", "split": "val", "text": "eu sei a sua rotina, cuidado não me teste", "label": "threat", "category": "violencia"}
+{"id": "val-00272", "split": "val", "text": "ei, eu sei a sua rotina, cuidado entendeu?", "label": "threat", "category": "violencia"}
+{"id": "val-00273", "split": "val", "text": "oi, bjs 🙏", "label": "safe", "category": "neutra"}
+{"id": "val-00274", "split": "val", "text": "livro que você me emprestou, comprei outro pra você - R$ 1.000.", "label": "safe", "category": "pagamento"}
+{"id": "val-00275", "split": "val", "text": "boa noite, vou contar pra sua mãe que você passou, parabéns! kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00276", "split": "val", "text": "boa noite, um cafezinho pra você - R$ 1.000 abraço", "label": "safe", "category": "pagamento"}
+{"id": "val-00277", "split": "val", "text": "então, envia 100 reais nessa chave senão sua mãe vai ver o que você mandou pra mim", "label": "threat", "category": "chantagem"}
+{"id": "val-00278", "split": "val", "text": "livro que você me emprestou, comprei outro pra você - R$ 50!", "label": "safe", "category": "pagamento"}
+{"id": "val-00279", "split": "val", "text": "boa noite, só lembrando do acerto do aluguel", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00280", "split": "val", "text": "então, manda R$ 50 e a gente fica quites ou vou na sua faculdade contar tudo tô falando sério", "label": "threat", "category": "chantagem"}
+{"id": "val-00281", "split": "val", "text": "OLÁ, AVISO: COBRANÇA DA MENSALIDADE REFERENTE A OUTUBRO", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00282", "split": "val", "text": "opa, internet do mês kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00283", "split": "val", "text": "fechado!", "label": "safe", "category": "neutra"}
+{"id": "val-00284", "split": "val", "text": "bom dia! gasolina da viagem - 2 mil", "label": "safe", "category": "pagamento"}
+{"id": "val-00285", "split": "val", "text": "gasolina da viagem - R$ 50!", "label": "safe", "category": "pagamento"}
+{"id": "val-00286", "split": "val", "text": "oi, livro que você me emprestou, comprei outro pra você - 500 conto 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00287", "split": "val", "text": "olá, aviso: cobrança da mensalidade referente a outubro kkk", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00288", "split": "val", "text": "boa noite, internet do mês - r$ 1.000 ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00289", "split": "val", "text": "última vez: manda R$ 150 e a gente fica quites senão sua mãe vai ver o que você mandou pra mim", "label": "threat", "category": "chantagem"}
+{"id": "val-00290", "split": "val", "text": "entao, envia R$ 50 nessa chave ou voce paga ou voce nao anda mais tranquilo...", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00291", "split": "val", "text": "manda R$ 5.000 e a gente fica quites ou você paga ou você não anda mais tranquilo", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00292", "split": "val", "text": "oi, livro que você me emprestou, comprei outro pra você", "label": "safe", "category": "pagamento"}
+{"id": "val-00293", "split": "val", "text": "ei, envia 2 mil nessa chave ou você nunca mais vai dormir em paz!!!", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00294", "split": "val", "text": "e aí, gasolina da viagem - R$ 1.000", "label": "safe", "category": "pagamento"}
+{"id": "val-00295", "split": "val", "text": "escuta bem: sua dívida, seu problema, 3 eu 531 onde v0cê m0r4", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00296", "split": "val", "text": "presta atenção. envia R$ 5.000 nessa chave ou você paga ou você não anda mais tranquilo não me teste", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00297", "split": "val", "text": "gasolina da viagem", "label": "safe", "category": "pagamento"}
+{"id": "val-00298", "split": "val", "text": "opa, reembolso da viagem - R$ 50 kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00299", "split": "val", "text": "pagamento do aluguel de outubro ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00300", "split": "val", "text": "opa, um cafezinho pra você - r$ 150 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00301", "split": "val", "text": "boa noite, gasolina da viagem kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00302", "split": "val", "text": "aviso: cobrança da mensalidade referente a outubro!", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00303", "split": "val", "text": "oi, matei a aula hoje kkk!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00304", "split": "val", "text": "ola, to te devendo a vida por esse favor", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00305", "split": "val", "text": "atirei pra todo lado mas fechei a venda, obrigado 😊", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00306", "split": "val", "text": "boa noite, gasolina da viagem 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00307", "split": "val", "text": "olá, reembolso da viagem 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00308", "split": "val", "text": "pagamento do aluguel de outubro 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00309", "split": "val", "text": "OPA, UM CAFEZINHO PRA VOCÊ ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00310", "split": "val", "text": "boa noite, conta do bar de sábado - R$ 5.000 valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00311", "split": "val", "text": "matei a aula hoje kkk 😂", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00312", "split": "val", "text": "opa, pagamento do aluguel de outubro abraço", "label": "safe", "category": "pagamento"}
+{"id": "val-00313", "split": "val", "text": "boa noite, só lembrando do acerto do aluguel ❤️", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00314", "split": "val", "text": "envia 100 reais nessa chave ou vou na sua faculdade contar tudo entendeu?", "label": "threat", "category": "chantagem"}
+{"id": "val-00315", "split": "val", "text": "bom dia! conta do bar de sabado", "label": "safe", "category": "pagamento"}
+{"id": "val-00316", "split": "val", "text": "eu sei a sua rotina, cuidado vc sabe que eu cumpro", "label": "threat", "category": "violencia"}
+{"id": "val-00317", "split": "val", "text": "envia 2 mil nessa chave senão eu acabo com a sua reputação 😡", "label": "threat", "category": "chantagem"}
+{"id": "val-00318", "split": "val", "text": "e aí, um cafezinho pra você valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00319", "split": "val", "text": "boa noite, pagamento valeu!", "label": "safe", "category": "neutra"}
+{"id": "val-00320", "split": "val", "text": "então, manda R$ 5.000 e a gente fica quites senão sua mãe vai ver o que você mandou pra mim vc sabe que eu cumpro", "label": "threat", "category": "chantagem"}
+{"id": "val-00321", "split": "val", "text": "bom dia! aviso: cobranca da mensalidade referente a outubro 😂", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00322", "split": "val", "text": "bom dia! atirei pra todo lado mas fechei a venda, obrigado kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00323", "split": "val", "text": "bjs", "label": "safe", "category": "neutra"}
+{"id": "val-00324", "split": "val", "text": "ENTÃO, MELHOR PAGAR ANTES QUE EU PERCA A PACIÊNCIA", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00325", "split": "val", "text": "um cafezinho pra você - R$ 50 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00326", "split": "val", "text": "olha só: envia R$ 200 nessa chave ou você nunca mais vai dormir em paz!!!", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00327", "split": "val", "text": "bati o carro mas tá tudo bem, pix pro conserto 🙏", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00328", "split": "val", "text": "E AÍ, REEMBOLSO DA VIAGEM - R$ 5.000", "label": "safe", "category": "pagamento"}
+{"id": "val-00329", "split": "val", "text": "bom dia! internet do mês - R$ 200", "label": "safe", "category": "pagamento"}
+{"id": "val-00330", "split": "val", "text": "ÚLTIMA VEZ: ENVIA R$ 1.000 NESSA CHAVE OU VOCÊ NUNCA MAIS VAI DORMIR EM PAZ 😈", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00331", "split": "val", "text": "e aí, pagamento 😊", "label": "safe", "category": "neutra"}
+{"id": "val-00332", "split": "val", "text": "EI, MANDA 2 MIL E A GENTE FICA QUITES OU VOCÊ NUNCA MAIS VAI DORMIR EM PAZ!!!", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00333", "split": "val", "text": "opa, pagamento 🙏", "label": "safe", "category": "neutra"}
+{"id": "val-00334", "split": "val", "text": "opa, 👍", "label": "safe", "category": "neutra"}
+{"id": "val-00335", "split": "val", "text": "última vez: melhor pagar antes que eu perca a paciência", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00336", "split": "val", "text": "opa, aviso: cobrança da mensalidade referente a outubro valeu!", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00337", "split": "val", "text": "conta do bar de sábado - mil reais 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00338", "split": "val", "text": "e ai, pagamento do aluguel de outubro - r$ 1.000!", "label": "safe", "category": "pagamento"}
+{"id": "val-00339", "split": "val", "text": "reembolso da viagem ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00340", "split": "val", "text": "ultimo aviso: nunca mais você anda em paz", "label": "threat", "category": "violencia"}
+{"id": "val-00341", "split": "val", "text": "boa noite, . abraço", "label": "safe", "category": "neutra"}
+{"id": "val-00342", "split": "val", "text": "escuta bem: sua divida, seu problema, e eu sei onde voce mora...", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00343", "split": "val", "text": "bom dia! vou contar pra sua mãe que você passou, parabéns!.", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00344", "split": "val", "text": "pagamento!", "label": "safe", "category": "neutra"}
+{"id": "val-00345", "split": "val", "text": "bom dia! livro que você me emprestou, comprei outro pra você kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00346", "split": "val", "text": "livro que você me emprestou, comprei outro pra você.", "label": "safe", "category": "pagamento"}
+{"id": "val-00347", "split": "val", "text": "gasolina da viagem - R$ 50", "label": "safe", "category": "pagamento"}
+{"id": "val-00348", "split": "val", "text": "olá, um cafezinho pra você", "label": "safe", "category": "pagamento"}
+{"id": "val-00349", "split": "val", "text": "presta atenção. envia 2 mil nessa chave ou você nunca mais vai dormir em paz", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00350", "split": "val", "text": "internet do mês - R$ 500 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00351", "split": "val", "text": "envia 300 nessa chave senão eu acabo com a sua reputação", "label": "threat", "category": "chantagem"}
+{"id": "val-00352", "split": "val", "text": "bom dia! tô te devendo a vida por esse favor!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00353", "split": "val", "text": "olá, .", "label": "safe", "category": "neutra"}
+{"id": "val-00354", "split": "val", "text": "olá, pagamento.", "label": "safe", "category": "neutra"}
+{"id": "val-00355", "split": "val", "text": "envia R$ 500 nessa chave senão eu acabo com a sua reputação entendeu?", "label": "threat", "category": "chantagem"}
+{"id": "val-00356", "split": "val", "text": "olá, só lembrando do acerto do aluguel valeu!", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00357", "split": "val", "text": "bom dia! fechado", "label": "safe", "category": "neutra"}
+{"id": "val-00358", "split": "val", "text": "só lembrando do acerto do aluguel.", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00359", "split": "val", "text": "bom dia! bati o carro mas tá tudo bem, pix pro conserto.", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00360", "split": "val", "text": "olha só: manda mil reais e a gente fica quites ou você paga ou você não anda mais tranquilo", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00361", "split": "val", "text": "olha so: melhor pagar antes que eu perca a paciencia!!!", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00362", "split": "val", "text": "olá, conta do bar de sábado 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00363", "split": "val", "text": "ENVIA 100 REAIS NESSA CHAVE SENÃO EU ACABO COM A SUA REPUTAÇÃO.", "label": "threat", "category": "chantagem"}
+{"id": "val-00364", "split": "val", "text": "olá, livro que você me emprestou, comprei outro pra você valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00365", "split": "val", "text": "to te devendo a vida por esse favor abraco", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00366", "split": "val", "text": "vou contar pra sua mãe que você passou, parabéns! 😂", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00367", "split": "val", "text": "e aí, gasolina da viagem - R$ 150!", "label": "safe", "category": "pagamento"}
+{"id": "val-00368", "split": "val", "text": "oi, só lembrando do acerto do aluguel 😊", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00369", "split": "val", "text": "bom dia! gasolina da viagem - R$ 5.000 ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00370", "split": "val", "text": "conta do bar de sábado kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00371", "split": "val", "text": "opa, pagamento!", "label": "safe", "category": "neutra"}
+{"id": "val-00372", "split": "val", "text": "so lembrando do acerto do aluguel!", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00373", "split": "val", "text": "envia R$ 50 nessa chave ou você paga ou você não anda mais tranquilo.", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00374", "split": "val", "text": "bjs 🙏", "label": "safe", "category": "neutra"}
+{"id": "val-00375", "split": "val", "text": "ei, te vejo na saída e você não vai gostar!!!", "label": "threat", "category": "violencia"}
+{"id": "val-00376", "split": "val", "text": "aviso: cobrança da m3n54l1d4d3 referente a outubro", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00377", "split": "val", "text": "livro que você me emprestou, comprei outro pra você - 300", "label": "safe", "category": "pagamento"}
+{"id": "val-00378", "split": "val", "text": "olha só: manda 300 e a gente fica quites senão sua mãe vai ver o que você mandou pra mim...", "label": "threat", "category": "chantagem"}
+{"id": "val-00379", "split": "val", "text": "pagamento do aluguel de outubro - R$ 1.000", "label": "safe", "category": "pagamento"}
+{"id": "val-00380", "split": "val", "text": "ei, envia R$ 200 nessa chave ou vou na sua faculdade contar tudo não me teste", "label": "threat", "category": "chantagem"}
+{"id": "val-00381", "split": "val", "text": "boa noite, livro que vc me emprestou, comprei outro p vc", "label": "safe", "category": "pagamento"}
+{"id": "val-00382", "split": "val", "text": "conta do bar de sábado - 500 conto ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00383", "split": "val", "text": "👍.", "label": "safe", "category": "neutra"}
+{"id": "val-00384", "split": "val", "text": "bati o carro mas ta tudo bem, pix pro conserto", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00385", "split": "val", "text": "olá, reembolso da viagem - R$ 200 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00386", "split": "val", "text": "opa, pagamento do aluguel de outubro 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00387", "split": "val", "text": "olá, internet do mês abraço", "label": "safe", "category": "pagamento"}
+{"id": "val-00388", "split": "val", "text": "então, melhor pagar antes que eu perca a paciência entendeu?", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00389", "split": "val", "text": "pagamento", "label": "safe", "category": "neutra"}
+{"id": "val-00390", "split": "val", "text": "boa noite, reembolso da viagem 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00391", "split": "val", "text": "boa noite, internet do mes - R$ 50 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00392", "split": "val", "text": "oi, matei 4 4ul4 hoje kkk valeu!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00393", "split": "val", "text": "ultimo aviso: envia mil reais nessa chave ou vou na sua faculdade contar tudo", "label": "threat", "category": "chantagem"}
+{"id": "val-00394", "split": "val", "text": "ENVIA MIL REAIS NESSA CHAVE SENÃO EU ACABO COM A SUA REPUTAÇÃO", "label": "threat", "category": "chantagem"}
+{"id": "val-00395", "split": "val", "text": "boa noite, matei a aula hoje kkk abraco", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00396", "split": "val", "text": "e aí, livro que você me emprestou, comprei outro pra você - R$ 1.000", "label": "safe", "category": "pagamento"}
+{"id": "val-00397", "split": "val", "text": "um cafezinho pra você 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00398", "split": "val", "text": "então, manda R$ 1.000 e a gente fica quites ou vou na sua faculdade contar tudo vc sabe que eu cumpro", "label": "threat", "category": "chantagem"}
+{"id": "val-00399", "split": "val", "text": "boa noite, vou te contar um segredo bom: passou no concurso! kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00400", "split": "val", "text": "boa noite, pagamento", "label": "safe", "category": "neutra"}
+{"id": "val-00401", "split": "val", "text": "PAGAMENTO KKK", "label": "safe", "category": "neutra"}
+{"id": "val-00402", "split": "val", "text": "e ai, matei a aula hoje kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00403", "split": "val", "text": "internet do mês - r$ 500 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00404", "split": "val", "text": "livro que você me emprestou, comprei outro pra você - 300!", "label": "safe", "category": "pagamento"}
+{"id": "val-00405", "split": "val", "text": "vou contar pra sua mãe que você passou, parabéns! 😊", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00406", "split": "val", "text": "e aí, gasolina da viagem - 2 mil 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00407", "split": "val", "text": "tô te devendo a vida por esse favor abraço", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00408", "split": "val", "text": "e aí, gasolina da viagem - R$ 200", "label": "safe", "category": "pagamento"}
+{"id": "val-00409", "split": "val", "text": "e aí, bati o carro mas tá tudo bem, pix pro conserto", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00410", "split": "val", "text": "bom dia! aviso: cobrança da mensalidade referente a outubro 😂", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00411", "split": "val", "text": "vou te contar um segredo bom: passou no concurso!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00412", "split": "val", "text": "olá, pagamento do aluguel de outubro - 300 kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00413", "split": "val", "text": "oi, conta do bar de sabado - mil reais!", "label": "safe", "category": "pagamento"}
+{"id": "val-00414", "split": "val", "text": "oi, pagamento do aluguel de outubro", "label": "safe", "category": "pagamento"}
+{"id": "val-00415", "split": "val", "text": "ei, eu sei a sua rotina, cuidado 😡", "label": "threat", "category": "violencia"}
+{"id": "val-00416", "split": "val", "text": "ultima vez: manda mil reais e a gente fica quites ou vou na sua faculdade contar tudo nao me teste", "label": "threat", "category": "chantagem"}
+{"id": "val-00417", "split": "val", "text": "olha só: manda R$ 200 e a gente fica quites senão eu acabo com a sua reputação 😡", "label": "threat", "category": "chantagem"}
+{"id": "val-00418", "split": "val", "text": "oi, conta do bar de sábado", "label": "safe", "category": "pagamento"}
+{"id": "val-00419", "split": "val", "text": "olá, livro que você me emprestou, comprei outro pra você kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00420", "split": "val", "text": "olá, reembolso da viagem - R$ 200", "label": "safe", "category": "pagamento"}
+{"id": "val-00421", "split": "val", "text": "opa, pagamento", "label": "safe", "category": "neutra"}
+{"id": "val-00422", "split": "val", "text": "vou te contar um segredo bom: passou no concurso! 😊", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00423", "split": "val", "text": "OI, GASOLINA DA VIAGEM - 2 MIL ABRACO", "label": "safe", "category": "pagamento"}
+{"id": "val-00424", "split": "val", "text": "boa noite, conta do bar de sábado - r$ 200 valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00425", "split": "val", "text": "última vez: manda 500 conto e a gente fica quites ou vou na sua faculdade contar tudo vc sabe que eu cumpro", "label": "threat", "category": "chantagem"}
+{"id": "val-00426", "split": "val", "text": "aviso: cobrança da mensalidade referente a outubro", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00427", "split": "val", "text": "opa, conta do bar de sábado - R$ 500 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00428", "split": "val", "text": "vou te contar um segredo bom: passou no concurso!.", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00429", "split": "val", "text": "aviso: cobrança da mensalidade referente a outubro kkk", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00430", "split": "val", "text": "ola, 👍", "label": "safe", "category": "neutra"}
+{"id": "val-00431", "split": "val", "text": "OPA, CONTA DO BAR DE SÁBADO VALEU!", "label": "safe", "category": "pagamento"}
+{"id": "val-00432", "split": "val", "text": "opa, reembolso da viagem 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00433", "split": "val", "text": "opa, tô te devendo a vida por esse favor.", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00434", "split": "val", "text": "livro que você me emprestou, comprei outro pra você valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00435", "split": "val", "text": "vou contar pra sua mãe que você passou, parabéns! abraço", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00436", "split": "val", "text": "manda R$ 5.000 3 a g3nt3 f1c4 qu1t35 senão sua mãe v41 ver o que você mandou pra mim...", "label": "threat", "category": "chantagem"}
+{"id": "val-00437", "split": "val", "text": "pagamento do aluguel de outubro - R$ 150!", "label": "safe", "category": "pagamento"}
+{"id": "val-00438", "split": "val", "text": "bom dia! pagamento do aluguel de outubro 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00439", "split": "val", "text": "internet do mês - R$ 1.000!", "label": "safe", "category": "pagamento"}
+{"id": "val-00440", "split": "val", "text": "olha só: envia r$ 200 nessa chave ou você paga ou você não anda mais tranquilo 😈", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00441", "split": "val", "text": "olá, internet do mês - mil reais!", "label": "safe", "category": "pagamento"}
+{"id": "val-00442", "split": "val", "text": "presta atenção. manda 300 e a gente fica quites ou você paga ou você não anda mais tranquilo não me teste", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00443", "split": "val", "text": "olha so: envia R$ 50 nessa chave senao eu acabo com a sua reputacao", "label": "threat", "category": "chantagem"}
+{"id": "val-00444", "split": "val", "text": "e aí, pagamento ❤️", "label": "safe", "category": "neutra"}
+{"id": "val-00445", "split": "val", "text": "oi, 👍.", "label": "safe", "category": "neutra"}
+{"id": "val-00446", "split": "val", "text": "ENVIA R$ 500 NESSA CHAVE OU VOU NA SUA FACULDADE CONTAR TUDO 😈", "label": "threat", "category": "chantagem"}
+{"id": "val-00447", "split": "val", "text": "opa, 👍 😂", "label": "safe", "category": "neutra"}
+{"id": "val-00448", "split": "val", "text": "boa noite, so lembrando do acerto do aluguel valeu!", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00449", "split": "val", "text": "e ai, bati o carro mas ta tudo bem, pix pro conserto abraco", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00450", "split": "val", "text": "oi, aviso: cobrança da mensalidade referente a outubro ❤️", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00451", "split": "val", "text": "gasolina da viagem - 300 abraço", "label": "safe", "category": "pagamento"}
+{"id": "val-00452", "split": "val", "text": "e aí, tô te devendo a vida por esse favor 😊", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00453", "split": "val", "text": "boa noite, livro que você me emprestou, comprei outro pra você - 300 ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00454", "split": "val", "text": "só lembrando do acerto do aluguel 🙏", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00455", "split": "val", "text": "matei 4 4ul4 hoje kkk.", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00456", "split": "val", "text": "boa noite, vou te contar um segredo bom: passou no concurso!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00457", "split": "val", "text": "manda R$ 1.000 e a gente fica quites senão eu acabo com a sua reputação tô falando sério", "label": "threat", "category": "chantagem"}
+{"id": "val-00458", "split": "val", "text": "boa noite, tô te devendo a vida por esse favor", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00459", "split": "val", "text": "então, manda 300 e a gente fica quites ou você nunca mais vai dormir em paz.", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00460", "split": "val", "text": "última vez: sua dívida, seu problema, e eu sei onde você mora", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00461", "split": "val", "text": "pagamento do aluguel de outubro - 500 conto abraço", "label": "safe", "category": "pagamento"}
+{"id": "val-00462", "split": "val", "text": "só lembrando do 4c3rt0 d0 aluguel", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00463", "split": "val", "text": "0p4, livro que v0cê m3 emprestou, c0mpr31 outro pr4 v0cê - r$ 5.000 valeu!", "label": "safe", "category": "pagamento"}
+{"id": "val-00464", "split": "val", "text": "ultimo aviso: sua dívida, seu problema, e eu sei onde você mora não me teste", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00465", "split": "val", "text": "bati o carro mas tá tudo bem, pix pro conserto 😂", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00466", "split": "val", "text": "envia 300 nessa chave senão sua mãe vai ver o que você mandou pra mim entendeu?", "label": "threat", "category": "chantagem"}
+{"id": "val-00467", "split": "val", "text": "boa noite, internet do mês ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00468", "split": "val", "text": "olha so: manda 100 reais e a gente fica quites ou vou na sua faculdade contar tudo", "label": "threat", "category": "chantagem"}
+{"id": "val-00469", "split": "val", "text": "boa noite, vou te contar um segredo bom: passou no concurso!.", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00470", "split": "val", "text": "bom dia! pagamento do aluguel de outubro - 2 mil kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00471", "split": "val", "text": "olá, aviso: cobrança da mensalidade referente a outubro.", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00472", "split": "val", "text": "olá, aviso: c0br4nç4 d4 m3n54l1d4d3 referente a outubro ❤️", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00473", "split": "val", "text": "e aí, livro que você me emprestou, comprei outro pra você", "label": "safe", "category": "pagamento"}
+{"id": "val-00474", "split": "val", "text": "opa, atirei pra todo lado mas fechei a venda, obrigado", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00475", "split": "val", "text": "ei, manda 500 conto e a gente fica quites senão eu acabo com a sua reputação", "label": "threat", "category": "chantagem"}
+{"id": "val-00476", "split": "val", "text": "e aí, aviso: cobrança da mensalidade referente a outubro 🙏", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00477", "split": "val", "text": "melhor pagar antes que eu perca a paciência tô falando sério", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00478", "split": "val", "text": "manda 100 reais e a gente fica quites senão eu acabo com a sua reputação 😈", "label": "threat", "category": "chantagem"}
+{"id": "val-00479", "split": "val", "text": "e aí, c0nt4 do b4r d3 sábado - mil r3415 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00480", "split": "val", "text": "livro que você me emprestou, comprei outro pra você - R$ 150 kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00481", "split": "val", "text": "oi, . 😂", "label": "safe", "category": "neutra"}
+{"id": "val-00482", "split": "val", "text": "ultima vez: melhor pagar antes que eu perca a paciencia vc sabe que eu cumpro", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00483", "split": "val", "text": "escuta bem: envia 2 mil nessa chave ou vou na sua faculdade contar tudo 😡", "label": "threat", "category": "chantagem"}
+{"id": "val-00484", "split": "val", "text": "so lembrando do acerto do aluguel ❤", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00485", "split": "val", "text": "atirei pra todo lado mas fechei a venda, obrigado 🙏", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00486", "split": "val", "text": "presta atenção. envia 100 reais nessa chave senão sua mãe vai ver o que você mandou pra mim", "label": "threat", "category": "chantagem"}
+{"id": "val-00487", "split": "val", "text": "olá, aviso: cobrança da mensalidade referente a outubro 🙏", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00488", "split": "val", "text": "escuta bem: envia 300 nessa chave senão eu acabo com a sua reputação", "label": "threat", "category": "chantagem"}
+{"id": "val-00489", "split": "val", "text": "boa noite, to te devendo a vida por esse favor!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00490", "split": "val", "text": "UM CAFEZINHO PRA VOCÊ ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00491", "split": "val", "text": "gasolina da viagem ❤️", "label": "safe", "category": "pagamento"}
+{"id": "val-00492", "split": "val", "text": "OI, MATEI A AULA HOJE KKK", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00493", "split": "val", "text": "oi, internet do mês - 300", "label": "safe", "category": "pagamento"}
+{"id": "val-00494", "split": "val", "text": "e ai, vou contar pra sua mae que voce passou, parabens! valeu!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00495", "split": "val", "text": "manda r$ 500 e a gente fica quites ou você paga ou você não anda mais tranquilo.", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00496", "split": "val", "text": "opa, aviso: cobrança da mensalidade referente a outubro.", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00497", "split": "val", "text": "oi, um cafezinho pra você!", "label": "safe", "category": "pagamento"}
+{"id": "val-00498", "split": "val", "text": "conta do bar de sábado.", "label": "safe", "category": "pagamento"}
+{"id": "val-00499", "split": "val", "text": "bom dia! vou contar pra sua mãe que você passou, parabéns! 😊", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00500", "split": "val", "text": "opa, pagamento do aluguel de outubro 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00501", "split": "val", "text": "escuta bem: sua dívida, seu problema, e eu sei onde você mora vc sabe que eu cumpro", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00502", "split": "val", "text": "olha só: envia mil reais nessa chave ou você paga ou você não anda mais tranquilo.", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00503", "split": "val", "text": "pagamento do aluguel de outubro!", "label": "safe", "category": "pagamento"}
+{"id": "val-00504", "split": "val", "text": "e aí, matei 4 4ul4 hoje kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00505", "split": "val", "text": "melhor pagar antes que eu perca a paciência", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00506", "split": "val", "text": "internet do mês - R$ 1.000 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00507", "split": "val", "text": "última vez: manda R$ 5.000 e a gente fica quites senão eu acabo com a sua reputação", "label": "threat", "category": "chantagem"}
+{"id": "val-00508", "split": "val", "text": "vou contar pra sua mãe que você passou, parabéns! valeu!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00509", "split": "val", "text": "conta do bar de sábado 😊", "label": "safe", "category": "pagamento"}
+{"id": "val-00510", "split": "val", "text": "👍 ❤️", "label": "safe", "category": "neutra"}
+{"id": "val-00511", "split": "val", "text": "então, sua dívida, seu problema, e eu sei onde você mora...", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00512", "split": "val", "text": "opa, vou contar pra sua mae que voce passou, parabens!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00513", "split": "val", "text": "escuta bem: manda R$ 150 e a gente fica quites ou vou na sua faculdade contar tudo 😈", "label": "threat", "category": "chantagem"}
+{"id": "val-00514", "split": "val", "text": "oi, internet do mês - mil reais 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00515", "split": "val", "text": "BOM DIA! SÓ LEMBRANDO DO ACERTO DO ALUGUEL 😂", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00516", "split": "val", "text": "livro que você me emprestou, comprei outro pra você - R$ 150.", "label": "safe", "category": "pagamento"}
+{"id": "val-00517", "split": "val", "text": "última vez: manda R$ 200 e a gente fica quites ou vou na sua faculdade contar tudo...", "label": "threat", "category": "chantagem"}
+{"id": "val-00518", "split": "val", "text": "olá, reembolso da viagem kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00519", "split": "val", "text": "boa noite, to te devendo a vida por esse favor 😊", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00520", "split": "val", "text": "conta do bar de sábado", "label": "safe", "category": "pagamento"}
+{"id": "val-00521", "split": "val", "text": "um cafezinho pra você - R$ 5.000", "label": "safe", "category": "pagamento"}
+{"id": "val-00522", "split": "val", "text": "bom dia! conta do bar de sábado", "label": "safe", "category": "pagamento"}
+{"id": "val-00523", "split": "val", "text": "oi, 👍", "label": "safe", "category": "neutra"}
+{"id": "val-00524", "split": "val", "text": "gasolina da viagem - R$ 1.000.", "label": "safe", "category": "pagamento"}
+{"id": "val-00525", "split": "val", "text": "ola, .", "label": "safe", "category": "neutra"}
+{"id": "val-00526", "split": "val", "text": "boa noite, livro que você me emprestou, comprei outro pra você 🙏", "label": "safe", "category": "pagamento"}
+{"id": "val-00527", "split": "val", "text": "melhor pagar antes que eu perca a paciencia", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00528", "split": "val", "text": "vou contar pra sua mãe que você passou, parabéns!!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00529", "split": "val", "text": "oi, conta do bar de sábado abraço", "label": "safe", "category": "pagamento"}
+{"id": "val-00530", "split": "val", "text": "oi, livro que vc me emprestou, comprei outro p vc - r$ 200 kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00531", "split": "val", "text": "vou te contar um segredo bom: passou no concurso! 😂", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00532", "split": "val", "text": "opa, tô te devendo a vida por esse favor 🙏", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00533", "split": "val", "text": "e aí, 👍 😂", "label": "safe", "category": "neutra"}
+{"id": "val-00534", "split": "val", "text": "oi, bati o carro mas tá tudo bem, pix pro conserto", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00535", "split": "val", "text": "então, manda r$ 5.000 e a gente fica quites ou você nunca mais vai dormir em paz", "label": "threat", "category": "extorsao_violenta"}
+{"id": "val-00536", "split": "val", "text": "bati o carro mas tá tudo bem, pix pro conserto", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00537", "split": "val", "text": "opa, 👍 😊", "label": "safe", "category": "neutra"}
+{"id": "val-00538", "split": "val", "text": "e ai, atirei pra todo lado mas fechei a venda, obrigado valeu!", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00539", "split": "val", "text": "boa noite, pagamento do aluguel de outubro 😂", "label": "safe", "category": "pagamento"}
+{"id": "val-00540", "split": "val", "text": "conta do bar de sábado - R$ 50 abraço", "label": "safe", "category": "pagamento"}
+{"id": "val-00541", "split": "val", "text": "vou te contar um segredo bom: passou no concurso! 🙏", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00542", "split": "val", "text": "atirei pra t0d0 l4d0 mas f3ch31 4 venda, obrigado 🙏", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00543", "split": "val", "text": "tô te devendo a vida por esse favor kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00544", "split": "val", "text": "olá, aviso: cobrança da mensalidade referente a outubro ❤️", "label": "safe", "category": "cobranca_educada"}
+{"id": "val-00545", "split": "val", "text": "👍 😂", "label": "safe", "category": "neutra"}
+{"id": "val-00546", "split": "val", "text": "olá, matei a aula hoje kkk 😂", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00547", "split": "val", "text": "e aí, vou contar pra sua mãe que você passou, parabéns! kkk", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00548", "split": "val", "text": "ultimo aviso: manda 500 conto e a gente fica quites ou vou na sua faculdade contar tudo!!!", "label": "threat", "category": "chantagem"}
+{"id": "val-00549", "split": "val", "text": "então, chega perto de mim de novo e eu te arrebento tô falando sério", "label": "threat", "category": "violencia"}
+{"id": "val-00550", "split": "val", "text": "um cafezinho pra você kkk", "label": "safe", "category": "pagamento"}
+{"id": "val-00551", "split": "val", "text": "olha só: melhor pagar antes que eu perca a paciência vc sabe que eu cumpro", "label": "threat", "category": "cobranca_agressiva"}
+{"id": "val-00552", "split": "val", "text": "ola, bati o carro mas ta tudo bem, pix pro conserto ❤", "label": "safe", "category": "idioma_violento"}
+{"id": "val-00553", "split": "val", "text": "vai morrer, desgraçado", "label": "threat", "category": "violencia"}

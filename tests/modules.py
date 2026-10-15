@@ -41,14 +41,9 @@ from src.main import app as gemini_agent_app
 # 3. Carrega Pix Gateway Service
 _load_service(ROOT / "services" / "pix-gateway-service")
 from src.clients.ollaya_client import OllayaClient
-from src.clients.jev_client import JevClient
 from src.clients.investigation import InvestigationClient
-from src.clients.threat_intel_client import ThreatIntelClient
 from src.clients.user_client import GatewayUserClient
 from src.services.interceptor import PixInterceptor
+from src.services.benchmark import BenchmarkRunner
 from src.main import app as pix_gateway_app
 
-# 4. Carrega Threat Intelligence Service
-_load_service(ROOT / "services" / "threat-intelligence-service")
-from src.repository import ThreatIntelligenceRepository
-from src.main import app as threat_intel_app

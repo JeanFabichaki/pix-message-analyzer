@@ -5,9 +5,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from common.database.models import Base, User, UserStatus
 from common.config.settings import settings
 
-# Força mock do Ollaya, JEV e Gemini para a suíte de testes
-settings.MOCK_OLLAYA = True
-settings.MOCK_JEV = True
+# Força mock do Gemini para a suíte de testes (o Ollaya é injetado nos testes via tests/fakes.py)
 settings.MOCK_GEMINI = True
 settings.PIX_THRESHOLD_AMOUNT_BRL = 10.00
 settings.THREAT_BLOCK_LIMIT = 5

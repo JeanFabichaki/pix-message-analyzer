@@ -15,15 +15,19 @@ class Settings(BaseSettings):
 
     # Ollaya Decision Model Server (ollaya.dev)
     OLLAYA_BASE_URL: str = "http://localhost:11435"
+    OLLAYA_CLUSTER_URLS: str = ""
     OLLAYA_MODEL: str = "laya:multilingual"
-    OLLAYA_TIMEOUT_SECONDS: float = 10.0
-    MOCK_OLLAYA: bool = False
+    OLLAYA_TIMEOUT_SECONDS: float = 25.0
 
-    # Legado JEV (retrocompatibilidade)
-    JEV_API_BASE_URL: str = "http://localhost:11435"
-    JEV_API_KEY: str = "ollaya-key"
-    JEV_TIMEOUT_SECONDS: float = 3.0
-    MOCK_JEV: bool = False
+    # Laya retreinado nativo no Ollaya (Pix: ameaças e extorsão)
+    LAYA_TUNED_BASE_URL: str = "http://localhost:11435"
+    LAYA_TUNED_CLUSTER_URLS: str = ""
+    LAYA_TUNED_MODEL: str = "laya:pix-threats"
+
+
+    # Dados de teste da página "Comparar" (montados em /data no container do gateway)
+    BENCHMARK_DATA_DIR: str = "/data"
+
 
     # Google Gemini API
     GEMINI_API_KEY: str = ""
@@ -33,7 +37,6 @@ class Settings(BaseSettings):
     # Endpoints Internos
     USER_SERVICE_URL: str = "http://localhost:8002"
     GEMINI_AGENT_URL: str = "http://localhost:8003"
-    THREAT_INTEL_SERVICE_URL: str = "http://localhost:8004"
 
     # Limite de Ameaças para Bloqueio
     THREAT_BLOCK_LIMIT: int = 5
