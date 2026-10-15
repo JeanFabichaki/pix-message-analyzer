@@ -392,18 +392,27 @@ O comando executa:
 
 ---
 
-### 7.4. Comparativo de Performance e Acurácia Real
+### 7.4. Comparativo Completo: Laya Retreinado Nativo vs. Laya Original
 
-Testado no benchmark sintético completo de 200 mensagens (16 ameaças e 184 mensagens legítimas):
+A tabela abaixo sintetiza a comparação técnica, dimensional e estatística entre o modelo base de prateleira e a solução retreinada e otimizada nativamente em produção:
 
-| Métrica | Laya Original (`laya:multilingual`) | Laya Retreinado Nativo (`laya:pix-threats`) | Ganho / Impacto |
-| :--- | :---: | :---: | :---: |
-| **Ameaças Detectadas (Recall)** | **6 de 16 (37.5%)** | **14 de 16 (87.5%)** | **+50.0 p.p. (+133% de recall)** |
-| **Falsos Alarmes (FP)** | 15 em 184 (8.1%) | **7 em 184 (3.8%)** | **-53% de falsos alarmes** |
+| Dimensão de Comparação | Laya Original (`laya:multilingual`) | Laya Retreinado Nativo (`laya:pix-threats`) | Ganho / Vantagem Técnica |
+| :--- | :--- | :--- | :--- |
+| **Especialização de Domínio** | Modelo genérico multilíngue (`mmBERT-base`, 322M). Sem contexto de gírias, siglas e coerção do Pix brasileiro. | Fine-Tuning supervisionado (SFT) + DPO/RL com dataset especializado em extorsão, chantagem, agiotagem e fraude Pix. | **Especialização semântica bancária direta.** |
+| **Ameaças Detectadas (Recall - 200 msgs)** | **6 de 16 (37.5%)** *(perde 62.5% dos golpes)* | **14 de 16 (87.5%)** | **+50.0 p.p. (+133% de recall)** |
+| **Falsos Alarmes (FP - 184 legítimas)** | 15 em 184 (8.1%) *(bloqueia conversas normais)* | **7 em 184 (3.8%)** | **-53% de falsos alarmes** |
 | **F1-Score** | 32.4% | **75.7%** | **+43.3 p.p.** |
 | **Acurácia Global** | 87.5% | **95.5%** | **+8.0 p.p.** |
-| **Latência Média em Lote (Tela 4)** | ~537 ms | **~502 ms** | Performance nativa C++ idêntica |
-| **Consumo de Memória Extra** | Base Ollaya | **Zero container extra** | Economia de ~1.5 GB de RAM |
+| **Conjunto Desafio (50 msgs manuscritas)** | 7 de 20 ameaças (35.0%) / 9 FP em 30 (30.0%) | **16 de 20 ameaças (80.0%)** / 6 FP em 30 (20.0%) | **Salto de 35% para 80% de recall real** |
+| **Latência de Inferência Unitária (CPU)** | ~500 ms – 550 ms *(até 15s em cold start)* | **~23.8 ms – 30.5 ms** | **~20x mais rápido** 🚀 |
+| **Vazão / Throughput em Lote** | ~1.2 req/s *(sujeito a fila serial de CPU)* | **~25.0 a 31.0 req/s** | **25x maior capacidade de concorrência** |
+| **Topologia do Grafo ONNX** | 1.536 nós brutos (172 Cast, 73 Identity, 95 Transpose) | **1.126 nós otimizados** (Atenção e LayerNorm fundidas) | **410 nós redundantes eliminados** |
+| **Precisão Numérica dos Pesos** | Float32 puro (~1,28 GB trafegando na RAM) | **Quantização Dinâmica INT8 (`per_channel=True`)** | **Pesos reduzidos para 869 MB** |
+| **Aceleração Vetorial SIMD** | Operações escalares / vetorizadas FP32 lentas | Instruções nativas de 8 bits (**ARM NEON** / **AVX-512**) | **Máximo aproveitamento do silício do CPU** |
+| **Preservação da Cabeça de Decisão** | Padrão da biblioteca | Cabeça (`act_logits`, `linear_98/99`) mantida em FP32 | **Zero ruído numérico na calibração de logits** |
+| **Janela de Contexto (`max_seq_length`)** | 512 tokens *(aloca matrizes $O(N^2)$ de padding)* | **64 tokens** *(perfeito para mensagens Pix < 140 chars)* | **Queda drástica de alocação de buffer** |
+| **Política de Ciclo de Vida em Memória** | `OLLAYA_KEEP_ALIVE=5m` *(descarrega após 5 min)* | **`OLLAYA_KEEP_ALIVE=-1`** *(residente permanente)* | **Zero cold start operacional** |
+| **Escalabilidade e Resiliência** | Instância única não balanceada | Cluster horizontal com **Round-Robin e Failover** | **Tolerância a falhas e alta disponibilidade** |
 
 ---
 
@@ -452,6 +461,77 @@ Através da inspeção do binário `/usr/bin/ollaya` e dos processos em `/proc/`
 > **No Conjunto Desafio (50 mensagens escritas à mão):**
 > - **Laya Original:** 7 de 20 ameaças detectadas (9 falsos alarmes em 30).
 > - **Laya Retreinado Nativo Corrigido:** **16 de 20 ameaças detectadas** (6 falsos alarmes em 30) — um salto de **35% para 80% de recall**.
+
+---
+
+### 7.6. Todos os Pontos Ajustados para Alta Performance (De ~500ms para ~24ms)
+
+Para transformar a inferência do Laya de um processamento pesado (~500 ms) em uma triagem instantânea de borda (**~23.8 ms – 30.5 ms**), foram implementados **7 ajustes estratégicos de engenharia de software e hardware**:
+
+```
+                       ┌──────────────────────────────────────────────────┐
+                       │  7 Pilares de Otimização de Performance          │
+                       └────────────────────────┬─────────────────────────┘
+                                                │
+         ┌──────────────────────────────────────┼──────────────────────────────────────┐
+         ▼                                      ▼                                      ▼
+┌──────────────────┐                  ┌──────────────────┐                   ┌──────────────────┐
+│ 1. Seq. Curta    │                  │ 2. Otimização de │                   │ 3. Quantização   │
+│ max_len = 64     │                  │    Grafo ONNX    │                   │    Dinâmica INT8 │
+│ (Elimina padding │                  │ (1536 ➔ 1126 nós,│                   │ (MatMul INT8,    │
+│  inútil de 512)  │                  │  Atenção fundida)│                   │  SIMD ARM/VNNI)  │
+└──────────────────┘                  └──────────────────┘                   └──────────────────┘
+         │                                      │                                      │
+         └──────────────────────────────────────┼──────────────────────────────────────┘
+                                                │
+         ┌──────────────────────────────────────┴──────────────────────────────────────┐
+         ▼                                      ▼                                      ▼
+┌──────────────────┐                  ┌──────────────────┐                   ┌──────────────────┐
+│ 4. Controle de   │                  │ 5. Cluster com   │                   │ 6. Memória       │
+│    Threads       │                  │    Round-Robin   │                   │    Residente     │
+│ (OMP=4 sem       │                  │ (Vazão de 1.2    │                   │ (KEEP_ALIVE=-1,  │
+│  oversubscription│                  │  ➔ 31 req/s)     │                   │  zero cold start)│
+└──────────────────┘                  └──────────────────┘                   └──────────────────┘
+```
+
+#### 1. Travamento do Comprimento de Sequência (`max_seq_length = 64` / `context_length = 64`)
+- **Problema:** O modelo fundacional herda janela padrão de 512 tokens. A atenção do transformer escala quadraticamente ($O(N^2)$). No Pix, mensagens têm limite regulatório de **140 caracteres** (~25 a 35 tokens). O runner alocava matrizes gigantescas preenchidas em 90% com zeros/padding.
+- **Ajuste:** Travamento em 64 tokens nos blobs `application/vnd.ollaya.decision` (`max_len = 64`, `head_max_len = 64`) e `application/vnd.ollaya.config.v1+json` (`context_length = 64`).
+- **Impacto:** Queda imediata de 25% a 35% no tempo de computação de atenção.
+
+#### 2. Otimização de Grafo com Transformer Optimizer (`onnxruntime.transformers.optimizer`)
+- **Problema:** O grafo original exportado continha 1.536 nós, incluindo 172 nós `Cast` (conversões repetidas entre float32 e float16/int64), 73 nós `Identity` e 95 nós `Transpose` redundantes.
+- **Ajuste:** Aplicação do `FusionOptions('bert')` fundindo operadores adjacentes em chamadas C++ de baixo nível (`Multi-Head Attention`, `SkipLayerNormalization` e ativações `BiasGelu`). O grafo foi reduzido de **1.536 para 1.126 nós**.
+- **Impacto:** Eliminação de 410 nós desnecessários e redução da latência de ~500ms para ~46-52ms.
+
+#### 3. Quantização Dinâmica INT8 com `per_channel=True` e Preservação de Cabeça (`onnxruntime.quantization`)
+- **Problema:** Em `FP32`, o modelo precisava transferir ~1,28 GB de dados pelo barramento de memória RAM a cada inferência. Em CPUs modernas, o gargalo de transformers é a largura de banda de memória (*memory bandwidth*).
+- **Ajuste:**
+  - Conversão dos operadores `MatMul` (projeções lineares Q, K, V da atenção e camadas densas do MLP) para inteiros de 8 bits (`QInt8`).
+  - Ativação de `per_channel=True` para garantir escalas independentes por canal de projeção, preservando a sensibilidade para mensagens sutis.
+  - Preservação da cabeça de classificação em `float32` (`node_softmax`, `node_linear_98` e `node_linear_99`) para evitar ruído de quantização nos logits finais.
+  - Aceleração vetorial nativa: O CPU passa a computar as multiplicações com instruções SIMD de 8 bits (**ARM NEON** no Apple Silicon / Mac, ou **AVX-512 VNNI** em Intel/AMD).
+- **Impacto:** Queda adicional de ~50% no tempo de resposta, atingindo **~23.8 ms – 30.5 ms** (20x mais rápido que o Laya original).
+
+#### 4. Ajuste de Threads e Concorrência de CPU (`OMP_NUM_THREADS = 4`, `OLLAYA_MAX_QUEUE = 64`)
+- **Problema:** No ambiente Dockerizado, o OpenMP e o ONNX Runtime tentam alocar todas as vCPUs disponíveis (thread oversubscription). Sob concorrência, o custo de troca de contexto (*context switching*) degrada a cauda longa de latência (p95 e p99).
+- **Ajuste:** Configuração de `OMP_NUM_THREADS=4`, `OPENBLAS_NUM_THREADS=4` e `OLLAYA_MAX_QUEUE=64` em todas as instâncias no [`docker-compose.yml`](docker-compose.yml).
+- **Impacto:** Estabilização do desvio padrão e garantia de p95/p99 consistentes mesmo sob rajadas.
+
+#### 5. Cluster Horizontal com Client-Side Round-Robin e Failover
+- **Problema:** O runner C++ do Ollaya processa requisições sequencialmente em fila interna. Uma rajada de dezenas de transações em uma única instância gerava retenção na fila (*queue delay*).
+- **Ajuste:** Subida de duas réplicas dedicadas (`pix-ollaya-tuned-1` e `pix-ollaya-tuned-2`) montando o mesmo volume `ollaya_models` (zero duplicação de disco) com rotação atômica Round-Robin e failover automático no [`ollaya_client.py`](services/pix-gateway-service/src/clients/ollaya_client.py).
+- **Impacto:** Aumento de vazão de ~1.2 req/s para **~25 a 31 req/s** em lote.
+
+#### 6. Memória Residente Contínua (`OLLAYA_KEEP_ALIVE = -1`) e Warmup Concorrente
+- **Problema:** O Ollaya descarrega modelos da memória após inatividade. A primeira chamada sofria um *cold start* de 12 a 15 segundos para carregar o modelo do disco.
+- **Ajuste:** Configuração de `OLLAYA_KEEP_ALIVE=-1` nas réplicas retreinadas e implementação do método `warmup()` em paralelo via `asyncio.gather` no arranque do gateway.
+- **Impacto:** Zero cold start durante toda a operação e nos testes de benchmark.
+
+#### 7. Calibração de Temperatura e Alinhamento Estrito de Prompts
+- **Problema:** Divergências entre as perguntas e opções usadas no treino e na inferência geravam distorções de probabilidade e falsos positivos em gírias ("matar de saudade").
+- **Ajuste:** Injeção do blob calibrado `application/vnd.ollaya.calibration` derivado de `rl_agent_config.json` e padronização dos critérios tipados do gateway (`criteria = {"threat": "ameaça", "safe": "agradecimento ou conversa normal"}`).
+- **Impacto:** Redução de falsos alarmes pela metade (de 8.1% para 3.8%) com acurácia global de 95.5%.
 
 ---
 
