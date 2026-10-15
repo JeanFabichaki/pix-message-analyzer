@@ -10,6 +10,8 @@ class OllayaClassificationResult(BaseModel):
     category: Optional[str] = Field(default=None, description="Categoria de decisão detectada pelo Ollaya")
     model: str = Field(default="laya", description="Modelo de decisão do Ollaya utilizado")
     detail: Optional[str] = Field(default=None, description="Detalhes adicionais da resposta do Ollaya")
+    decomposed_scores: Optional[Dict[str, float]] = Field(default=None, description="Probabilidades separadas das perguntas decompostas")
+    in_gray_zone: bool = Field(default=False, description="Indica se a probabilidade máxima ficou na zona cinzenta (0.45 a 0.65)")
 
 
 class GeminiThreatAnalysis(BaseModel):
@@ -32,6 +34,18 @@ class GeminiThreatAnalysis(BaseModel):
     acao_imediata_recomendada: bool = Field(
         description="Se a infração é grave o suficiente para intervenção prioritária"
     )
+    padrao_identificado: Optional[str] = Field(
+        default=None,
+        description="Padrão criminoso ou comportamental identificado na mensagem ou série de mensagens",
+    )
+    evidencias_citadas: List[str] = Field(
+        default_factory=list,
+        description="Trechos ou termos textuais específicos extraídos que comprovam a infração",
+    )
+    recomendacao_analista: Optional[str] = Field(
+        default=None,
+        description="Ação sugerida para o analista humano de compliance e prevenção a fraudes",
+    )
     bypassed: bool = Field(
         default=False,
         description="Indica se a análise do Gemini foi ignorada/bypassed por indisponibilidade",
@@ -50,6 +64,10 @@ class InvestigationDispatchPayload(BaseModel):
     canonical_text: Optional[str] = None
     evasion_detected: bool = False
     ollaya_data: Optional[Dict[str, Any]] = None
+    history: Optional[List[str]] = Field(
+        default=None,
+        description="Histórico recente de mensagens anteriores para análise contextual continuada",
+    )
 
 
 class GeneratedBenchmarkMessage(BaseModel):

@@ -19,14 +19,14 @@ const FLUSH_MS = 250;
 const SERIES_LEN = 48;
 
 const OUTCOME = {
-  clean: { label: 'Entregue', cls: 'chip--safe' },
+  clean: { label: 'Aprovado', cls: 'chip--safe' },
   skipped: { label: 'Não analisado', cls: 'chip--skip' },
-  masked: { label: 'Mensagem retida', cls: 'chip--detect' },
+  blocked: { label: 'Pix bloqueado', cls: 'chip--detect' },
   fallback: { label: 'Aprovado (IA fora)', cls: 'chip--error' },
 };
 
 function outcomeOf(ev) {
-  if (ev.masked) return 'masked';
+  if (ev.blocked || ev.masked) return 'blocked';
   if (ev.decidedBy === 'skipped') return 'skipped';
   if (ev.decidedBy === 'ollaya_fallback') return 'fallback';
   return 'clean';
@@ -109,7 +109,9 @@ export default function ScreenLive({ active, onInspect }) {
       if (result.network) return;
       const source = result.source;
       const stations = buildStations(source);
+      const blocked = result.ok && (Boolean(source.blocked) || source.status === 'BLOCKED');
       const masked = result.ok && Boolean(source.original_masked ?? source.was_masked);
+      const isThreat = blocked || masked;
       const ms = totalMsOf(source);
       const ev = {
         id: payload.transaction_id,
@@ -118,7 +120,8 @@ export default function ScreenLive({ active, onInspect }) {
         amount: payload.amount,
         message: payload.description,
         ok: result.ok,
-        masked,
+        blocked,
+        masked: isThreat,
         decidedBy: source.decided_by,
         stations,
         realMs: ms,
@@ -127,7 +130,7 @@ export default function ScreenLive({ active, onInspect }) {
       };
       const c = countersRef.current;
       c.processed += 1;
-      if (masked) c.retained += 1;
+      if (isThreat) c.retained += 1;
       if (typeof ms === 'number') {
         seriesRef.current = [...seriesRef.current, ms].slice(-SERIES_LEN);
       }
@@ -193,7 +196,7 @@ export default function ScreenLive({ active, onInspect }) {
         <div>
           <h2 className="page__title">Pix chegando ao vivo</h2>
           <p className="page__lead">
-            Cada linha é um Pix real passando pelo gateway. Os pontos mostram o resultado em cada uma das 4 estações.
+            Cada linha é um Pix real passando pelo gateway com mensagem e valor dentro do limite (≤ R$ 10,00), garantindo 100% de passagem pelo Laya para aferição precisa de latência e vazão.
           </p>
         </div>
         <div className="live__controls">
@@ -230,10 +233,10 @@ export default function ScreenLive({ active, onInspect }) {
         <div className="kpi kpi--lavender">
           <span className="kpi__label">Pix analisados</span>
           <CountUp value={counters.processed} className="kpi__value" />
-          <span className="kpi__sub">desde que a tela foi iniciada</span>
+          <span className="kpi__sub">100% com mensagem e triagem na IA</span>
         </div>
         <div className="kpi kpi--lime">
-          <span className="kpi__label">Mensagens retidas</span>
+          <span className="kpi__label">Pix bloqueados</span>
           <motion.span
             key={counters.retained}
             initial={reduced ? false : { scale: 1.12 }}
@@ -243,7 +246,7 @@ export default function ScreenLive({ active, onInspect }) {
           >
             <CountUp value={counters.retained} className="kpi__value" duration={0.3} />
           </motion.span>
-          <span className="kpi__sub">o dinheiro foi entregue normalmente</span>
+          <span className="kpi__sub">envio bloqueado por conter ameaça</span>
         </div>
         <div className="kpi kpi--mint">
           <span className="kpi__label">Tempo da análise (p50 / p95)</span>

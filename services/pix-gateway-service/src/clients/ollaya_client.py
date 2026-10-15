@@ -18,8 +18,34 @@ THREAT_CRITERIA = {
     "safe": "conversa normal ou amigável",
 }
 
-# Probabilidade mínima de "ameaça" para mascarar a mensagem.
+# Probabilidade mínima padrão para pergunta única (compatível com modelo retreinado)
 THREAT_THRESHOLD = 0.40
+
+# Perguntas decompostas para o forward pass no modelo Laya multilingual (mmBERT-base)
+DECOMPOSED_QUESTIONS = {
+    "ameaca_violencia": {
+        "type": "choice",
+        "instructions": "A mensagem de Pix contém ameaça de violência física, morte ou agressão?",
+        "criteria": {"threat": "ameaça ou agressão física", "safe": "conversa normal"},
+    },
+    "extorsao_chantagem": {
+        "type": "choice",
+        "instructions": "A mensagem de Pix contém extorsão, chantagem ou exigência forçada sob ameaça?",
+        "criteria": {"threat": "chantagem ou extorsão", "safe": "conversa normal"},
+    },
+    "coercao_financeira": {
+        "type": "choice",
+        "instructions": "A mensagem de Pix contém cobrança hostil abusiva, intimidação a familiares ou coerção?",
+        "criteria": {"threat": "coerção ou intimidação", "safe": "conversa normal"},
+    },
+}
+
+# Limiares de decisão calibrados para modelo encoder em borda (Laya multilingual):
+# - Corte padrão para modelos compactos: 0.65 (evita falsos alarmes em linguagem coloquial)
+THREAT_CUTOFF_THRESHOLD = 0.65
+# - Zona cinzenta para transações suspeitas ou de valor mais alto: 0.45 a 0.65
+GRAY_ZONE_MIN = 0.45
+GRAY_ZONE_MAX = 0.65
 
 # O servidor do Laya retreinado (laya-serve) exige 'instructions'. DEVE ser idêntica à usada no treino
 # (finetune/train_laya_pix.py, QUESTIONS), senão o modelo recebe uma pergunta diferente da que aprendeu.
@@ -40,9 +66,17 @@ class OllayaClient:
         client: Optional[httpx.AsyncClient] = None,
         instructions: Optional[str] = DEFAULT_INSTRUCTIONS,
         criteria: Optional[dict] = None,
+        decomposed: bool = False,
+        threat_threshold: Optional[float] = None,
     ):
+        self.decomposed = decomposed
         self.instructions = instructions
         self.criteria = criteria or THREAT_CRITERIA
+        self.threat_threshold = (
+            threat_threshold
+            if threat_threshold is not None
+            else (THREAT_CUTOFF_THRESHOLD if decomposed else THREAT_THRESHOLD)
+        )
         
         # Cluster de instâncias do Ollaya: lista de URLs ou string separada por vírgula
         if base_urls:
@@ -128,6 +162,9 @@ class OllayaClient:
         # Contrato TypeSafe /v1/systemone do Ollaya
         # Trava comprimento máximo (max_seq_length = 64): mensagens de Pix têm limite regulatório de 140 chars
         safe_text = (text or "").strip()[:200]
+        if self.decomposed:
+            return {"model": self.model, "state": safe_text, "questions": DECOMPOSED_QUESTIONS}
+
         question = {"type": "choice", "criteria": self.criteria}
         if self.instructions:
             question = {"type": "choice", "instructions": self.instructions, "criteria": self.criteria}
@@ -177,6 +214,8 @@ class OllayaClient:
                 category=None,
                 model=self.model,
                 detail="Mensagem vazia ou sem texto",
+                decomposed_scores={},
+                in_gray_zone=False,
             )
 
         attempts = len(self.base_urls)
@@ -205,18 +244,55 @@ class OllayaClient:
                     raise RuntimeError(f"Erro na API do Ollaya: {self._describe(ex)}") from ex
 
         answers = data.get("answers", {})
+
+        # 1. Rota de perguntas decompostas no mesmo forward pass
+        if self.decomposed and any(k in answers for k in DECOMPOSED_QUESTIONS):
+            decomposed_scores = {}
+            for q_key in DECOMPOSED_QUESTIONS:
+                q_ans = answers.get(q_key, {})
+                q_choice = q_ans.get("choice", "safe")
+                q_conf = float(q_ans.get("confidence", 0.0))
+                q_probs = q_ans.get("probabilities", {})
+                q_prob = float(q_probs.get("threat", q_conf if q_choice == "threat" else 0.0))
+                decomposed_scores[q_key] = round(q_prob, 4)
+
+            max_key = max(decomposed_scores, key=decomposed_scores.get)
+            max_score = decomposed_scores[max_key]
+
+            # Calibração estrita: corte em 0.65; zona cinzenta entre 0.45 e 0.65
+            is_threat = max_score >= self.threat_threshold
+            in_gray_zone = (GRAY_ZONE_MIN <= max_score < GRAY_ZONE_MAX)
+
+            category_name = max_key if is_threat else ("zona_cinzenta" if in_gray_zone else "benigno")
+            return OllayaClassificationResult(
+                is_threat=is_threat,
+                score=max_score,
+                category=category_name,
+                model=data.get("model", self.model),
+                detail=(
+                    f"Decisão Decomposta: max={max_key} ({max_score:.4f}), "
+                    f"cutoff={self.threat_threshold}, gray_zone={in_gray_zone}"
+                ),
+                decomposed_scores=decomposed_scores,
+                in_gray_zone=in_gray_zone,
+            )
+
+        # 2. Rota de pergunta única (modelo retreinado ou legado)
         threat_ans = answers.get("threat", {})
         choice = threat_ans.get("choice", "safe")
         confidence = float(threat_ans.get("confidence", 0.0))
         probs = threat_ans.get("probabilities", {})
         threat_prob = float(probs.get("threat", confidence if choice == "threat" else 0.0))
 
-        is_threat = (choice == "threat") or (threat_prob >= THREAT_THRESHOLD)
+        is_threat = (choice == "threat") or (threat_prob >= self.threat_threshold)
+        in_gray_zone = (GRAY_ZONE_MIN <= threat_prob < GRAY_ZONE_MAX)
 
         return OllayaClassificationResult(
             is_threat=is_threat,
             score=threat_prob,
-            category="ameaca_ou_extorsao" if is_threat else "benigno",
+            category="ameaca_ou_extorsao" if is_threat else ("zona_cinzenta" if in_gray_zone else "benigno"),
             model=data.get("model", self.model),
             detail=f"Decisão Ollaya: choice={choice}, confidence={confidence:.4f}, threat_prob={threat_prob:.4f}",
+            decomposed_scores={"threat": threat_prob},
+            in_gray_zone=in_gray_zone,
         )

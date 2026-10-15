@@ -37,10 +37,11 @@ class TraceStep(BaseModel):
 
 class PixTransactionResponse(BaseModel):
     transaction_id: str
-    status: str = Field(..., description="Status da transação (APPROVED)")
+    status: str = Field(..., description="Status da transação (APPROVED ou BLOCKED)")
     amount: float
     description: Optional[str] = None
     original_masked: bool = False
+    blocked: bool = Field(default=False, description="Indica se o Pix foi bloqueado por ameaça")
     engine: str = Field(default="laya", description="Modelo que fez a triagem desta mensagem")
     canonical_message: Optional[str] = Field(default=None, description="Texto desofuscado detectado pela camada anti-evasão")
     evasion_detected: bool = Field(default=False, description="Indica se houve tentativa de leetspeak ou ofuscação")

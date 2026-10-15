@@ -67,22 +67,12 @@ async def _process_threat(
         f"Ameaça registrada para user={user_id}. Total acumulado: {total_threats}/{settings.THREAT_BLOCK_LIMIT}"
     )
 
-    blocked = False
-    # 4. Gatilho de bloqueio preventivo ao atingir o limite
-    if total_threats >= settings.THREAT_BLOCK_LIMIT:
-        logger.warning(
-            f"LIMITE DE {settings.THREAT_BLOCK_LIMIT} AMEAÇAS ATINGIDO PARA {user_id}. Solicitando bloqueio..."
-        )
-        try:
-            await user_client.block_user(
-                user_id=user_id,
-                reason="EXCEEDED_THREAT_THRESHOLD",
-                total_threats=total_threats,
-                triggered_by_tx=threat_log.transaction_id,
-                details=f"Conta bloqueada automaticamente após alcançar {total_threats} mensagens de ameaça reincidentes.",
-            )
-            blocked = True
-        except Exception as e:
-            logger.error(f"Erro ao disparar bloqueio para {user_id}: {e}")
+    # 4. Bloqueio de conta agora é decisão do analista humano baseado no laudo do Gemini.
+    # Não há mais bloqueio automático por contagem de ameaças.
+    blocked = bool(existing_user and existing_user.status == UserStatus.BLOCKED_SUSPICIOUS)
+    logger.info(
+        f"Ameaça registrada para user={user_id}. Total acumulado: {total_threats}. "
+        f"Bloqueio de conta sob governança do analista humano (blocked={blocked})."
+    )
 
     return total_threats, blocked

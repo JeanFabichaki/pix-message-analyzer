@@ -34,13 +34,19 @@ user_service_app = user_service_app
 # 2. Carrega Gemini Investigation Agent
 _load_service(ROOT / "agents" / "gemini-investigation-agent")
 from src.clients.user_client import UserClient
-from src.analyzer import GeminiThreatAnalyzer
+from src.analyzer import GeminiThreatAnalyzer, FORENSIC_SYSTEM_INSTRUCTION
 from src.rules.threshold import record_and_evaluate_limit
 from src.main import app as gemini_agent_app
 
 # 3. Carrega Pix Gateway Service
 _load_service(ROOT / "services" / "pix-gateway-service")
-from src.clients.ollaya_client import OllayaClient
+from src.clients.ollaya_client import (
+    OllayaClient,
+    DECOMPOSED_QUESTIONS,
+    THREAT_CUTOFF_THRESHOLD,
+    GRAY_ZONE_MIN,
+    GRAY_ZONE_MAX,
+)
 from src.clients.investigation import InvestigationClient
 from src.clients.user_client import GatewayUserClient
 from src.services.interceptor import PixInterceptor

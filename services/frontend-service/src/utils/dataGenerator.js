@@ -16,7 +16,6 @@ const BENIGN_MESSAGES = [
   'Doacao para campanha do agasalho',
   'Ajuste da corrida do app',
   'Compra de livro usado',
-  '',
 ];
 
 const THREAT_MESSAGES = [
@@ -53,20 +52,13 @@ export function generateSyntheticPix() {
   const sender = SENDERS[Math.floor(Math.random() * SENDERS.length)];
   const receiver = RECEIVERS[Math.floor(Math.random() * RECEIVERS.length)];
 
-  let amount;
+  // Na Tela 2, todas as transações têm mensagem e valor <= R$ 10,00 para garantir que 100% batam no Laya
+  const amount = parseFloat((Math.random() * 9.4 + 0.5).toFixed(2));
   let description;
 
   if (isThreatCandidate) {
-    // 80% das ameaças são micro-pix (< R$ 10) para testar a triagem em tempo real, 20% acima
-    const isMicro = Math.random() < 0.8;
-    amount = isMicro ? parseFloat((Math.random() * 9.9 + 0.05).toFixed(2)) : parseFloat((Math.random() * 250 + 15).toFixed(2));
     description = THREAT_MESSAGES[Math.floor(Math.random() * THREAT_MESSAGES.length)];
   } else {
-    // Transações normais: a maioria é micro-Pix (passa pela análise completa), o resto é Pix comum acima do limite
-    amount =
-      Math.random() < 0.65
-        ? parseFloat((Math.random() * 9.4 + 0.5).toFixed(2))
-        : parseFloat((Math.random() * 450 + 10.5).toFixed(2));
     description = BENIGN_MESSAGES[Math.floor(Math.random() * BENIGN_MESSAGES.length)];
   }
 

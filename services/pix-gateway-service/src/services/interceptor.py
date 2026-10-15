@@ -20,7 +20,8 @@ class InterceptorResult:
     def __init__(
         self,
         message: Optional[str],
-        is_masked: bool,
+        is_blocked: bool = False,
+        is_masked: bool = False,
         canonical_message: Optional[str] = None,
         evasion_detected: bool = False,
         timing: Optional[Dict[str, float]] = None,
@@ -28,6 +29,7 @@ class InterceptorResult:
         trace: Optional[List[TraceStep]] = None,
     ):
         self.message = message
+        self.is_blocked = is_blocked
         self.is_masked = is_masked
         self.canonical_message = canonical_message
         self.evasion_detected = evasion_detected
@@ -36,14 +38,14 @@ class InterceptorResult:
         self.trace = trace or []
 
     def __iter__(self):
-        # Permite unpack de 2 elementos: final_message, is_masked
-        return iter([self.message, self.is_masked])
+        # Permite unpack de 2 elementos: final_message, is_blocked
+        return iter([self.message, self.is_blocked])
 
     def __getitem__(self, idx: int) -> Any:
         if idx == 0:
             return self.message
         elif idx == 1:
-            return self.is_masked
+            return self.is_blocked
         elif idx == 2:
             return self.canonical_message
         elif idx == 3:
@@ -198,10 +200,24 @@ class PixInterceptor:
         ollaya_ms = round((time.perf_counter() - t_ollaya_start) * 1000, 2)
         timing["ollaya_ms"] = ollaya_ms
 
+        # Tratamento calibrado da Zona Cinzenta (0.45 a 0.65):
+        # Em transações de maior valor (> R$ 5,00) ou com tentativa de evasão disfarçada,
+        # o risco residual é elevado: retém preventivamente para investigação assíncrona.
+        if getattr(ollaya_response, "in_gray_zone", False) and not ollaya_response.is_threat:
+            if tx.amount > 5.00 or evasion_detected:
+                logger.warning(
+                    f"⚠️ [ZONA CINZENTA RETIDA] TX {tx.transaction_id}: score={ollaya_response.score:.4f} "
+                    f"em zona cinzenta (0.45-0.65) com amount=R$ {tx.amount:.2f} e evasion={evasion_detected}. Retendo para análise."
+                )
+                ollaya_response.is_threat = True
+                ollaya_response.category = f"{ollaya_response.category}_retencao_preventiva"
+
         ollaya_data = {
             "score": ollaya_response.score,
             "category": ollaya_response.category,
             "model": ollaya_response.model,
+            "decomposed_scores": getattr(ollaya_response, "decomposed_scores", None),
+            "in_gray_zone": getattr(ollaya_response, "in_gray_zone", False),
         }
 
         t_mask_start = time.perf_counter()
@@ -250,10 +266,10 @@ class PixInterceptor:
 
         logger.warning(
             f"AMEAÇA DETECTADA NA TX {tx.transaction_id} PELO OLLAYA [{ollaya_response.model}]: "
-            f"score={ollaya_response.score:.4f}, cat={ollaya_response.category}, evasion={evasion_detected}. Mascarando mensagem."
+            f"score={ollaya_response.score:.4f}, cat={ollaya_response.category}, evasion={evasion_detected}. Bloqueando envio do Pix."
         )
 
-        # 4. Disparo assíncrono para o Gemini e auditoria de reincidência
+        # 4. Disparo assíncrono para o Gemini e auditoria
         ollaya_payload = ollaya_response.model_dump()
         ollaya_payload["canonical_text"] = canonical_text
         ollaya_payload["evasion_detected"] = evasion_detected
@@ -266,12 +282,13 @@ class PixInterceptor:
             await_without_background=True,
         )
 
-        # 5. Substituição imediata pela mensagem padrão de segurança
+        # 5. Bloqueio imediato do envio do Pix (a mensagem original não é alterada)
         masking_ms = round((time.perf_counter() - t_mask_start) * 1000, 3)
         timing["masking_ms"] = max(masking_ms, 0.05)
         return InterceptorResult(
-            settings.PIX_MASKED_MESSAGE,
-            True,
+            tx.description,
+            is_blocked=True,
+            is_masked=False,
             canonical_message=canonical_text,
             evasion_detected=evasion_detected,
             timing=timing,
@@ -290,7 +307,7 @@ class PixInterceptor:
                     step="delivery",
                     status="detect",
                     ms=timing["masking_ms"],
-                    detail="Mensagem substituída pelo aviso padrão. O dinheiro segue normalmente.",
+                    detail="Envio do Pix bloqueado por conter ameaça. O valor não foi transferido.",
                 ),
             ],
         )

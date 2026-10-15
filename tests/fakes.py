@@ -24,7 +24,7 @@ class HeuristicOllaya:
 class FakeGeminiAnalyzer:
     """Dublê do Gemini para cenários de teste controlados."""
 
-    async def analyze(self, text: str):
+    async def analyze(self, text: str, history=None):
         from common.schemas.threat import GeminiThreatAnalysis
 
         return GeminiThreatAnalysis(
@@ -32,6 +32,9 @@ class FakeGeminiAnalyzer:
             criticidade="ALTA",
             categoria="stalking_perseguicao",
             resumo_analise="Detectada ameaça em teste de unidade",
+            padrao_identificado="Coação psicológica reiterada no histórico de mensagens",
+            evidencias_citadas=[text],
+            recomendacao_analista="Bloqueio preventivo e abertura de dossiê",
             acao_imediata_recomendada=True,
             bypassed=False,
         )

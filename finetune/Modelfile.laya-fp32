@@ -1,0 +1,15 @@
+# Modelfile para Ollaya (ollaya.dev) com precisão FP32
+# Garante execução estrita em ponto flutuante de 32 bits (FP32),
+# evitando erros de arredondamento e inversão de probabilidades
+# na casa decimal em modelos encoders compactos (mmBERT-base).
+
+FROM laya:multilingual
+
+# Força precisão FP32 para evitar ruído numérico de FP16 em triagem financeira
+PARAMETER precision fp32
+
+# Threads CPU otimizadas para inferência de borda em SLA rígido (<15ms)
+PARAMETER num_thread 4
+
+# Limite de contexto alinhado ao campo de descrição do Pix (<= 140 chars)
+PARAMETER max_seq_length 64

@@ -421,6 +421,28 @@ button { font-family: inherit; color: inherit; }
 .after-card__text { font-size: 0.86rem; }
 .after-card__text--danger { display: flex; gap: 0.4rem; align-items: flex-start; color: var(--color-danger); font-weight: 600; }
 .after-card__muted { font-size: 0.8rem; color: var(--color-ink-muted); }
+.chip--accent { background: #f0f7ff; color: #0284c7; border-color: #bae6fd; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; }
+.after-card__pattern-box { background: #f8fafc; border: 1px solid var(--color-rule); border-left: 3px solid #6366f1; border-radius: var(--radius-sm); padding: 0.6rem 0.75rem; display: grid; gap: 0.3rem; margin-top: 0.2rem; }
+.after-card__evidences-box { background: #fffbeb; border: 1px solid var(--border-warning); border-left: 3px solid #f59e0b; border-radius: var(--radius-sm); padding: 0.6rem 0.75rem; display: grid; gap: 0.35rem; }
+.after-card__rec-box { background: #f0fdf4; border: 1px solid var(--border-safe); border-left: 3px solid #10b981; border-radius: var(--radius-sm); padding: 0.6rem 0.75rem; display: grid; gap: 0.3rem; }
+.after-card__box-header { display: flex; align-items: center; gap: 0.45rem; font-size: 0.8rem; color: var(--color-ink); }
+.after-card__box-icon { color: var(--color-ink-muted); flex-shrink: 0; }
+.after-card__box-text { font-size: 0.82rem; color: var(--color-ink); line-height: 1.45; }
+.after-card__quote-list { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.after-card__quote-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.76rem; background: #fff; border: 1px solid rgba(0, 0, 0, 0.1); padding: 0.25rem 0.55rem; border-radius: var(--radius-sm); color: #92400e; font-style: italic; font-weight: 500; }
+.after-card__history-section { border-top: 1px solid var(--color-rule); padding-top: 0.6rem; margin-top: 0.2rem; }
+.after-card__history-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0.5rem 0.75rem; background: #f8fafc; border: 1px solid var(--color-rule); border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--color-ink); cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; text-align: left; }
+.after-card__history-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.after-card__history-btn-label { display: flex; align-items: center; gap: 0.5rem; }
+.after-card__history-list { display: grid; gap: 0.45rem; margin-top: 0.55rem; padding: 0.6rem; background: #fafafa; border: 1px solid var(--color-rule); border-radius: var(--radius-sm); max-height: 220px; overflow-y: auto; }
+.after-card__history-info { display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; color: #047857; margin-bottom: 0.25rem; font-weight: 500; }
+.after-card__msg-row { display: grid; grid-template-columns: auto 1fr; gap: 0.5rem; align-items: baseline; font-size: 0.78rem; padding: 0.35rem 0.5rem; background: #fff; border: 1px solid var(--color-rule); border-radius: 4px; }
+.after-card__msg-row--target { border-color: #ef4444; background: #fef2f2; }
+.after-card__msg-tag { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; padding: 0.1rem 0.35rem; border-radius: 3px; background: #e2e8f0; color: #475569; white-space: nowrap; }
+.after-card__msg-tag--target { background: #dc2626; color: #fff; }
+.after-card__msg-content { color: var(--color-ink); word-break: break-word; line-height: 1.35; }
+.after-card__footer-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem; padding-top: 0.4rem; border-top: 1px dashed var(--color-rule); font-size: 0.76rem; }
+.after-card__guardrail-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.7rem; font-weight: 500; color: #475569; background: rgba(0, 0, 0, 0.04); padding: 0.2rem 0.45rem; border-radius: var(--radius-sm); }
 
 /* ==========================================================================
    Ao vivo

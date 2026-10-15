@@ -100,7 +100,8 @@ async def test_threat_always_goes_to_ollaya():
     )
     st = steps(res)
     assert res.decided_by == "ollaya"
-    assert res.is_masked is True
+    assert res.is_blocked is True
+    assert res.message == "Vou te pegar na saida do trabalho se nao me responder"
     assert "known_threat" not in st
     assert st["ollaya"].status == "detect"
     assert st["delivery"].status == "detect"
@@ -126,7 +127,8 @@ async def test_subtle_threat_is_caught_by_ollaya():
     )
     st = steps(res)
     assert res.decided_by == "ollaya"
-    assert res.is_masked is True
+    assert res.is_blocked is True
+    assert res.message == "Sei exatamente que horas voce chega em casa. Seria uma pena se algo acontecesse"
     assert st["ollaya"].status == "detect"
     assert st["ollaya"].data["score"] == pytest.approx(0.91)
 

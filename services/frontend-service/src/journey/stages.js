@@ -28,16 +28,16 @@ export const SYNC_STAGES = [
   {
     id: 'delivery',
     n: 4,
-    title: 'Entrega',
-    short: 'Entrega',
-    running: 'Decidindo o que o destinatário vai ver…',
-    tech: 'interceptor · PIX_MASKED_MESSAGE ou texto original',
+    title: 'Desfecho Pix',
+    short: 'Desfecho',
+    running: 'Decidindo se o Pix é aprovado ou bloqueado…',
+    tech: 'interceptor · Bloqueio se ameaça ou aprovação imediata',
   },
 ];
 
 export const STAGE_INDEX = Object.fromEntries(SYNC_STAGES.map((s, i) => [s.id, i]));
 
-// Estações que rodam depois da entrega, sem atrasar o Pix.
+// Estações que rodam em segundo plano após a triagem síncrona.
 export const ASYNC_STAGES = [
   {
     id: 'laudo',
@@ -50,8 +50,8 @@ export const ASYNC_STAGES = [
     id: 'ficha',
     n: 6,
     title: 'Ficha de quem enviou',
-    sub: 'Contagem de ocorrências',
-    tech: 'threshold.record_and_evaluate_limit → user-service /block',
+    sub: 'Governança sob análise do analista',
+    tech: 'threat_logs · Histórico para decisão de bloqueio de conta pelo analista',
   },
 ];
 
@@ -61,7 +61,7 @@ export const STATUS_LABEL = {
   pass: 'Passou',
   skip: 'Não precisou',
   detect: 'Detectou',
-    error: 'Falhou',
+  error: 'Falhou',
   void: 'Não chegou aqui',
 };
 
@@ -70,7 +70,7 @@ export const VERDICT_LABEL = {
   amount_rule: { pass: 'Analisar', skip: 'Dispensado' },
   anti_evasion: { pass: 'Texto limpo', detect: 'Disfarce' },
   ollaya: { pass: 'Segura', detect: 'Ameaça', skip: 'Não precisou', error: 'Fora do ar' },
-  delivery: { pass: 'Original', detect: 'Substituída' },
+  delivery: { pass: 'Aprovado', detect: 'Bloqueado' },
 };
 
 export function verdictLabel(stageId, status) {
@@ -78,8 +78,8 @@ export function verdictLabel(stageId, status) {
 }
 
 export const DECIDED_BY_LABEL = {
-  none: 'Nenhuma estação precisou agir: a mensagem estava limpa.',
+  none: 'Nenhuma estação precisou agir: o Pix foi aprovado normalmente.',
   skipped: 'A regra de valor dispensou a análise desta mensagem.',
-  ollaya: 'A IA rápida identificou a ameaça (estação 3).',
+  ollaya: 'A IA rápida identificou a ameaça e bloqueou o envio do Pix (estação 3).',
   ollaya_fallback: 'A IA rápida estava fora do ar; o Pix foi aprovado por segurança.',
 };

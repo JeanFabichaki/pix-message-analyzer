@@ -113,14 +113,17 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
   const finishWith = useCallback(
     async (payload, result, { playSpeed = speed } = {}) => {
       const source = result.source;
+      const blocked = result.ok && (Boolean(source.blocked) || source.status === 'BLOCKED');
       const masked = result.ok && Boolean(source.original_masked ?? source.was_masked);
+      const isThreat = blocked || masked;
       const stations = buildStations(source);
       setRun({
         payload,
         txId: payload.transaction_id,
         stations,
         ok: result.ok,
-        masked,
+        blocked,
+        masked: isThreat,
         decidedBy: source.decided_by,
         realMs: totalMsOf(source),
         finalMessage: result.ok ? source.description : null,
@@ -172,7 +175,7 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
       }
       last = { payload, result };
       if (!result.ok) break;
-      if (result.source.original_masked) {
+      if (result.source.original_masked || result.source.blocked || result.source.status === 'BLOCKED') {
         await waitForInvestigation(payload.transaction_id);
         if (token !== sendIdRef.current) return;
         await refreshGovernance(scenario.sender.id);
@@ -474,6 +477,7 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
         <ReceiverPhone
           phase={phase === 'waiting' ? 'running' : phase}
           delivered={tl.delivered}
+          blocked={Boolean(run?.blocked)}
           amount={run?.payload?.amount ?? amount}
           senderName={scenario.sender.name}
           message={run?.finalMessage ?? ''}
@@ -490,6 +494,7 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
             investigation={investigation}
             ficha={ficha}
             reduced={reduced}
+            targetMessage={run?.payload?.description || message}
           />
         )}
       </AnimatePresence>

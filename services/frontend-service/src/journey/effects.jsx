@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Banknote, ShieldCheck } from 'lucide-react';
+import { Banknote, ShieldCheck, Lock } from 'lucide-react';
 import CountUp from '../components/ui/CountUp';
 import { dur, ease, spring } from '../motion/tokens';
 import { formatBRL } from './scenarios';
@@ -118,50 +118,33 @@ export function AmountRuler({ amount, limit, play }) {
   );
 }
 
-/** O texto se desfaz em fragmentos e é trocado pelo aviso padrão; o dinheiro segue direto. */
-export function MessageSwap({ original, masked, amount, play }) {
-  const words = useMemo(() => String(original || '').split(/\s+/).filter(Boolean), [original]);
+/** Quando ameaça é identificada, o envio do Pix é bloqueado e a mensagem original é preservada para perícia. */
+export function MessageSwap({ original, amount, play }) {
   return (
-    <div className="swap">
+    <div className="swap swap--blocked">
       <div className="swap__box">
-        <span className="decode__label">O que foi digitado</span>
-        <p className="swap__original">
-          {words.map((w, i) => (
-            <motion.span
-              key={`${w}-${i}`}
-              className="swap__word"
-              initial={false}
-              animate={
-                play
-                  ? { opacity: 0.18, y: (i % 3) * -3 - 2, filter: 'blur(3px)' }
-                  : { opacity: 0.35, filter: 'blur(2px)' }
-              }
-              transition={{ delay: play ? 0.15 + i * 0.03 : 0, duration: 0.45, ease }}
-            >
-              {w}{' '}
-            </motion.span>
-          ))}
-        </p>
+        <span className="decode__label">Mensagem sob Ameaça (Preservada para Perícia)</span>
+        <p className="swap__original">“{original}”</p>
       </div>
-      <div className="swap__box swap__box--after">
-        <span className="decode__label">O que chega a quem recebe</span>
+      <div className="swap__box swap__box--after swap__box--blocked">
+        <span className="decode__label">Desfecho de Segurança</span>
         <motion.p
-          className="swap__masked"
+          className="swap__masked swap__masked--blocked"
           initial={play ? { opacity: 0, y: 8 } : false}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: play ? 0.75 : 0, duration: dur.base, ease }}
+          transition={{ delay: play ? 0.3 : 0, duration: dur.base, ease }}
         >
-          <ShieldCheck size={16} aria-hidden="true" /> {masked}
+          <Lock size={16} aria-hidden="true" /> Envio do Pix BLOQUEADO
         </motion.p>
       </div>
       <motion.div
-        className="swap__money"
+        className="swap__money swap__money--blocked"
         initial={play ? { opacity: 0, x: -10 } : false}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: play ? 0.9 : 0, ...spring.soft }}
+        transition={{ delay: play ? 0.5 : 0, ...spring.soft }}
       >
-        <Banknote size={16} aria-hidden="true" />{' '}
-        {amount === null || amount === undefined ? 'O dinheiro' : formatBRL(amount)} segue direto para quem recebe, sem atraso.
+        <Lock size={16} aria-hidden="true" />{' '}
+        {amount === null || amount === undefined ? 'O valor' : formatBRL(amount)} foi retido e NÃO transferido ao destinatário.
       </motion.div>
     </div>
   );

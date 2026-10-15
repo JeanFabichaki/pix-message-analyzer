@@ -54,6 +54,7 @@ async def test_gateway_endpoint_threat_masking(db_session, monkeypatch):
         resp = await client.post("/pix/transactions", json=payload)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["status"] == "APPROVED"
-        assert data["original_masked"] is True
-        assert data["description"] == settings.PIX_MASKED_MESSAGE
+        assert data["status"] == "BLOCKED"
+        assert data["blocked"] is True
+        assert data["original_masked"] is False
+        assert data["description"] == payload["description"]

@@ -116,15 +116,15 @@ async def test_interceptor_anti_bypass_detection():
 
     result = await interceptor.inspect_and_filter(tx)
 
-    # 1. Deve ser mascarada
-    assert result.is_masked is True
-    assert result.message == settings.PIX_MASKED_MESSAGE
+    # 1. Envio do Pix deve ser bloqueado e mensagem original preservada
+    assert result.is_blocked is True
+    assert result.message == tx.description
 
     # 2. Deve conter dados anti-evasão
     assert result.evasion_detected is True
     assert result.canonical_message == "vou te pegar na saida do trabalho"
 
     # 3. Suporte a unpack tradicional
-    msg, masked = result
-    assert masked is True
-    assert msg == settings.PIX_MASKED_MESSAGE
+    msg, is_blocked = result
+    assert is_blocked is True
+    assert msg == tx.description

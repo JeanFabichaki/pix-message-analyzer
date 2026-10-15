@@ -125,7 +125,7 @@ export function SenderPhone({
   );
 }
 
-export function ReceiverPhone({ phase, delivered, amount, senderName, message, masked, realMs }) {
+export function ReceiverPhone({ phase, delivered, blocked, amount, senderName, message, masked, realMs }) {
   const showResult = phase === 'done';
   return (
     <section className="phone phone--receiver" aria-label="Celular de quem recebe">
@@ -152,7 +152,57 @@ export function ReceiverPhone({ phase, delivered, amount, senderName, message, m
             </motion.div>
           )}
 
-          {showResult && delivered && (
+          {showResult && blocked && (
+            <motion.div key="blocked" className="receiver-ok" initial="hidden" animate="show">
+              <motion.div
+                className="notif notif--danger"
+                variants={{
+                  hidden: { opacity: 0, y: -28 },
+                  show: { opacity: 1, y: 0, transition: { ...spring.soft } },
+                }}
+              >
+                <span className="notif__title">Envio Bloqueado</span>
+                <span className="notif__sub">Transação retida pelo sistema</span>
+              </motion.div>
+
+              <motion.div
+                className="receiver-amount"
+                variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { delay: 0.15 } } }}
+              >
+                <span className="phone__label">Valor transferido</span>
+                <span className="receiver-amount__value" style={{ color: 'var(--color-danger, #ef4444)' }}>
+                  R$ 0,00
+                </span>
+              </motion.div>
+
+              <motion.div
+                className="chat-bubble chat-bubble--blocked"
+                variants={{
+                  hidden: { opacity: 0, y: 12, scale: 0.97 },
+                  show: { opacity: 1, y: 0, scale: 1, transition: { ...spring.soft, delay: 0.35 } },
+                }}
+              >
+                <span className="chat-bubble__tag" style={{ color: 'var(--color-danger, #ef4444)' }}>
+                  <Lock size={12} aria-hidden="true" /> Pix não transferido
+                </span>
+                <p>O Pix continha ameaça ou intimidação e foi bloqueado preventivamente.</p>
+              </motion.div>
+
+              {typeof realMs === 'number' && (
+                <motion.div
+                  className="real-time-seal"
+                  variants={{
+                    hidden: { opacity: 0, scale: 0.8 },
+                    show: { opacity: 1, scale: 1, transition: { ...spring.pop, delay: 0.7 } },
+                  }}
+                >
+                  Tempo até bloqueio: <strong className="num">{realMs.toFixed(1).replace('.', ',')} ms</strong>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+
+          {showResult && delivered && !blocked && (
             <motion.div key="delivered" className="receiver-ok" initial="hidden" animate="show">
               <motion.div
                 className="notif"

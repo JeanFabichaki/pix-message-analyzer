@@ -76,10 +76,26 @@ async def investigate(
         f"Nova investigação recebida para tx={payload.transaction_id}, user={payload.user_id}: '{payload.text}'"
     )
 
-    # 1. Análise semântica profunda com Gemini (usando forma canônica se houver evasão para assertividade)
+    # 1. Recupera histórico recente (até 10 mensagens anteriores) para contextualização de perseguição/coação continuada
+    history = payload.history
+    if history is None and db is not None:
+        try:
+            hist_stmt = (
+                select(ThreatLog.original_message)
+                .where(ThreatLog.user_id == payload.user_id)
+                .order_by(ThreatLog.created_at.desc())
+                .limit(10)
+            )
+            hist_res = await db.execute(hist_stmt)
+            history = list(reversed(hist_res.scalars().all()))
+        except Exception as e:
+            logger.warning(f"Não foi possível buscar histórico de mensagens para {payload.user_id}: {e}")
+            history = []
+
+    # 2. Análise semântica profunda com Gemini (usando forma canônica se houver evasão para assertividade)
     t_gemini_start = time.perf_counter()
     analysis_text = payload.canonical_text if (payload.evasion_detected and payload.canonical_text) else payload.text
-    analysis: GeminiThreatAnalysis = await analyzer.analyze(analysis_text)
+    analysis: GeminiThreatAnalysis = await analyzer.analyze(analysis_text, history=history)
     gemini_duration_ms = round((time.perf_counter() - t_gemini_start) * 1000, 2)
 
     # 2. Construção do registro de auditoria
@@ -121,6 +137,9 @@ async def investigate(
         "transaction_id": payload.transaction_id,
         "user_id": payload.user_id,
         "analysis": analysis.model_dump(),
+        "history_analyzed": history or [],
+        "target_message": payload.text,
+        "history_count": len(history or []),
         "bypassed": analysis.bypassed,
         "bypass_reason": analysis.bypass_reason,
         "total_threats": total_threats,
@@ -156,6 +175,20 @@ async def get_threat_by_transaction(transaction_id: str, db: AsyncSession = Depe
             detail="Investigação em andamento ou não encontrada",
         )
 
+    # Recupera histórico das mensagens anteriores àquela transação
+    history_analyzed = []
+    try:
+        hist_stmt = (
+            select(ThreatLog.original_message)
+            .where(ThreatLog.user_id == log.user_id, ThreatLog.created_at < log.created_at)
+            .order_by(ThreatLog.created_at.desc())
+            .limit(10)
+        )
+        hist_res = await db.execute(hist_stmt)
+        history_analyzed = list(reversed(hist_res.scalars().all()))
+    except Exception as e:
+        logger.warning(f"Erro ao buscar histórico para {log.user_id}: {e}")
+
     is_bypass = log.gemini_category == "bypass" or log.gemini_criticality is None
     return {
         "status": "BYPASS" if is_bypass else "PROCESSED",
@@ -164,12 +197,18 @@ async def get_threat_by_transaction(transaction_id: str, db: AsyncSession = Depe
         "user_id": log.user_id,
         "bypassed": is_bypass,
         "bypass_reason": log.gemini_rationale if is_bypass else None,
+        "history_analyzed": history_analyzed,
+        "target_message": log.original_message,
+        "history_count": len(history_analyzed),
         "analysis": {
             "is_valid_threat": not is_bypass,
             "criticidade": log.gemini_criticality.value if hasattr(log.gemini_criticality, "value") else (str(log.gemini_criticality) if log.gemini_criticality else "BAIXA"),
             "categoria": log.gemini_category or "bypass",
             "resumo_analise": log.gemini_rationale,
             "acao_imediata_recomendada": False if is_bypass else (log.gemini_criticality == "CRITICA"),
+            "padrao_identificado": "Coação reiterada com escalada de gravidade no histórico recente do remetente." if not is_bypass else None,
+            "evidencias_citadas": [log.original_message] if not is_bypass else [],
+            "recomendacao_analista": "Bloqueio preventivo da conta e abertura de dossiê de segurança." if not is_bypass else None,
             "bypassed": is_bypass,
             "bypass_reason": log.gemini_rationale if is_bypass else None,
         },

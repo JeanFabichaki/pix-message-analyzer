@@ -233,9 +233,22 @@ async def test_scenario_5_and_6_blocking_trigger_and_governance(db_session):
     )
 
     assert total_5 == 5
-    assert blocked_5 is True
+    assert blocked_5 is False  # Não há mais bloqueio automático por contagem de ameaças!
 
-    # Verifica status atualizado no banco
+    # Usuário permanece ACTIVE até decisão do analista
+    user = await user_svc.get_by_id(user_id)
+    assert user.status == UserStatus.ACTIVE
+
+    # Analista humano revisa o laudo do Gemini e decide bloquear a conta manualmente
+    await MockUserClient().block_user(
+        user_id=user_id,
+        reason="MANUAL_ANALYST_DECISION",
+        total_threats=total_5,
+        triggered_by_tx="tx_trigger_5",
+        details="Bloqueio cautelar aplicado manualmente pelo analista de fraudes.",
+    )
+
+    # Verifica status atualizado no banco pelo analista
     user = await user_svc.get_by_id(user_id)
     assert user.status == UserStatus.BLOCKED_SUSPICIOUS
 

@@ -24,12 +24,16 @@ from common.config.settings import settings
 ollaya_client = OllayaClient(
     base_urls=settings.OLLAYA_CLUSTER_URLS or settings.OLLAYA_BASE_URL,
     model=settings.OLLAYA_MODEL,
+    decomposed=True,
+    threat_threshold=0.65,
 )
 ollaya_tuned_client = OllayaClient(
     base_urls=settings.LAYA_TUNED_CLUSTER_URLS or settings.LAYA_TUNED_BASE_URL or settings.OLLAYA_BASE_URL,
     model=settings.LAYA_TUNED_MODEL,
     instructions=TUNED_INSTRUCTIONS,
     criteria=TUNED_CRITERIA,
+    decomposed=False,
+    threat_threshold=0.40,
 )
 investigation_client = InvestigationClient()
 user_client = GatewayUserClient()
@@ -263,16 +267,21 @@ async def _process_transaction(
         "masking_ms": timing_metrics["step3_masking_ms"],
     })
 
-    # 3. Liquidação da transação
+    # 3. Liquidação ou bloqueio da transação
+    status = "BLOCKED" if res.is_blocked else "APPROVED"
+    detail = "Envio do Pix bloqueado por conter ameaça." if res.is_blocked else None
+
     return PixTransactionResponse(
         transaction_id=tx.transaction_id,
-        status="APPROVED",
+        status=status,
         amount=tx.amount,
         description=res.message,
-        original_masked=res.is_masked,
+        original_masked=False,
+        blocked=res.is_blocked,
         engine=tx.engine,
         canonical_message=res.canonical_message,
         evasion_detected=res.evasion_detected,
+        detail=detail,
         timing=timing_metrics,
         decided_by=res.decided_by,
         trace=res.trace,
