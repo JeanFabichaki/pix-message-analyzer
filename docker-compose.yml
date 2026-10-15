@@ -62,6 +62,10 @@ services:
       # Descarrega o modelo base após 5 min ocioso para economizar RAM quando o benchmark não estiver ativo
       - OLLAYA_KEEP_ALIVE=5m
       - OLLAYA_MAX_LOADED_MODELS=1
+      # Ajuste de threads no CPU para evitar context switching e estabilizar p95/p99
+      - OMP_NUM_THREADS=4
+      - OPENBLAS_NUM_THREADS=4
+      - OLLAYA_MAX_QUEUE=64
     ports:
       - "11435:11435"
     volumes:
@@ -75,6 +79,10 @@ services:
       # Mantém o modelo retreinado sempre residente em RAM para inferência ultrarrápida (<35ms)
       - OLLAYA_KEEP_ALIVE=-1
       - OLLAYA_MAX_LOADED_MODELS=1
+      # Ajuste de threads no CPU para evitar context switching e estabilizar p95/p99
+      - OMP_NUM_THREADS=4
+      - OPENBLAS_NUM_THREADS=4
+      - OLLAYA_MAX_QUEUE=64
     ports:
       - "11436:11435"
     volumes:
@@ -87,6 +95,10 @@ services:
     environment:
       - OLLAYA_KEEP_ALIVE=-1
       - OLLAYA_MAX_LOADED_MODELS=1
+      # Ajuste de threads no CPU para evitar context switching e estabilizar p95/p99
+      - OMP_NUM_THREADS=4
+      - OPENBLAS_NUM_THREADS=4
+      - OLLAYA_MAX_QUEUE=64
     ports:
       - "11437:11435"
     volumes:

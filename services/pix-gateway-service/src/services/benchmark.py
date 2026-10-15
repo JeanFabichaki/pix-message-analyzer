@@ -161,7 +161,7 @@ def build_report(rows: List[Dict[str, Any]], dataset: str, engine_timings: Optio
 class BenchmarkRunner:
     """Mantém os trabalhos em memória (um benchmark por vez já é o uso esperado)."""
 
-    def __init__(self, clients: Dict[str, Any], data_dir: Optional[Path], concurrency: int = 6):
+    def __init__(self, clients: Dict[str, Any], data_dir: Optional[Path], concurrency: int = 4):
         self.clients = clients
         self.data_dir = data_dir
         self.concurrency = concurrency
