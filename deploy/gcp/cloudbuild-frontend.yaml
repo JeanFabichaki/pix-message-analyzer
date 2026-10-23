@@ -5,7 +5,7 @@ steps:
       - '-t'
       - 'us-central1-docker.pkg.dev/pix-guard-poc/pix-guard-repo/pix-frontend:latest'
       - '-f'
-      - 'deploy/docker/Dockerfile.frontend'
+      - 'deploy/docker/Dockerfile.frontend.prod'
       - '.'
 
 images:
