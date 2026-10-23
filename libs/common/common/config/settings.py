@@ -14,15 +14,15 @@ class Settings(BaseSettings):
     PIX_MASKED_MESSAGE: str = "Mensagem retida por conter conteúdo inadequado sob análise de segurança."
 
     # Ollaya Decision Model Server (ollaya.dev)
-    OLLAYA_BASE_URL: str = "http://localhost:11435"
+    OLLAYA_BASE_URL: str = "http://127.0.0.1:11435"
     OLLAYA_CLUSTER_URLS: str = ""
     OLLAYA_MODEL: str = "laya:multilingual"
     OLLAYA_TIMEOUT_SECONDS: float = 25.0
 
     # Laya retreinado nativo no Ollaya (Pix: ameaças e extorsão)
-    LAYA_TUNED_BASE_URL: str = "http://localhost:11435"
-    LAYA_TUNED_CLUSTER_URLS: str = ""
-    LAYA_TUNED_MODEL: str = "laya:pix-threats"
+    LAYA_TUNED_BASE_URL: str = "http://127.0.0.1:8000"
+    LAYA_TUNED_CLUSTER_URLS: str = "http://127.0.0.1:8000"
+    LAYA_TUNED_MODEL: str = "pix-threats"
 
 
     # Dados de teste da página "Comparar" (montados em /data no container do gateway)

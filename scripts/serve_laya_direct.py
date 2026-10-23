@@ -270,4 +270,4 @@ async def systemone(request: Request):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=HOST, port=PORT, log_level="info")
+    uvicorn.run(app, host=HOST, port=PORT, log_level="info", timeout_keep_alive=120)

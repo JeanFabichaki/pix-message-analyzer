@@ -31,21 +31,21 @@ echo $! > "$DIR/.pids/laya.pid"
 echo "[3/6] Iniciando User Service na porta 8002..."
 nohup env PYTHONPATH="$DIR/services/user-service:$DIR/libs/common" .venv/bin/python -m uvicorn src.main:app \
     --app-dir "$DIR/services/user-service" \
-    --host 0.0.0.0 --port 8002 < /dev/null > "$DIR/.logs/user-service.log" 2>&1 &
+    --host 0.0.0.0 --port 8002 --timeout-keep-alive 120 < /dev/null > "$DIR/.logs/user-service.log" 2>&1 &
 echo $! > "$DIR/.pids/user-service.pid"
 
 # 3. Iniciar Gemini Investigation Agent
 echo "[4/6] Iniciando Gemini Investigation Agent na porta 8003..."
 nohup env PYTHONPATH="$DIR/agents/gemini-investigation-agent:$DIR/libs/common" .venv/bin/python -m uvicorn src.main:app \
     --app-dir "$DIR/agents/gemini-investigation-agent" \
-    --host 0.0.0.0 --port 8003 < /dev/null > "$DIR/.logs/gemini-agent.log" 2>&1 &
+    --host 0.0.0.0 --port 8003 --timeout-keep-alive 120 < /dev/null > "$DIR/.logs/gemini-agent.log" 2>&1 &
 echo $! > "$DIR/.pids/gemini-agent.pid"
 
 # 4. Iniciar Pix Gateway Service
 echo "[5/6] Iniciando Pix Gateway Service na porta 8001..."
 nohup env PYTHONPATH="$DIR/services/pix-gateway-service:$DIR/libs/common" .venv/bin/python -m uvicorn src.main:app \
     --app-dir "$DIR/services/pix-gateway-service" \
-    --host 0.0.0.0 --port 8001 < /dev/null > "$DIR/.logs/gateway.log" 2>&1 &
+    --host 0.0.0.0 --port 8001 --timeout-keep-alive 120 < /dev/null > "$DIR/.logs/gateway.log" 2>&1 &
 echo $! > "$DIR/.pids/gateway.pid"
 
 # 5. Iniciar Frontend React
