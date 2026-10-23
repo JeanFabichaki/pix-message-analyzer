@@ -1,0 +1,16 @@
+FROM ghcr.io/ollaya-dev/ollaya:latest
+
+# Configurações para acelerador NVIDIA GPU no Google Cloud Run
+ENV CUDA_VISIBLE_DEVICES=0 \
+    NVIDIA_VISIBLE_DEVICES=all \
+    NVIDIA_DRIVER_CAPABILITIES=compute,utility \
+    OLLAYA_GPU=1 \
+    OLLAYA_KEEP_ALIVE=-1 \
+    PORT=11435
+
+# Copia os pesos retreinados para inclusão nativa
+COPY finetune/models/pix-threats /models/pix-threats
+
+EXPOSE 11435
+
+CMD ["/usr/bin/ollaya", "serve"]

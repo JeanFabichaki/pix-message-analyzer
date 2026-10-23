@@ -1,0 +1,46 @@
+server {
+    listen 8080;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Gzip Compression
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    # SPA routing fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy reverso para o Gateway do Pix
+    location /pix-api/ {
+        proxy_pass ${GATEWAY_URL}/;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_ssl_server_name on;
+    }
+
+    # Proxy reverso para o User Service
+    location /user-api/ {
+        proxy_pass ${USER_SERVICE_URL}/;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_ssl_server_name on;
+    }
+
+    # Proxy reverso para o Gemini Agent
+    location /gemini-api/ {
+        proxy_pass ${GEMINI_AGENT_URL}/;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_ssl_server_name on;
+    }
+}
