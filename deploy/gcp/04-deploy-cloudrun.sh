@@ -12,20 +12,14 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 
 AR_BASE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO_NAME}"
-CONNECTION_NAME=$(gcloud sql instances describe "$DB_INSTANCE_NAME" --project="$PROJECT_ID" --format="value(connectionName)" 2>/dev/null || true)
 
 echo "================================================================="
 echo "   Pix Guard - 04: Deploy dos Serviços no Google Cloud Run"
 echo "   Projeto       : $PROJECT_ID"
 echo "   Região        : $REGION"
 echo "   Min Instances : $MIN_INSTANCES (Zero Cold Start)"
-echo "   GPU           : $GPU_COUNT x $GPU_TYPE"
+echo "   Persistência  : Google Cloud Firestore (Serverless Native)"
 echo "================================================================="
-
-if [ -z "$CONNECTION_NAME" ]; then
-    echo "[ERRO] Instância Cloud SQL '$DB_INSTANCE_NAME' não encontrada. Execute ./02-setup-db.sh primeiro."
-    exit 1
-fi
 
 # 1. Deploy Laya Model Server no Cloud Run
 echo ""
@@ -56,8 +50,7 @@ gcloud run deploy user-service \
     --cpu=1 \
     --memory=512Mi \
     --min-instances="$MIN_INSTANCES" \
-    --set-secrets="DATABASE_URL=DATABASE_URL:latest" \
-    --add-cloudsql-instances="$CONNECTION_NAME" \
+    --set-env-vars="PERSISTENCE_TYPE=firestore,FIRESTORE_PROJECT_ID=$PROJECT_ID,FIRESTORE_DATABASE=(default)" \
     --port=8002 \
     --allow-unauthenticated \
     --project="$PROJECT_ID" \
@@ -75,9 +68,8 @@ gcloud run deploy gemini-investigation-agent \
     --cpu=1 \
     --memory=512Mi \
     --min-instances="$MIN_INSTANCES" \
-    --set-secrets="DATABASE_URL=DATABASE_URL:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest" \
-    --set-env-vars="USER_SERVICE_URL=$USER_SERVICE_URL,GEMINI_MODEL=$GEMINI_MODEL" \
-    --add-cloudsql-instances="$CONNECTION_NAME" \
+    --set-secrets="GEMINI_API_KEY=GEMINI_API_KEY:latest" \
+    --set-env-vars="USER_SERVICE_URL=$USER_SERVICE_URL,GEMINI_MODEL=$GEMINI_MODEL,PERSISTENCE_TYPE=firestore,FIRESTORE_PROJECT_ID=$PROJECT_ID,FIRESTORE_DATABASE=(default)" \
     --port=8003 \
     --allow-unauthenticated \
     --project="$PROJECT_ID" \

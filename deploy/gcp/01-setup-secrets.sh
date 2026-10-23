@@ -43,27 +43,22 @@ else
 fi
 echo "[OK] Segredo GEMINI_API_KEY configurado!"
 
-# Gera senha segura para o Cloud SQL se não existir
-echo "[INFO] Verificando segredo DB_PASSWORD..."
-if ! gcloud secrets describe DB_PASSWORD --project="$PROJECT_ID" >/dev/null 2>&1; then
-    DB_PASS=$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 20)
-    echo -n "$DB_PASS" | gcloud secrets create DB_PASSWORD --data-file=- --replication-policy="automatic" --project="$PROJECT_ID"
-    echo "[OK] Senha de banco de dados gerada e salva no Secret Manager!"
-else
-    echo "[INFO] Segredo DB_PASSWORD já existe."
-fi
-
-# Concede permissão de leitura de segredos para a Service Account padrão do Cloud Run
+# Concede permissão de leitura de segredos e acesso ao Firestore para a Service Account padrão do Cloud Run
 PROJECT_NUM=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
 COMPUTE_SA="${PROJECT_NUM}-compute@developer.gserviceaccount.com"
 
-echo "[INFO] Concedendo permissão secretmanager.secretAccessor para $COMPUTE_SA..."
+echo "[INFO] Concedendo permissões secretmanager.secretAccessor e datastore.user para $COMPUTE_SA..."
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
     --member="serviceAccount:${COMPUTE_SA}" \
     --role="roles/secretmanager.secretAccessor" \
     --condition=None --quiet >/dev/null
 
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="serviceAccount:${COMPUTE_SA}" \
+    --role="roles/datastore.user" \
+    --condition=None --quiet >/dev/null
+
 echo "================================================================="
-echo "   [SUCESSO] Segredos configurados no Secret Manager!"
-echo "   Próximo passo: ./02-setup-db.sh $PROJECT_ID"
+echo "   [SUCESSO] Segredos e permissões configurados!"
+echo "   Próximo passo: ./02-setup-firestore.sh $PROJECT_ID"
 echo "================================================================="

@@ -49,7 +49,7 @@ gcloud services enable \
     run.googleapis.com \
     artifactregistry.googleapis.com \
     secretmanager.googleapis.com \
-    sqladmin.googleapis.com \
+    firestore.googleapis.com \
     generativelanguage.googleapis.com \
     compute.googleapis.com \
     iam.googleapis.com \

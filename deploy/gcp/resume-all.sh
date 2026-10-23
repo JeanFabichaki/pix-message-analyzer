@@ -16,14 +16,7 @@ echo "   ⚡ PIX GUARD - REATIVAR RECURSOS (ZERO COLD START)"
 echo "   Projeto: $PROJECT_ID"
 echo "================================================================="
 
-# 1. Reativar a instância Cloud SQL PostgreSQL
-echo "[INFO] Reativando instância Cloud SQL '$DB_INSTANCE_NAME'..."
-if gcloud sql instances describe "$DB_INSTANCE_NAME" --project="$PROJECT_ID" >/dev/null 2>&1; then
-    gcloud sql instances patch "$DB_INSTANCE_NAME" --activation-policy=ALWAYS --project="$PROJECT_ID" --quiet
-    echo "[OK] Cloud SQL reativado!"
-fi
-
-# 2. Reativar instâncias no Cloud Run com min-instances=1
+# 1. Reativar instâncias no Cloud Run com min-instances=1
 echo "[INFO] Restaurando min-instances=1 no Cloud Run..."
 SERVICES=("pix-ollaya-gpu" "pix-gateway-service" "user-service" "gemini-investigation-agent" "pix-frontend")
 

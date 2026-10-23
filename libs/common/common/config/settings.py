@@ -6,8 +6,13 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "INFO"
 
-    # Banco de Dados
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/pix_guard_db"
+    # Persistência: "firestore" (Google Cloud Firestore Native) ou "sql" (PostgreSQL/SQLite)
+    PERSISTENCE_TYPE: str = "firestore"
+    FIRESTORE_PROJECT_ID: str = "pix-guard-poc"
+    FIRESTORE_DATABASE: str = "(default)"
+
+    # Banco de Dados Relacional (Fallback para testes locais e SQLite)
+    DATABASE_URL: str = "sqlite+aiosqlite:///./pix_guard.db"
 
     # Regras de Negócio do Gateway
     PIX_THRESHOLD_AMOUNT_BRL: float = 10.00

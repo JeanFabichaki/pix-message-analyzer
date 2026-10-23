@@ -17,6 +17,43 @@ async def record_and_evaluate_limit(
     session: AsyncSession = None,
 ) -> Tuple[int, bool]:
     """Registra a ameaça investigada e verifica o limite de reincidência para bloqueio."""
+    if settings.PERSISTENCE_TYPE == "firestore":
+        from datetime import datetime, timezone
+        from common.database import firestore_repo
+
+        user = await firestore_repo.ensure_user(
+            user_id=user_id,
+            cpf_cnpj=f"CPF_{user_id[-8:]}",
+            name=f"User {user_id}",
+        )
+        threat_dict = {
+            "id": threat_log.id,
+            "user_id": threat_log.user_id,
+            "transaction_id": threat_log.transaction_id,
+            "direction": threat_log.direction.value if hasattr(threat_log.direction, "value") else str(threat_log.direction),
+            "original_message": threat_log.original_message,
+            "ollaya_score": threat_log.ollaya_score,
+            "ollaya_category": threat_log.ollaya_category,
+            "gemini_criticality": threat_log.gemini_criticality.value if hasattr(threat_log.gemini_criticality, "value") else (str(threat_log.gemini_criticality) if threat_log.gemini_criticality else None),
+            "gemini_category": threat_log.gemini_category,
+            "gemini_rationale": threat_log.gemini_rationale,
+            "gemini_model": threat_log.gemini_model,
+            "prompt_tokens": threat_log.prompt_tokens or 0,
+            "completion_tokens": threat_log.completion_tokens or 0,
+            "total_tokens": threat_log.total_tokens or 0,
+            "cost_usd": threat_log.cost_usd or 0.0,
+            "cost_brl": threat_log.cost_brl or 0.0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await firestore_repo.record_threat_log(threat_dict)
+        total_threats = await firestore_repo.count_user_threats(user_id)
+        blocked = bool(user and user.get("status") == "BLOCKED_SUSPICIOUS")
+        logger.info(
+            f"Ameaça registrada no Firestore para user={user_id}. Total acumulado: {total_threats}. "
+            f"Bloqueio de conta sob governança do analista humano (blocked={blocked})."
+        )
+        return total_threats, blocked
+
     if session is not None:
         return await _process_threat(session, user_id, threat_log, user_client)
 

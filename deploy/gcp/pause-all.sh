@@ -27,12 +27,8 @@ for SVC in "${SERVICES[@]}"; do
     fi
 done
 
-# 2. Pausar a instância Cloud SQL PostgreSQL
-echo "[INFO] Pausando instância Cloud SQL '$DB_INSTANCE_NAME'..."
-if gcloud sql instances describe "$DB_INSTANCE_NAME" --project="$PROJECT_ID" >/dev/null 2>&1; then
-    gcloud sql instances patch "$DB_INSTANCE_NAME" --activation-policy=NEVER --project="$PROJECT_ID" --quiet
-    echo "[OK] Instância Cloud SQL pausada (cobrança de computação suspensa)!"
-fi
+# Persistência: O Firestore é nativamente serverless e não gera nenhum custo ocioso.
+echo "[INFO] Firestore Native não requer pausa (zero custo ocioso no Free Tier)."
 
 echo ""
 echo "================================================================="

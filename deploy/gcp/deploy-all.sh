@@ -24,8 +24,8 @@ echo "================================================================="
 # Etapa 1: Segredos e Chaves
 "$DIR/01-setup-secrets.sh" "$PROJECT_ID"
 
-# Etapa 2: Banco de Dados Cloud SQL
-"$DIR/02-setup-db.sh" "$PROJECT_ID"
+# Etapa 2: Banco de Dados Serverless (Google Cloud Firestore)
+"$DIR/02-setup-firestore.sh" "$PROJECT_ID"
 
 # Etapa 3: Build e Push das Imagens
 "$DIR/03-build-and-push.sh" "$PROJECT_ID"

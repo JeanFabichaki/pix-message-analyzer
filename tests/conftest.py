@@ -9,6 +9,7 @@ from common.config.settings import settings
 settings.MOCK_GEMINI = True
 settings.PIX_THRESHOLD_AMOUNT_BRL = 10.00
 settings.THREAT_BLOCK_LIMIT = 5
+settings.PERSISTENCE_TYPE = "sql"
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 

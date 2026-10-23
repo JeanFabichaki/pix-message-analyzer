@@ -1,10 +1,10 @@
 # Pix Guard - Plataforma Inteligente Antifraude e Triagem de Ameaças Pix (Laya SLM & Gemini 2.5 Flash)
 
-[![Google Cloud Platform](https://img.shields.io/badge/GCP-Cloud%20Run%20%7C%20Cloud%20SQL-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com)
+[![Google Cloud Platform](https://img.shields.io/badge/GCP-Cloud%20Run%20%7C%20Firestore-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com)
 [![Zero Cold Start](https://img.shields.io/badge/Cold%20Start-Zero%20(min--instances=1)-00C853)](https://cloud.google.com/run)
 [![Laya SLM](https://img.shields.io/badge/Laya%20SLM-mmBERT%20Fine--Tuned-FF6F00)](finetune/README.md)
 [![Gemini 2.5 Flash](https://img.shields.io/badge/Gemini-2.5%20Flash%20(Structured)-8E24AA?logo=google-gemini&logoColor=white)](https://ai.google.dev)
-[![PostgreSQL 16](https://img.shields.io/badge/Database-PostgreSQL%2016-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![Google Cloud Firestore](https://img.shields.io/badge/Database-Cloud%20Firestore%20Native-FFCA28?logo=firebase&logoColor=black)](https://cloud.google.com/firestore)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%20%28Async%29-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React Vite](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite%20%2B%20Tailwind-61DAFB?logo=react&logoColor=black)](https://react.dev)
 [![FinOps](https://img.shields.io/badge/FinOps-1--Click%20Pause%2FResume-00ACC1)](deploy/gcp/)
@@ -90,17 +90,18 @@ A arquitetura foi desenhada seguindo as melhores práticas do Google Cloud Well-
 │           │                                         │                                           │
 │           └──► [Auditoria Assíncrona via Events]────┼─────────────────────────┘                 │
 │                                                     │                                           │
-│                                                     ▼ (Unix Domain Socket / Cloud SQL Proxy)     │
+│                                                     ▼ (IAM Service Account / Firestore SDK)     │
 │                                        ┌───────────────────────────────┐                        │
-│                                        │ pix-guard-db (Cloud SQL)      │                        │
-│                                        │ PostgreSQL 16 (db-f1-micro)   │                        │
-│                                        │ Tables: users, threat_logs    │                        │
+│                                        │ Google Cloud Firestore        │                        │
+│                                        │ (Native Mode - Serverless)    │                        │
+│                                        │ Collections: users, threat_logs│                        │
+│                                        │ Custo ocioso: R$ 0,00         │                        │
 │                                        └───────────────────────────────┘                        │
 │                                                     ▲                                           │
 │                                                     │ Segredos Injetados                        │
 │                                        ┌────────────┴──────────────────┐                        │
 │                                        │ Google Secret Manager         │                        │
-│                                        │ GEMINI_API_KEY, DATABASE_URL  │                        │
+│                                        │ GEMINI_API_KEY                │                        │
 │                                        └───────────────────────────────┘                        │
 └─────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -138,7 +139,7 @@ A arquitetura foi desenhada seguindo as melhores práticas do Google Cloud Well-
                                     5. Emite laudo estruturado JSON
                                                   │
                                                   ▼
-                                    [ Grava em threat_logs (PostgreSQL) ]
+                                    [ Grava em threat_logs (Firestore) ]
                                                   │
                                                   ▼
                                     [ Ficha Disponível no Painel ]
@@ -158,12 +159,12 @@ pix-message-analyzer/
 │   ├── gcp/
 │   │   ├── 00-init-project.sh          # Provisionamento do projeto, billing e APIs
 │   │   ├── 01-setup-secrets.sh         # Injeção de chaves no Google Secret Manager
-│   │   ├── 02-setup-db.sh              # Criação do PostgreSQL 16 no Cloud SQL
+│   │   ├── 02-setup-firestore.sh       # Provisionamento do Google Cloud Firestore Native
 │   │   ├── 03-build-and-push.sh        # Compilação e push via Cloud Build
 │   │   ├── 04-deploy-cloudrun.sh       # Deploy de todos os serviços no Cloud Run
 │   │   ├── deploy-all.sh               # Orquestrador completo end-to-end
-│   │   ├── pause-all.sh                # FinOps: Pausa Cloud SQL e escala Cloud Run a zero
-│   │   └── resume-all.sh               # FinOps: Reativa Cloud SQL e escala p/ min-instances=1
+│   │   ├── pause-all.sh                # FinOps: Escala Cloud Run para zero (Firestore já é R$ 0 ocioso)
+│   │   └── resume-all.sh               # FinOps: Escala Cloud Run para min-instances=1 (Zero Cold Start)
 │   ├── docker/
 │   │   ├── Dockerfile.laya-serve.gpu   # Runtime do Laya com PyTorch CUDA/C++
 │   │   └── ...                         # Dockerfiles otimizados de cada serviço
@@ -219,14 +220,14 @@ gcloud auth login
 
 O script configura:
 - **Zero Cold Start:** Todos os serviços sobem com `--min-instances=1`, mantendo réplicas quentes em memória.
-- **Conexão Segura com Banco:** Conexão Unix socket `/cloudsql/pix-guard-poc:us-central1:pix-guard-db` via Cloud SQL Auth Proxy embutido no Cloud Run.
-- **Segurança de Credenciais:** As chaves de API e senhas do banco são injetadas diretamente a partir do **Google Secret Manager**, sem variáveis de ambiente expostas em texto puro.
+- **Persistência Serverless Nativa:** Google Cloud Firestore (Native Mode), autenticado via Service Account (IAM / ADC), sem senhas, sem VPC e com custo R$ 0,00 no Free Tier permanente.
+- **Segurança de Credenciais:** As chaves de API são injetadas diretamente a partir do **Google Secret Manager**, sem variáveis de ambiente expostas em texto puro.
 
 ---
 
 ### 4.2. FinOps: Controle de Custos (Pause & Resume)
 
-Para viabilizar testes, validações e demonstrações sem incorrer em custos contínuos de instâncias quentes ou bancos rodando 24/7, foram criados utilitários dedicados de FinOps:
+Para viabilizar testes, validações e demonstrações sem incorrer em custos contínuos de instâncias quentes rodando 24/7, foram criados utilitários dedicados de FinOps:
 
 #### ⏸️ Pausar Tudo (Custo Zero quando inativo)
 Ao terminar a sessão de testes, execute:
@@ -234,15 +235,14 @@ Ao terminar a sessão de testes, execute:
 ./deploy/gcp/pause-all.sh pix-guard-poc
 ```
 - Reduz `--min-instances=0` em todos os 5 serviços Cloud Run (cobrança de vCPU/GPU/RAM cessa imediatamente).
-- Pausa a instância do Cloud SQL (`--activation-policy=NEVER`), mantendo apenas o custo residual de armazenamento em disco (~$2/mês).
+- O Firestore Native não gera nenhum custo ocioso no Free Tier (50k leituras/dia e 20k escritas/dia grátis).
 
-#### ▶️ Reativar Tudo (Zero Cold Start em ~60s)
+#### ▶️ Reativar Tudo (Zero Cold Start imediato)
 Antes de iniciar uma apresentação ou bateria de testes:
 ```bash
 ./deploy/gcp/resume-all.sh pix-guard-poc
 ```
-- Restaura a instância do Cloud SQL para `ALWAYS`.
-- Escala todos os serviços de volta para `--min-instances=1`, eliminando qualquer latência de cold start.
+- Reativa instâncias para `--min-instances=1` instantaneamente (sem esperar 1-2 minutos de inicialização de VM de banco de dados).
 
 ---
 
@@ -255,7 +255,7 @@ Antes de iniciar uma apresentação ou bateria de testes:
 | **User Service** | Cloud Run | [https://user-service-535416943293.us-central1.run.app](https://user-service-535416943293.us-central1.run.app) |
 | **Gemini Investigation Agent** | Cloud Run | [https://gemini-investigation-agent-535416943293.us-central1.run.app](https://gemini-investigation-agent-535416943293.us-central1.run.app) |
 | **Laya Inference Service** | Cloud Run | [https://pix-ollaya-gpu-535416943293.us-central1.run.app](https://pix-ollaya-gpu-535416943293.us-central1.run.app) |
-| **PostgreSQL 16** | Cloud SQL | `pix-guard-db` (`db-f1-micro`, us-central1) |
+| **Google Cloud Firestore** | Cloud Firestore | `(default)` (Native Mode, us-central1, Free Tier permanente) |
 
 ---
 
