@@ -118,10 +118,12 @@ services:
       - GEMINI_AGENT_URL=http://gemini-investigation-agent:8003
       - OLLAYA_BASE_URL=http://ollaya:11435
       - OLLAYA_CLUSTER_URLS=http://ollaya:11435
-      - LAYA_TUNED_BASE_URL=http://ollaya-tuned-1:11435
-      - LAYA_TUNED_CLUSTER_URLS=http://ollaya-tuned-1:11435,http://ollaya-tuned-2:11435
-      - LAYA_TUNED_MODEL=laya:pix-threats
+      - LAYA_TUNED_BASE_URL=${LAYA_TUNED_BASE_URL:-http://ollaya-tuned-1:11435}
+      - LAYA_TUNED_CLUSTER_URLS=${LAYA_TUNED_CLUSTER_URLS:-http://ollaya-tuned-1:11435,http://ollaya-tuned-2:11435}
+      - LAYA_TUNED_MODEL=${LAYA_TUNED_MODEL:-laya:pix-threats}
       - OLLAYA_TIMEOUT_SECONDS=25.0
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     volumes:
       - ./services/pix-gateway-service/src:/app/services/pix-gateway-service/src

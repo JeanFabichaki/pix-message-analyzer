@@ -1,10 +1,11 @@
-.PHONY: up-tuned check-tuned pull-model reset help install test seed up down logs clean run-gateway run-user run-agent run-frontend install-frontend
+.PHONY: up-tuned check-tuned pull-model reset help install test seed up down logs clean run-gateway run-user run-agent run-frontend install-frontend run-laya-mac
 
 help:
 	@echo "Comandos disponíveis:"
 	@echo "  make install          - Instala dependências Python e Node.js"
 	@echo "  make install-frontend - Instala dependências do frontend (npm install)"
 	@echo "  make run-frontend     - Executa o frontend React localmente (porta 3000)"
+	@echo "  make run-laya-mac     - Executa o Laya FP32 nativo no Mac com Apple Silicon GPU (MPS)"
 	@echo "  make test             - Executa a suíte de testes de validação da PoC"
 	@echo "  make seed             - Reseta e regenera a base de dados com usuários de teste"
 	@echo "  make up               - Sobe os serviços com o Laya original (Ollaya)"
@@ -27,6 +28,9 @@ install-frontend:
 
 run-frontend:
 	cd services/frontend-service && npm run dev
+
+run-laya-mac:
+	./scripts/run_native_laya_mac.sh
 
 PYTHON ?= $(shell if [ -f .venv/bin/python ]; then echo .venv/bin/python; else echo python3; fi)
 PYTEST ?= $(shell if [ -f .venv/bin/pytest ]; then echo .venv/bin/pytest; else echo pytest; fi)

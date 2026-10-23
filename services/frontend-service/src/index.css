@@ -355,6 +355,47 @@ button { font-family: inherit; color: inherit; }
 .detail__ms { font-size: 0.8rem; color: var(--color-ink-secondary); }
 .detail__tech { margin-top: 0.6rem; padding: 0.7rem; background: var(--color-charcoal); color: #d6dde8; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.72rem; white-space: pre-wrap; overflow-x: auto; }
 
+/* Decomposição de Latência: inferência de CPU vs transporte Cloud Run */
+.latency-breakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.6rem;
+  margin: 0.8rem 0;
+  padding: 0.75rem 0.9rem;
+  background: #ffffff;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.latency-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.latency-item__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.latency-item__title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+.latency-item__value {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-brand, #2563eb);
+}
+.latency-item__desc {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--color-ink-secondary);
+  line-height: 1.3;
+}
+
 /* Efeitos das estações */
 .decode { display: grid; gap: 0.6rem; }
 .decode__row { display: grid; gap: 0.15rem; }

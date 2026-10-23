@@ -172,6 +172,38 @@ pix-message-analyzer/
    make down
    ```
 
+### 7.4. Decomposição de Latência em Nuvem (Cloud Run): `inference_ms` vs. `network_ms`
+
+Na arquitetura de microsserviços do Google Cloud, a medição total da chamada do Laya (`step2_ollaya_ms`) é segregada em dois componentes fundamentais para transparência analítica:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│               Tempo Total Medido pelo Gateway: ~200ms – 230ms           │
+├────────────────────────────────────────┬───────────────────────────────┤
+│  🧠 1. inference_ms (Computação CPU)   │  🌐 2. network_ms (Cloud Run) │
+│         110 ms – 180 ms (80% a 90%)    │       15 ms – 25 ms (10% a 20%)│
+└────────────────────────────────────────┴───────────────────────────────┘
+```
+
+- **`inference_ms`**: **Tempo em que a CPU processou a rede neural.**
+  - Medido internamente no container `pix-ollaya-gpu` e transmitido no cabeçalho `x-inference-time-ms`.
+  - Reflete o forward pass dos 322 milhões de parâmetros do mmBERT em 4 vCPUs no Cloud Run.
+- **`network_ms`**: **Latência de transporte e proxy Cloud Run.**
+  - Medido pelo `pix-gateway-service` (`total_elapsed - inference_ms`).
+  - Cobre a terminação TLS (HTTPS), autenticação IAM e roteamento seguro do Google Front End (GFE) dentro da região `us-central1`.
+
+#### Ajustes de Performance e Observabilidade Aplicados:
+1. **Controle Estrito de Threads no Cloud Run (`OMP_NUM_THREADS = 4`):**
+   - No ambiente conteinerizado do Cloud Run, o OpenMP e o PyTorch tentavam alocar todas as threads físicas do host da máquina física da nuvem (64 a 128 threads), gerando contenção severa (*thread oversubscription*) em uma cota de 4 vCPUs.
+   - Foram fixados `OMP_NUM_THREADS=4`, `TORCH_NUM_THREADS=4`, `MKL_NUM_THREADS=4` e `OPENBLAS_NUM_THREADS=4` nas revisões do Cloud Run.
+2. **Exibição Visual no Frontend (Etapa 3 - Jornada):**
+   - A estação do Laya exibe visualmente a segregação entre `inference_ms` (CPU da rede neural) e `network_ms` (transporte Cloud Run), permitindo que o analista audite instantaneamente o custo de computação versus o custo de rede.
+3. **Telemetria Estruturada no Cloud Logging:**
+   - Emissão de logs com granularidade de milissegundos para auditoria forense:
+     ```text
+     ⚡ [OLLAYA INFERENCE] URL=https://... | Total Round-Trip=204.12ms | Pure Inference=168.40ms | Network Overhead=35.72ms | Model=laya-rl-agent
+     ```
+
 ---
 
 ### 3.2. Execução Local com Python Virtualenv

@@ -171,14 +171,25 @@ class OllayaClient:
         return {"model": self.model, "state": safe_text, "questions": {"threat": question}}
 
     async def is_available(self) -> bool:
-        """Verifica se o modelo está registrado no Ollaya consultando /v1/models (leve, sem carregar pesos)."""
+        """Verifica se o modelo está registrado no Ollaya ou no laya-serve."""
         client = self._get_client()
         for base_url in self.base_urls:
+            # 1. Tenta /v1/models (Ollaya C++)
             try:
-                resp = await client.get(f"{base_url}/v1/models", timeout=4.0)
+                resp = await client.get(f"{base_url}/v1/models", timeout=3.0)
                 if resp.status_code == 200:
                     models = [m.get("name") for m in resp.json().get("models", [])]
                     if self.model in models:
+                        return True
+            except Exception:
+                pass
+            # 2. Tenta /health (laya-serve nativo com MPS/CUDA/CPU)
+            try:
+                resp = await client.get(f"{base_url}/health", timeout=3.0)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    loaded = data.get("loaded", [])
+                    if self.model in loaded or data.get("status") == "ok":
                         return True
             except Exception:
                 continue
@@ -221,16 +232,31 @@ class OllayaClient:
         attempts = len(self.base_urls)
         data = None
         used_url = None
+        req_elapsed_ms = 0.0
+        inference_ms = None
+        network_ms = 0.0
 
         for attempt in range(attempts):
             base_url = self._next_url()
             used_url = base_url
             url = f"{base_url}/v1/systemone"
+            t_req_start = time.perf_counter()
             try:
                 resp = await self._get_client().post(url, json=self._payload(text))
                 resp.raise_for_status()
+                req_elapsed_ms = round((time.perf_counter() - t_req_start) * 1000, 2)
                 data = resp.json()
                 self._record_ok()
+
+                # Extrai tempo puro de inferência do container (se provido nos headers)
+                resp_headers = getattr(resp, "headers", None) or {}
+                raw_inf_ms = resp_headers.get("x-inference-time-ms") if hasattr(resp_headers, "get") else None
+                if raw_inf_ms:
+                    try:
+                        inference_ms = round(float(raw_inf_ms), 2)
+                    except Exception:
+                        inference_ms = None
+                network_ms = round(max(0.0, req_elapsed_ms - (inference_ms or 0.0)), 2)
                 break
             except httpx.TimeoutException as te:
                 self._record_failure(self._describe(te))
@@ -264,6 +290,11 @@ class OllayaClient:
             in_gray_zone = (GRAY_ZONE_MIN <= max_score < GRAY_ZONE_MAX)
 
             category_name = max_key if is_threat else ("zona_cinzenta" if in_gray_zone else "benigno")
+            logger.info(
+                f"⚡ [OLLAYA INFERENCE - DECOMPOSED] URL={used_url} | Total Round-Trip={req_elapsed_ms:.2f}ms | "
+                f"Pure Inference={inference_ms}ms | Network Overhead={network_ms:.2f}ms | "
+                f"Model={data.get('model', self.model)} | MaxScore={max_score:.4f} ({max_key}) | IsThreat={is_threat}"
+            )
             return OllayaClassificationResult(
                 is_threat=is_threat,
                 score=max_score,
@@ -275,6 +306,8 @@ class OllayaClient:
                 ),
                 decomposed_scores=decomposed_scores,
                 in_gray_zone=in_gray_zone,
+                inference_ms=inference_ms,
+                network_ms=network_ms,
             )
 
         # 2. Rota de pergunta única (modelo retreinado ou legado)
@@ -287,6 +320,12 @@ class OllayaClient:
         is_threat = (choice == "threat") or (threat_prob >= self.threat_threshold)
         in_gray_zone = (GRAY_ZONE_MIN <= threat_prob < GRAY_ZONE_MAX)
 
+        logger.info(
+            f"⚡ [OLLAYA INFERENCE] URL={used_url} | Total Round-Trip={req_elapsed_ms:.2f}ms | "
+            f"Pure Inference={inference_ms}ms | Network Overhead={network_ms:.2f}ms | "
+            f"Model={data.get('model', self.model)} | ThreatScore={threat_prob:.4f} | Choice={choice} | IsThreat={is_threat}"
+        )
+
         return OllayaClassificationResult(
             is_threat=is_threat,
             score=threat_prob,
@@ -295,4 +334,6 @@ class OllayaClient:
             detail=f"Decisão Ollaya: choice={choice}, confidence={confidence:.4f}, threat_prob={threat_prob:.4f}",
             decomposed_scores={"threat": threat_prob},
             in_gray_zone=in_gray_zone,
+            inference_ms=inference_ms,
+            network_ms=network_ms,
         )

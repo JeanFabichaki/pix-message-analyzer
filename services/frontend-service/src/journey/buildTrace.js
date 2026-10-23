@@ -35,6 +35,10 @@ function deduceTrace(res) {
     step: 'ollaya',
     status: masked ? 'detect' : 'pass',
     ms: t.step2_ollaya_ms,
+    data: {
+      pure_inference_ms: t.ollaya_pure_inference_ms,
+      network_ms: t.ollaya_network_ms,
+    },
   });
   out.push({ step: 'delivery', status: masked ? 'detect' : 'pass', ms: t.step3_masking_ms });
   return out;

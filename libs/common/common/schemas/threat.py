@@ -12,6 +12,8 @@ class OllayaClassificationResult(BaseModel):
     detail: Optional[str] = Field(default=None, description="Detalhes adicionais da resposta do Ollaya")
     decomposed_scores: Optional[Dict[str, float]] = Field(default=None, description="Probabilidades separadas das perguntas decompostas")
     in_gray_zone: bool = Field(default=False, description="Indica se a probabilidade máxima ficou na zona cinzenta (0.45 a 0.65)")
+    inference_ms: Optional[float] = Field(default=None, description="Tempo puro de inferência retornado pelo backend (ex: x-inference-time-ms)")
+    network_ms: Optional[float] = Field(default=None, description="Tempo de rede / roundtrip medido pelo gateway")
 
 
 class GeminiCostMetadata(BaseModel):

@@ -1,0 +1,18 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/pix-guard-poc/pix-guard-repo/pix-frontend:latest'
+      - '-f'
+      - 'deploy/docker/Dockerfile.frontend'
+      - '.'
+
+images:
+  - 'us-central1-docker.pkg.dev/pix-guard-poc/pix-guard-repo/pix-frontend:latest'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '300s'
