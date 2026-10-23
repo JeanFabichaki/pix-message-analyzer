@@ -4,6 +4,18 @@ export const RECEIVER = {
   cpf: '98765432100',
 };
 
+export const DEFAULT_SCENARIO = {
+  id: 'livre',
+  icon: 'PencilLine',
+  title: 'Mensagem livre',
+  path: 'Você escolhe',
+  expects: 'Digite qualquer mensagem e valor para ver a triagem em tempo real.',
+  amount: 5,
+  message: '',
+  sender: { id: 'usr_livre_01', name: 'Você', cpf: '12312312312' },
+  editable: true,
+};
+
 // Cada caso percorre um caminho diferente pela jornada.
 export const SCENARIOS = [
   {

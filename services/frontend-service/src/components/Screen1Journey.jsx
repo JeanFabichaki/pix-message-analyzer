@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChevronRight, FastForward, History, Play, RotateCcw, Send, SkipForward } from 'lucide-react';
-import { SCENARIO_ICONS } from '../journey/scenarioIcons';
 import { SenderPhone, ReceiverPhone } from '../journey/PhoneMock';
 import JourneyTrack from '../journey/JourneyTrack';
 import StageDetail from '../journey/StageDetail';
@@ -10,7 +9,7 @@ import { useJourneyTimeline } from '../journey/useJourneyTimeline';
 import { useInvestigation, waitForInvestigation } from '../journey/useInvestigation';
 import { buildStations, totalMsOf } from '../journey/buildTrace';
 import { DECIDED_BY_LABEL, SYNC_STAGES, verdictLabel } from '../journey/stages';
-import { SCENARIOS, buildPayload, formatBRL } from '../journey/scenarios';
+import { DEFAULT_SCENARIO, buildPayload, formatBRL } from '../journey/scenarios';
 import { fmtMs } from '../journey/format';
 import { getUser, getUserThreatLogs, resetUserThreats, sendPixSafe } from '../services/api';
 import { useMotionPrefs } from '../motion/MotionProvider';
@@ -25,51 +24,15 @@ function isTyping() {
   return tag === 'input' || tag === 'textarea' || tag === 'select';
 }
 
-function ScenarioPicker({ activeId, onPick, disabled, replayActive }) {
-  return (
-    <div className="scenarios" role="radiogroup" aria-label="Casos prontos">
-      {SCENARIOS.map((sc) => {
-        const Icon = SCENARIO_ICONS[sc.icon];
-        const active = activeId === sc.id;
-        return (
-          <button
-            key={sc.id}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            className={`scenario ${active ? 'is-active' : ''}`}
-            onClick={() => onPick(sc)}
-            disabled={disabled && !active}
-          >
-            {active && <motion.span layoutId="scenario-pill" className="scenario__pill" transition={spring.soft} />}
-            <span className="scenario__content">
-              <Icon size={16} aria-hidden="true" />
-              <span>{sc.title}</span>
-            </span>
-          </button>
-        );
-      })}
-      {replayActive && (
-        <span className="scenario is-active scenario--replay">
-          <span className="scenario__content">
-            <History size={16} aria-hidden="true" />
-            <span>Reprodução</span>
-          </span>
-        </span>
-      )}
-    </div>
-  );
-}
-
 export default function Screen1Journey({ replay, onReplayConsumed, active = true }) {
   const { reduced } = useMotionPrefs();
   const { toast } = useToast();
   const timeline = useJourneyTimeline({ reduced });
   const { state: tl } = timeline;
 
-  const [scenario, setScenario] = useState(SCENARIOS[2]);
-  const [amount, setAmount] = useState(SCENARIOS[2].amount);
-  const [message, setMessage] = useState(SCENARIOS[2].message);
+  const [scenario, setScenario] = useState(DEFAULT_SCENARIO);
+  const [amount, setAmount] = useState(DEFAULT_SCENARIO.amount);
+  const [message, setMessage] = useState(DEFAULT_SCENARIO.message);
   const [run, setRun] = useState(null);
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -189,21 +152,18 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
     }
   }, [busy, scenario, amount, message, timeline, finishWith, toast, refreshGovernance]);
 
-  const handlePick = useCallback(
-    (sc) => {
-      sendIdRef.current += 1;
-      setBusy(false);
-      setBurstProgress(null);
-      setReplayActive(false);
-      timeline.reset();
-      setRun(null);
-      setSelected(null);
-      setScenario(sc);
-      setAmount(sc.amount);
-      setMessage(sc.message);
-    },
-    [timeline]
-  );
+  const handleResetToFree = useCallback(() => {
+    sendIdRef.current += 1;
+    setBusy(false);
+    setBurstProgress(null);
+    setReplayActive(false);
+    timeline.reset();
+    setRun(null);
+    setSelected(null);
+    setScenario(DEFAULT_SCENARIO);
+    setAmount(DEFAULT_SCENARIO.amount);
+    setMessage(DEFAULT_SCENARIO.message);
+  }, [timeline]);
 
   const handleReactivate = useCallback(async () => {
     try {
@@ -319,10 +279,18 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
         </div>
       </div>
 
-      <ScenarioPicker activeId={scenario.id} onPick={handlePick} disabled={busy} replayActive={replayActive} />
-      {!replayActive && (
-        <p className="scenario-note" key={scenario.id}>
-          <strong>Caminho:</strong> {scenario.path}. {scenario.expects}
+      {replayActive ? (
+        <div className="replay-banner" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.5rem 0 0.75rem' }}>
+          <span className="chip chip--neutral" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.35rem 0.75rem' }}>
+            <History size={14} aria-hidden="true" /> Reproduzindo transação do histórico ({scenario.sender.name})
+          </span>
+          <button type="button" className="btn btn--ghost btn--xs" onClick={handleResetToFree}>
+            Voltar para mensagem livre
+          </button>
+        </div>
+      ) : (
+        <p className="scenario-note">
+          Digite qualquer mensagem e valor para simular a transação Pix e acompanhar a triagem de segurança em tempo real.
         </p>
       )}
 

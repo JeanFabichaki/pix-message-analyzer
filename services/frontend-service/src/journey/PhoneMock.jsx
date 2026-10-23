@@ -23,7 +23,7 @@ export function SenderPhone({
 }) {
   const editable = Boolean(scenario.editable);
   const isReplay = scenario.id === 'replay';
-  const sendDisabled = busy || isReplay || (editable && !String(message).trim());
+  const sendDisabled = busy || isReplay || !amount || Number(amount) <= 0 || (editable && !String(message).trim());
 
   return (
     <section className={`phone ${suspended ? 'phone--suspended' : ''}`} aria-label="Celular de quem envia">

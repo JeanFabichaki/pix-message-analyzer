@@ -238,7 +238,8 @@ class OllayaClient:
                 self._record_ok()
 
                 # Extrai tempo puro de inferência do container (se provido nos headers)
-                raw_inf_ms = resp.headers.get("x-inference-time-ms")
+                headers = getattr(resp, "headers", {}) or {}
+                raw_inf_ms = headers.get("x-inference-time-ms") if hasattr(headers, "get") else None
                 if raw_inf_ms:
                     try:
                         inference_ms = round(float(raw_inf_ms), 2)
