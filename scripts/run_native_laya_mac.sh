@@ -43,4 +43,4 @@ echo "[INFO] Modelo FP32: $MODEL_DIR"
 echo "[INFO] Porta: http://localhost:8000"
 echo ""
 
-exec .venv/bin/python -m laya.serve
+exec .venv/bin/python scripts/serve_laya_direct.py
