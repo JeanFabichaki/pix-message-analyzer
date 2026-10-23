@@ -276,18 +276,29 @@ class PixInterceptor:
             f"score={ollaya_response.score:.4f}, cat={ollaya_response.category}, evasion={evasion_detected}. Bloqueando envio do Pix."
         )
 
-        # 4. Disparo assíncrono para o Gemini e auditoria
-        ollaya_payload = ollaya_response.model_dump()
-        ollaya_payload["canonical_text"] = canonical_text
-        ollaya_payload["evasion_detected"] = evasion_detected
-        await self._dispatch(
-            tx,
-            canonical_text,
-            evasion_detected,
-            ollaya_payload,
-            background_tasks,
-            await_without_background=True,
+        # 4. Disparo assíncrono para o Gemini e auditoria (somente quando solicitado pela Tela 1 - Jornada)
+        should_investigate = (
+            getattr(tx, "enable_investigation", False) is True
+            or getattr(tx, "source_screen", None) == "journey"
         )
+        if should_investigate:
+            ollaya_payload = ollaya_response.model_dump()
+            ollaya_payload["canonical_text"] = canonical_text
+            ollaya_payload["evasion_detected"] = evasion_detected
+            await self._dispatch(
+                tx,
+                canonical_text,
+                evasion_detected,
+                ollaya_payload,
+                background_tasks,
+                await_without_background=True,
+            )
+        else:
+            logger.info(
+                f"🛡️ [ECONOMIA DE CUSTO GEMINI] Investigação dispensada para TX={tx.transaction_id} "
+                f"(source_screen={getattr(tx, 'source_screen', None)}, enable_investigation={getattr(tx, 'enable_investigation', False)}). "
+                f"Execução exclusiva para a Tela 1 (Jornada)."
+            )
 
         # 5. Bloqueio imediato do envio do Pix (a mensagem original não é alterada)
         masking_ms = round((time.perf_counter() - t_mask_start) * 1000, 3)

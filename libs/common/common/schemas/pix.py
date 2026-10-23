@@ -19,6 +19,15 @@ class PixTransactionRequest(BaseModel):
         default="laya_tuned",
         description="Modelo de triagem: 'laya' (original, via Ollaya) ou 'laya_tuned' (retreinado para ameaças em Pix)",
     )
+    enable_investigation: bool = Field(
+        default=False,
+        description="Se True, executa a investigação forense profunda com o Google Gemini. "
+                    "Quando False (padrão em tráfego ao vivo e testes), economiza custos de IA.",
+    )
+    source_screen: Optional[str] = Field(
+        default=None,
+        description="Identificador da tela de origem ('journey', 'live', 'compare', etc.)",
+    )
 
 
 TraceStepId = Literal["amount_rule", "anti_evasion", "ollaya", "delivery"]

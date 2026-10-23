@@ -94,6 +94,8 @@ export function buildPayload({ scenario, amount, message, transactionId }) {
     direction: 'CASH_OUT',
     amount: Number.isFinite(Number(amount)) && Number(amount) > 0 ? Number(amount) : 1,
     description: message,
+    enable_investigation: true,
+    source_screen: 'journey',
   };
 }
 

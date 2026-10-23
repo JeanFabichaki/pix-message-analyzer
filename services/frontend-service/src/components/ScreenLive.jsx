@@ -103,6 +103,8 @@ export default function ScreenLive({ active, onInspect }) {
       direction: synthetic.direction,
       amount: synthetic.amount,
       description: synthetic.description,
+      enable_investigation: false,
+      source_screen: 'live',
     };
     try {
       const result = await sendPixSafe(payload);
