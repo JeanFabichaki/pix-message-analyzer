@@ -144,6 +144,12 @@ async def list_all_threats(db: AsyncSession = Depends(get_db)):
             "gemini_criticality": log.gemini_criticality.value if hasattr(log.gemini_criticality, 'value') else str(log.gemini_criticality),
             "gemini_category": log.gemini_category,
             "gemini_rationale": log.gemini_rationale,
+            "gemini_model": log.gemini_model,
+            "prompt_tokens": log.prompt_tokens or 0,
+            "completion_tokens": log.completion_tokens or 0,
+            "total_tokens": log.total_tokens or 0,
+            "cost_usd": log.cost_usd or 0.0,
+            "cost_brl": log.cost_brl or 0.0,
             "created_at": log.created_at.isoformat() if log.created_at else None,
         })
     return threats
@@ -163,6 +169,15 @@ async def get_audit_metrics(db: AsyncSession = Depends(get_db)):
     total_threats_res = await db.execute(select(func.count(ThreatLog.id)))
     total_threats = total_threats_res.scalar_one()
 
+    total_cost_usd_res = await db.execute(select(func.coalesce(func.sum(ThreatLog.cost_usd), 0.0)))
+    total_cost_usd = float(total_cost_usd_res.scalar_one() or 0.0)
+
+    total_cost_brl_res = await db.execute(select(func.coalesce(func.sum(ThreatLog.cost_brl), 0.0)))
+    total_cost_brl = float(total_cost_brl_res.scalar_one() or 0.0)
+
+    total_tokens_res = await db.execute(select(func.coalesce(func.sum(ThreatLog.total_tokens), 0)))
+    total_tokens = int(total_tokens_res.scalar_one() or 0)
+
     crit_res = await db.execute(
         select(ThreatLog.gemini_criticality, func.count(ThreatLog.id)).group_by(ThreatLog.gemini_criticality)
     )
@@ -178,6 +193,9 @@ async def get_audit_metrics(db: AsyncSession = Depends(get_db)):
         "blocked_users": blocked_users,
         "active_users": total_users - blocked_users,
         "total_threats": total_threats,
+        "total_cost_usd": round(total_cost_usd, 6),
+        "total_cost_brl": round(total_cost_brl, 6),
+        "total_tokens": total_tokens,
         "threats_by_criticality": by_criticality,
         "threats_by_category": by_category,
     }

@@ -106,6 +106,7 @@ async def investigate(
     if payload.evasion_detected and payload.canonical_text and not analysis.bypassed:
         rationale = f"[Anti-Bypass: Evasão Detectada | Canônico: '{payload.canonical_text}']: {rationale}"
 
+    cost_data = analysis.cost
     threat_log = ThreatLog(
         id=str(uuid.uuid4()),
         user_id=payload.user_id,
@@ -117,6 +118,12 @@ async def investigate(
         gemini_criticality=None if analysis.bypassed else analysis.criticidade,
         gemini_category="bypass" if analysis.bypassed else analysis.categoria,
         gemini_rationale=rationale,
+        gemini_model=cost_data.model if cost_data else analyzer.model_name,
+        prompt_tokens=cost_data.prompt_tokens if cost_data else 0,
+        completion_tokens=cost_data.completion_tokens if cost_data else 0,
+        total_tokens=cost_data.total_tokens if cost_data else 0,
+        cost_usd=cost_data.cost_usd if cost_data else 0.0,
+        cost_brl=cost_data.cost_brl if cost_data else 0.0,
     )
 
     # 3. Persistência e avaliação de limite de reincidência
@@ -137,6 +144,7 @@ async def investigate(
         "transaction_id": payload.transaction_id,
         "user_id": payload.user_id,
         "analysis": analysis.model_dump(),
+        "cost": cost_data.model_dump() if cost_data else None,
         "history_analyzed": history or [],
         "target_message": payload.text,
         "history_count": len(history or []),
@@ -190,6 +198,18 @@ async def get_threat_by_transaction(transaction_id: str, db: AsyncSession = Depe
         logger.warning(f"Erro ao buscar histórico para {log.user_id}: {e}")
 
     is_bypass = log.gemini_category == "bypass" or log.gemini_criticality is None
+    cost_info = {
+        "model": log.gemini_model or analyzer.model_name,
+        "prompt_tokens": log.prompt_tokens or 0,
+        "completion_tokens": log.completion_tokens or 0,
+        "total_tokens": log.total_tokens or 0,
+        "cost_usd": log.cost_usd or 0.0,
+        "cost_brl": log.cost_brl or 0.0,
+        "prompt_rate_per_1m": settings.GEMINI_PROMPT_RATE_PER_1M_USD,
+        "completion_rate_per_1m": settings.GEMINI_COMPLETION_RATE_PER_1M_USD,
+        "exchange_rate_brl": settings.USD_TO_BRL_RATE,
+    }
+
     return {
         "status": "BYPASS" if is_bypass else "PROCESSED",
         "threat_log_id": log.id,
@@ -200,6 +220,7 @@ async def get_threat_by_transaction(transaction_id: str, db: AsyncSession = Depe
         "history_analyzed": history_analyzed,
         "target_message": log.original_message,
         "history_count": len(history_analyzed),
+        "cost": cost_info,
         "analysis": {
             "is_valid_threat": not is_bypass,
             "criticidade": log.gemini_criticality.value if hasattr(log.gemini_criticality, "value") else (str(log.gemini_criticality) if log.gemini_criticality else "BAIXA"),
@@ -211,6 +232,7 @@ async def get_threat_by_transaction(transaction_id: str, db: AsyncSession = Depe
             "recomendacao_analista": "Bloqueio preventivo da conta e abertura de dossiê de segurança." if not is_bypass else None,
             "bypassed": is_bypass,
             "bypass_reason": log.gemini_rationale if is_bypass else None,
+            "cost": cost_info,
         },
         "block_limit": settings.THREAT_BLOCK_LIMIT,
         "timing": {
@@ -235,6 +257,12 @@ async def get_user_threats(user_id: str, db: AsyncSession = Depends(get_db)):
             "gemini_criticality": r.gemini_criticality,
             "gemini_category": r.gemini_category,
             "gemini_rationale": r.gemini_rationale,
+            "gemini_model": r.gemini_model,
+            "prompt_tokens": r.prompt_tokens or 0,
+            "completion_tokens": r.completion_tokens or 0,
+            "total_tokens": r.total_tokens or 0,
+            "cost_usd": r.cost_usd or 0.0,
+            "cost_brl": r.cost_brl or 0.0,
             "created_at": r.created_at,
         }
         for r in records

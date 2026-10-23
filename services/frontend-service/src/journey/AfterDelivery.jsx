@@ -14,11 +14,12 @@ import {
   ChevronUp,
   MessageSquare,
   Quote,
+  Coins,
 } from 'lucide-react';
 import DotMeter from '../components/ui/DotMeter';
 import Skeleton from '../components/ui/Skeleton';
 import { ASYNC_STAGES } from './stages';
-import { CRITICALITY_LABEL, categoryLabel, fmtMs } from './format';
+import { CRITICALITY_LABEL, categoryLabel, fmtMs, formatCostUSD, formatCostBRL, formatTokens } from './format';
 import { dur, ease, spring } from '../motion/tokens';
 
 const ICONS = { laudo: Brain, ficha: ClipboardList };
@@ -81,6 +82,8 @@ export default function AfterDelivery({ masked, investigation, ficha, reduced, t
 
   const cardTone = isBypass ? 'bypass' : masked && analysis ? 'ready' : 'default';
 
+  const cost = data?.cost || analysis?.cost;
+
   return (
     <section className="after" aria-label="O que acontece depois da entrega, em segundo plano">
       <div className="after__lead">
@@ -133,6 +136,29 @@ export default function AfterDelivery({ masked, investigation, ficha, reduced, t
               </div>
 
               <TypeReveal text={analysis.resumo_analise} play={play} />
+
+              {/* Box de Custo e Telemetria de Tokens do Gemini */}
+              {cost && (
+                <div className="after-card__cost-box">
+                  <div className="after-card__cost-main">
+                    <Coins size={14} aria-hidden="true" className="after-card__cost-icon" />
+                    <span>
+                      Custo da perícia IA:{' '}
+                      <strong className="num">{formatCostUSD(cost.cost_usd)}</strong>
+                      <span className="after-card__cost-brl"> (~{formatCostBRL(cost.cost_brl)})</span>
+                    </span>
+                  </div>
+                  <div className="after-card__cost-tokens">
+                    <span className="after-card__cost-tag" title="Total de tokens processados">
+                      {formatTokens(cost.total_tokens)}
+                    </span>
+                    <span className="after-card__cost-split">
+                      ({cost.prompt_tokens} in / {cost.completion_tokens} out)
+                    </span>
+                    <span className="after-card__cost-model">{cost.model}</span>
+                  </div>
+                </div>
+              )}
 
               {/* Padrão Comportamental Identificado na Série Temporal */}
               {analysis.padrao_identificado && (
@@ -222,6 +248,11 @@ export default function AfterDelivery({ masked, investigation, ficha, reduced, t
                     Laudo pericial gerado em <strong>{fmtMs(data.timing.gemini_ms)}</strong>.
                   </span>
                 )}
+                {cost && (
+                  <span className="after-card__cost-rate" title="Tarifa por milhão de tokens">
+                    Tarifa: ${cost.prompt_rate_per_1m}/1M in · ${cost.completion_rate_per_1m}/1M out
+                  </span>
+                )}
                 <span className="after-card__guardrail-badge">
                   Guardrails: Tags XML &amp; Sanitização PII
                 </span>
@@ -242,6 +273,13 @@ export default function AfterDelivery({ masked, investigation, ficha, reduced, t
                   Investigação em Bypass
                 </motion.span>
                 <span className="chip chip--bypass">API Gemini Indisponível</span>
+              </div>
+
+              <div className="after-card__cost-box after-card__cost-box--bypass">
+                <div className="after-card__cost-main">
+                  <Coins size={14} aria-hidden="true" />
+                  <span>Custo da perícia: <strong>$0.00</strong> (Bypass sem tarifação)</span>
+                </div>
               </div>
 
               <p className="after-card__text after-card__text--bypass">

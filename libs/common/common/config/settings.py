@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-2.5-flash"
     MOCK_GEMINI: bool = False
 
+    # Tarifas de Custo do Gemini (em USD por 1M de tokens) e Câmbio
+    GEMINI_PROMPT_RATE_PER_1M_USD: float = 0.10      # $0.10 por 1M de tokens de entrada (Gemini 2.5 Flash)
+    GEMINI_COMPLETION_RATE_PER_1M_USD: float = 0.40  # $0.40 por 1M de tokens de saída (Gemini 2.5 Flash)
+    USD_TO_BRL_RATE: float = 5.70                    # Cotação estimada USD -> BRL
+
     # Endpoints Internos
     USER_SERVICE_URL: str = "http://localhost:8002"
     GEMINI_AGENT_URL: str = "http://localhost:8003"

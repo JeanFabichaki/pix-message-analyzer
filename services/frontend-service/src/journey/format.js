@@ -29,3 +29,33 @@ export const CRITICALITY_LABEL = {
   CRITICA: 'Crítica',
   BYPASS: 'Bypass',
 };
+
+export function formatCostUSD(val) {
+  if (val === null || val === undefined) return '$0.00';
+  const n = Number(val);
+  if (n === 0) return '$0.00';
+  if (n < 0.0001) return `$${n.toFixed(6)}`;
+  return `$${n.toFixed(4)}`;
+}
+
+export function formatCostBRL(val) {
+  if (val === null || val === undefined) return 'R$ 0,00';
+  const n = Number(val);
+  if (n === 0) return 'R$ 0,00';
+  if (n < 0.01) return `R$ ${n.toFixed(5).replace('.', ',')}`;
+  return `R$ ${n.toFixed(2).replace('.', ',')}`;
+}
+
+export function formatTokens(count) {
+  if (count === null || count === undefined) return '0 tokens';
+  const n = Number(count);
+  return `${n.toLocaleString('pt-BR')} tokens`;
+}
+
+export function formatCostSummary(cost) {
+  if (!cost) return null;
+  const usd = formatCostUSD(cost.cost_usd);
+  const brl = formatCostBRL(cost.cost_brl);
+  return `${usd} (~${brl})`;
+}
+

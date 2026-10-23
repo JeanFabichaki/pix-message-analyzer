@@ -1,17 +1,53 @@
 import json
 import logging
 import os
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
+from pydantic import BaseModel, Field
 from common.config.settings import settings
 from common.schemas.threat import (
     GeminiThreatAnalysis,
+    GeminiCostMetadata,
     GeneratedBenchmarkDataset,
     GeneratedBenchmarkMessage,
 )
 
 from common.utils.anonymizer import anonymize_text
+from common.utils.cost_calculator import calculate_gemini_cost, estimate_text_tokens
 
 logger = logging.getLogger("gemini-agent.analyzer")
+
+class GeminiForensicResponse(BaseModel):
+    is_valid_threat: bool = Field(
+        description="Confirmação semântica de se a mensagem constitui intimidação, assédio, extorsão ou ameaça"
+    )
+    criticidade: Literal["BAIXA", "MEDIA", "ALTA", "CRITICA"] = Field(
+        description="Nível de gravidade do risco avaliado"
+    )
+    categoria: Literal[
+        "extorsao",
+        "violencia_fisica",
+        "stalking_perseguicao",
+        "injuria_difamacao",
+        "outros",
+    ] = Field(description="Classificação categórica da ofensa")
+    resumo_analise: str = Field(
+        description="Justificativa concisa da criticidade para fundamentação de auditoria"
+    )
+    acao_imediata_recomendada: bool = Field(
+        description="Se a infração é grave o suficiente para intervenção prioritária"
+    )
+    padrao_identificado: Optional[str] = Field(
+        default=None,
+        description="Padrão criminoso ou comportamental identificado na mensagem ou série de mensagens",
+    )
+    evidencias_citadas: List[str] = Field(
+        default_factory=list,
+        description="Trechos ou termos textuais específicos extraídos que comprovam a infração",
+    )
+    recomendacao_analista: Optional[str] = Field(
+        default=None,
+        description="Ação sugerida para o analista humano de compliance e prevenção a fraudes",
+    )
 
 FORENSIC_SYSTEM_INSTRUCTION = (
     "Você é um auditor forense sênior e perito de segurança bancária do Banco Central do Brasil / Pix Guard. "
@@ -121,6 +157,8 @@ class GeminiThreatAnalyzer:
         Se a API falhar, não estiver configurada ou credenciais forem inválidas,
         aciona estritamente o modo BYPASS (sem fallback heurístico).
         """
+        zero_cost = calculate_gemini_cost(self.model_name, 0, 0)
+
         if not message or not message.strip():
             return GeminiThreatAnalysis(
                 is_valid_threat=False,
@@ -129,6 +167,7 @@ class GeminiThreatAnalyzer:
                 resumo_analise="Mensagem vazia ou sem conteúdo semântico relevante.",
                 acao_imediata_recomendada=False,
                 bypassed=False,
+                cost=zero_cost,
             )
 
         if self.use_mock or not self._client:
@@ -142,6 +181,7 @@ class GeminiThreatAnalyzer:
                 acao_imediata_recomendada=False,
                 bypassed=True,
                 bypass_reason=reason,
+                cost=zero_cost,
             )
 
         try:
@@ -159,6 +199,7 @@ class GeminiThreatAnalyzer:
                 acao_imediata_recomendada=False,
                 bypassed=True,
                 bypass_reason=reason,
+                cost=zero_cost,
             )
 
     async def _analyze_with_gemini(self, message: str, history: Optional[List[str]] = None) -> GeminiThreatAnalysis:
@@ -169,13 +210,13 @@ class GeminiThreatAnalyzer:
                 system_instruction=FORENSIC_SYSTEM_INSTRUCTION,
                 safety_settings=self._build_safety_settings(),
                 response_mime_type="application/json",
-                response_schema=GeminiThreatAnalysis,
+                response_schema=GeminiForensicResponse,
             )
         else:
             config = {
                 "system_instruction": FORENSIC_SYSTEM_INSTRUCTION,
                 "response_mime_type": "application/json",
-                "response_schema": GeminiThreatAnalysis,
+                "response_schema": GeminiForensicResponse,
             }
 
         logger.info(f"Chamando API real do Google Gemini ({self.model_name}) para análise forense estruturada...")
@@ -193,13 +234,33 @@ class GeminiThreatAnalyzer:
             )
 
         parsed_json = json.loads(response.text)
+
+        # Extração de telemetria e custo da chamada
+        usage = getattr(response, "usage_metadata", None)
+        prompt_tokens = getattr(usage, "prompt_token_count", 0) if usage else 0
+        completion_tokens = getattr(usage, "candidates_token_count", 0) if usage else 0
+
+        # Se usage_metadata não estiver presente ou for 0, calcula estimativa com base no texto real
+        if not prompt_tokens:
+            prompt_tokens = estimate_text_tokens(prompt)
+        if not completion_tokens:
+            completion_tokens = estimate_text_tokens(getattr(response, "text", ""))
+
+        cost_metadata = calculate_gemini_cost(
+            model=self.model_name,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+        )
+
         logger.info(
             f"Análise estruturada do Gemini ({self.model_name}) concluída: "
             f"is_threat={parsed_json.get('is_valid_threat')}, "
             f"criticidade={parsed_json.get('criticidade')}, "
-            f"categoria={parsed_json.get('categoria')}"
+            f"categoria={parsed_json.get('categoria')}, "
+            f"tokens={cost_metadata.total_tokens} (prompt={cost_metadata.prompt_tokens}, comp={cost_metadata.completion_tokens}), "
+            f"custo=${cost_metadata.cost_usd:.6f} (~R${cost_metadata.cost_brl:.5f})"
         )
-        return GeminiThreatAnalysis(**parsed_json)
+        return GeminiThreatAnalysis(**parsed_json, cost=cost_metadata)
 
     async def generate_test_dataset(self, count: int = 50) -> List[Dict[str, Any]]:
         """Gera um conjunto equilibrado de mensagens sintéticas de Pix para benchmark via Gemini."""

@@ -14,6 +14,18 @@ class OllayaClassificationResult(BaseModel):
     in_gray_zone: bool = Field(default=False, description="Indica se a probabilidade máxima ficou na zona cinzenta (0.45 a 0.65)")
 
 
+class GeminiCostMetadata(BaseModel):
+    model: str = Field(default="gemini-2.5-flash", description="Nome do modelo Gemini utilizado")
+    prompt_tokens: int = Field(default=0, description="Tokens de entrada (prompt + histórico + instruções)")
+    completion_tokens: int = Field(default=0, description="Tokens de saída gerados pelo modelo (laudo estruturado)")
+    total_tokens: int = Field(default=0, description="Total de tokens consumidos na chamada")
+    cost_usd: float = Field(default=0.0, description="Custo da chamada em Dólares (USD)")
+    cost_brl: float = Field(default=0.0, description="Custo estimado da chamada em Reais (BRL)")
+    prompt_rate_per_1m: float = Field(default=0.10, description="Tarifa por 1M de tokens de entrada em USD")
+    completion_rate_per_1m: float = Field(default=0.40, description="Tarifa por 1M de tokens de saída em USD")
+    exchange_rate_brl: float = Field(default=5.70, description="Taxa de câmbio USD -> BRL utilizada")
+
+
 class GeminiThreatAnalysis(BaseModel):
     is_valid_threat: bool = Field(
         description="Confirmação semântica de se a mensagem constitui intimidação, assédio, extorsão ou ameaça"
@@ -53,6 +65,10 @@ class GeminiThreatAnalysis(BaseModel):
     bypass_reason: Optional[str] = Field(
         default=None,
         description="Motivo detalhado do bypass caso o Gemini não tenha sido chamado",
+    )
+    cost: Optional[GeminiCostMetadata] = Field(
+        default=None,
+        description="Métricas de consumo de tokens e custo financeiro da chamada (USD/BRL)",
     )
 
 

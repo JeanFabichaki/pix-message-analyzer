@@ -1,7 +1,7 @@
 import enum
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Text, Float, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, String, Text, Float, Integer, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -54,6 +54,15 @@ class ThreatLog(Base):
     gemini_criticality = Column(SQLEnum(CriticalityLevel), nullable=True)
     gemini_category = Column(String(64), nullable=True)
     gemini_rationale = Column(Text, nullable=True)
+
+    # Telemetria financeira e contagem de tokens da chamada ao Gemini
+    gemini_model = Column(String(64), nullable=True)
+    prompt_tokens = Column(Integer, nullable=True, default=0)
+    completion_tokens = Column(Integer, nullable=True, default=0)
+    total_tokens = Column(Integer, nullable=True, default=0)
+    cost_usd = Column(Float, nullable=True, default=0.0)
+    cost_brl = Column(Float, nullable=True, default=0.0)
+
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False, index=True)
 
     user = relationship("User", back_populates="threats")

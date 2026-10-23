@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ChevronDown, Lock, LockOpen, Route, Search, Trash2, RefreshCw } from 'lucide-react';
+import { ChevronDown, Lock, LockOpen, Route, Search, Trash2, RefreshCw, Coins } from 'lucide-react';
 import CountUp from './ui/CountUp';
 import DotMeter from './ui/DotMeter';
 import Skeleton from './ui/Skeleton';
@@ -14,7 +14,7 @@ import {
   unblockUser,
 } from '../services/api';
 import { MASK_FALLBACK, stationsFromAuditLog } from '../journey/buildTrace';
-import { CRITICALITY_LABEL, categoryLabel } from '../journey/format';
+import { CRITICALITY_LABEL, categoryLabel, formatCostUSD, formatCostBRL, formatTokens } from '../journey/format';
 import { friendlyName } from '../journey/people';
 import { useMotionPrefs } from '../motion/MotionProvider';
 import { dur, ease } from '../motion/tokens';
@@ -140,7 +140,7 @@ export default function ScreenHistory({ active, onInspect }) {
         </div>
       </div>
 
-      <div className="kpis kpis--3">
+      <div className="kpis">
         <div className="kpi kpi--lavender">
           <span className="kpi__label">Mensagens retidas</span>
           <CountUp value={metrics?.total_threats ?? 0} className="kpi__value" />
@@ -158,6 +158,15 @@ export default function ScreenHistory({ active, onInspect }) {
             className="kpi__value"
           />
           <span className="kpi__sub">segundo o laudo da IA</span>
+        </div>
+        <div className="kpi kpi--mint">
+          <span className="kpi__label">Custo Perícia IA (Gemini)</span>
+          <span className="kpi__value num">
+            {formatCostBRL(metrics?.total_cost_brl ?? 0)}
+          </span>
+          <span className="kpi__sub">
+            {formatCostUSD(metrics?.total_cost_usd ?? 0)} · {formatTokens(metrics?.total_tokens ?? 0)}
+          </span>
         </div>
       </div>
 
@@ -219,6 +228,12 @@ export default function ScreenHistory({ active, onInspect }) {
                         <>
                           <span className={`chip chip--crit-${crit}`}>{CRITICALITY_LABEL[crit] || crit || '—'}</span>
                           <span className="chip">{categoryLabel(t.gemini_category)}</span>
+                          {(t.cost_usd > 0 || t.total_tokens > 0) && (
+                            <span className="chip chip--cost" title={`${t.total_tokens || 0} tokens (${t.prompt_tokens || 0} in / ${t.completion_tokens || 0} out)`}>
+                              <Coins size={11} aria-hidden="true" />
+                              {formatCostUSD(t.cost_usd)}
+                            </span>
+                          )}
                         </>
                       )}
                       <ChevronDown size={16} className="threat__chev" aria-hidden="true" />
@@ -248,6 +263,15 @@ export default function ScreenHistory({ active, onInspect }) {
                                 </p>
                               ) : (
                                 <p className="threat__rationale">{t.gemini_rationale || 'Sem justificativa registrada.'}</p>
+                              )}
+                              {!isBypass && (t.cost_usd > 0 || t.total_tokens > 0) && (
+                                <div className="threat__cost-badge">
+                                  <Coins size={12} aria-hidden="true" />
+                                  <span>
+                                    <strong>Custo Perícia:</strong> {formatCostUSD(t.cost_usd)} (~{formatCostBRL(t.cost_brl)}) ·{' '}
+                                    <strong>{t.total_tokens || 0} tokens</strong> ({t.prompt_tokens || 0} in / {t.completion_tokens || 0} out) · {t.gemini_model || 'gemini-2.5-flash'}
+                                  </span>
+                                </div>
                               )}
                               {typeof t.ollaya_score === 'number' && (
                                 <span className="chip">IA rápida: risco {Math.round(t.ollaya_score * 100)}%</span>
