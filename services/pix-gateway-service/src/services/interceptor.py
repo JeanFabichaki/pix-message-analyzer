@@ -212,12 +212,19 @@ class PixInterceptor:
                 ollaya_response.is_threat = True
                 ollaya_response.category = f"{ollaya_response.category}_retencao_preventiva"
 
+        pure_inf_ms = getattr(ollaya_response, "inference_ms", None)
+        net_overhead_ms = getattr(ollaya_response, "network_ms", None)
+        timing["ollaya_inference_ms"] = pure_inf_ms
+        timing["ollaya_network_ms"] = net_overhead_ms
+
         ollaya_data = {
             "score": ollaya_response.score,
             "category": ollaya_response.category,
             "model": ollaya_response.model,
             "decomposed_scores": getattr(ollaya_response, "decomposed_scores", None),
             "in_gray_zone": getattr(ollaya_response, "in_gray_zone", False),
+            "pure_inference_ms": pure_inf_ms,
+            "network_ms": net_overhead_ms,
         }
 
         t_mask_start = time.perf_counter()

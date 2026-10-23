@@ -257,7 +257,19 @@ async def _process_transaction(
         "step2_ollaya_ms": res.timing.get("ollaya_ms", 0.0),
         "step3_masking_ms": res.timing.get("masking_ms", 0.1),
         "total_gateway_ms": max(t_total_gateway_ms, 1.0),
+        "ollaya_pure_inference_ms": res.timing.get("ollaya_inference_ms"),
+        "ollaya_network_ms": res.timing.get("ollaya_network_ms"),
     }
+
+    # 3. Liquidação ou bloqueio da transação
+    status = "BLOCKED" if res.is_blocked else "APPROVED"
+    detail = "Envio do Pix bloqueado por conter ameaça." if res.is_blocked else None
+
+    logger.info(
+        f"🏁 [PIX RESULT] TX={tx.transaction_id} | Status={status} | Engine={res.engine} | DecidedBy={res.decided_by} | "
+        f"Total={timing_metrics['total_gateway_ms']:.2f}ms | OllayaTotal={timing_metrics['step2_ollaya_ms']:.2f}ms "
+        f"(PureInference={timing_metrics.get('ollaya_pure_inference_ms')}ms, Network={timing_metrics.get('ollaya_network_ms')}ms)"
+    )
 
     # Grava amostra no buffer síncrono para telemetria p50/p95/p99
     SYNC_LATENCY_BUFFER.append({
@@ -266,10 +278,6 @@ async def _process_transaction(
         "ollaya_ms": timing_metrics["step2_ollaya_ms"],
         "masking_ms": timing_metrics["step3_masking_ms"],
     })
-
-    # 3. Liquidação ou bloqueio da transação
-    status = "BLOCKED" if res.is_blocked else "APPROVED"
-    detail = "Envio do Pix bloqueado por conter ameaça." if res.is_blocked else None
 
     return PixTransactionResponse(
         transaction_id=tx.transaction_id,
