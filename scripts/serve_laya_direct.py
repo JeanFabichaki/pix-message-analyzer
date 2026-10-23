@@ -35,6 +35,7 @@ HOST = os.getenv("LAYA_HOST", "0.0.0.0")
 # Instância global do Agent residente em GPU
 agent_instance: Optional[Agent] = None
 device_name: str = "cpu"
+last_request_time: float = time.perf_counter()
 
 
 def collate_fixed(batch, pad_id: int, min_len: int = 64, min_k: int = 2):
@@ -83,14 +84,32 @@ def collate_fixed(batch, pad_id: int, min_len: int = 64, min_k: int = 2):
 @torch.no_grad()
 def infer_fast(state: str, questions: dict) -> dict:
     """Execução direta e ultraotimizada sem hooks ou camadas intermediárias."""
+    global last_request_time
+    last_request_time = time.perf_counter()
+    t0 = last_request_time
     ids = list(questions.keys())
+    t1 = time.perf_counter()
     internal = {qid: agent_instance._to_internal(questions[qid]) for qid in ids}
+    t2 = time.perf_counter()
     encoded = [agent_instance._encode_state(state, ids, internal, max_len=64)]
+    t3 = time.perf_counter()
     b = collate_fixed(encoded, agent_instance.tok.pad_token_id, min_len=64, min_k=2)
+    t4 = time.perf_counter()
     logits, act = agent_instance._forward(b)
+    t5 = time.perf_counter()
     if device_name == "mps":
         torch.mps.synchronize()
+    t6 = time.perf_counter()
     answers = agent_instance._decode_answers(logits, act, encoded[0], ids, internal, 0)
+    t7 = time.perf_counter()
+
+    logger.info(
+        f"⏱️ [INFER_FAST BREAKDOWN] Total={(t7-t0)*1000:.2f}ms | "
+        f"Internal={(t2-t1)*1000:.2f}ms | Encode={(t3-t2)*1000:.2f}ms | Collate={(t4-t3)*1000:.2f}ms | "
+        f"Forward={(t5-t4)*1000:.2f}ms | MPSSync={(t6-t5)*1000:.2f}ms | Decode={(t7-t6)*1000:.2f}ms | "
+        f"BatchLen={b['input_ids'].shape[1]}"
+    )
+
     return {
         "model": "laya-rl-agent",
         "answers": answers,
@@ -106,7 +125,7 @@ def infer_fast(state: str, questions: dict) -> dict:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global agent_instance, device_name
+    global agent_instance, device_name, last_request_time
 
     # 1. Detecta o melhor acelerador de hardware (Apple Silicon MPS prioritário no Mac)
     if torch.backends.mps.is_available():
@@ -138,19 +157,56 @@ async def lifespan(app: FastAPI):
     t_w = agent_instance.warmup(shapes=shapes)
     logger.info(f" -> Compilação de shaders Metal concluída em {t_w * 1000:.2f}ms")
 
-    # Warmup adicional com frases reais para aquecer tokenizer e grafo completo
-    warmup_q = {
-        "threat": {
-            "type": "choice",
-            "instructions": "A mensagem de Pix contém ameaça, extorsão ou intimidação?",
-            "criteria": {"threat": "ameaça", "safe": "normal"},
-        }
-    }
-    for phrase in ["transferencia de 50 reais para meu amigo", "se nao pagar vou te matar"]:
-        infer_fast(phrase, warmup_q)
+    # 4. Warmup profundo com os formatos exatos de critérios do Gateway Pix
+    warmup_queries = [
+        {
+            "threat": {
+                "type": "choice",
+                "instructions": "A mensagem de Pix contém ameaça, extorsão ou intimidação?",
+                "criteria": {"threat": "ameaça", "safe": "agradecimento ou conversa normal"},
+            }
+        },
+        {
+            "threat": {
+                "type": "choice",
+                "instructions": "A mensagem de Pix contém ameaça, extorsão ou intimidação?",
+                "criteria": {"threat": "ameaça", "safe": "normal"},
+            }
+        },
+    ]
+    warmup_phrases = [
+        "transferencia de 50 reais para meu amigo",
+        "Se você não fizer o Pix até 18h sei onde seu filho estuda e sua família vai pagar o pato",
+        "oi",
+    ]
+    for q in warmup_queries:
+        for phrase in warmup_phrases:
+            infer_fast(phrase, q)
 
-    logger.info("✅ Servidor pronto para atender com inferência sub-20ms!")
+    # 5. Heartbeat Loop: mantém a GPU Metal ativa e previne clock downscaling de energia do Apple Silicon
+    ka_ids = list(warmup_queries[0].keys())
+    ka_internal = {qid: agent_instance._to_internal(warmup_queries[0][qid]) for qid in ka_ids}
+    ka_enc = [agent_instance._encode_state("keepalive", ka_ids, ka_internal, max_len=64)]
+    ka_b = collate_fixed(ka_enc, agent_instance.tok.pad_token_id, min_len=64, min_k=2)
+
+    async def keep_gpu_warm():
+        """Mantém a GPU Metal aquecida a cada 1.5s se não houver requisições de clientes."""
+        global last_request_time
+        while True:
+            await asyncio.sleep(1.5)
+            if time.perf_counter() - last_request_time >= 1.5:
+                try:
+                    with torch.no_grad():
+                        agent_instance._infer(ka_b)
+                        if device_name == "mps":
+                            torch.mps.synchronize()
+                except Exception:
+                    pass
+
+    keepalive_task = asyncio.create_task(keep_gpu_warm())
+    logger.info("✅ Servidor pronto com Keep-Alive de GPU Metal ativo (latência sub-20ms contínua)!")
     yield
+    keepalive_task.cancel()
     logger.info("Encerrando servidor Laya Direto.")
 
 
@@ -214,4 +270,4 @@ async def systemone(request: Request):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=HOST, port=PORT, log_level="warning")
+    uvicorn.run(app, host=HOST, port=PORT, log_level="info")

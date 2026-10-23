@@ -43,4 +43,5 @@ echo "[INFO] Modelo FP32: $MODEL_DIR"
 echo "[INFO] Porta: http://localhost:8000"
 echo ""
 
-exec .venv/bin/python scripts/serve_laya_direct.py
+# Previne sleep de GPU e App Nap do macOS usando o utilitário oficial caffeinate
+exec /usr/bin/caffeinate -i -s -m .venv/bin/python scripts/serve_laya_direct.py
