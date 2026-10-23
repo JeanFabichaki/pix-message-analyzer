@@ -50,7 +50,7 @@ echo $! > "$DIR/.pids/gateway.pid"
 
 # 5. Iniciar Frontend React
 echo "[6/6] Iniciando Frontend React (Vite) na porta 3000..."
-nohup "$DIR/services/frontend-service/node_modules/.bin/vite" --host 0.0.0.0 --port 3000 "$DIR/services/frontend-service" < /dev/null > "$DIR/.logs/frontend.log" 2>&1 &
+nohup env CI=true "$DIR/services/frontend-service/node_modules/.bin/vite" --host 0.0.0.0 --port 3000 "$DIR/services/frontend-service" < /dev/null > "$DIR/.logs/frontend.log" 2>&1 &
 echo $! > "$DIR/.pids/frontend.pid"
 
 echo ""
