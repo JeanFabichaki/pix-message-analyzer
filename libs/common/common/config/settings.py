@@ -31,7 +31,7 @@ class Settings(BaseSettings):
 
     # Google Gemini API
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_MODEL: str = "gemini-2.5-flash-lite"
     MOCK_GEMINI: bool = False
 
     # Tarifas de Custo do Gemini (em USD por 1M de tokens) e Câmbio

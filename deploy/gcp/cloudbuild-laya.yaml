@@ -1,0 +1,18 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/pix-guard-poc/pix-guard-repo/pix-ollaya-gpu:latest'
+      - '-f'
+      - 'deploy/docker/Dockerfile.laya-serve.gpu'
+      - '.'
+
+images:
+  - 'us-central1-docker.pkg.dev/pix-guard-poc/pix-guard-repo/pix-ollaya-gpu:latest'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '900s'

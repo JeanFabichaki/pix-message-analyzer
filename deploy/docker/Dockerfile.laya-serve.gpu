@@ -6,8 +6,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
  && rm -rf /var/lib/apt/lists/*
 
-# Instala PyTorch com suporte a CUDA 12.1 e pacote de serviço do Laya
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cu121 \
+# Instala PyTorch 2.6+ com CUDA e laya[serve]
+RUN pip install --no-cache-dir "torch>=2.6.0" --index-url https://download.pytorch.org/whl/cu124 \
  && pip install --no-cache-dir "laya[serve]>=0.4.7"
 
 # Copia os pesos retreinados do modelo para detecção de ameaças
