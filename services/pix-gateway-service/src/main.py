@@ -266,7 +266,7 @@ async def _process_transaction(
     detail = "Envio do Pix bloqueado por conter ameaça." if res.is_blocked else None
 
     logger.info(
-        f"🏁 [PIX RESULT] TX={tx.transaction_id} | Status={status} | Engine={res.engine} | DecidedBy={res.decided_by} | "
+        f"🏁 [PIX RESULT] TX={tx.transaction_id} | Status={status} | Engine={tx.engine} | DecidedBy={res.decided_by} | "
         f"Total={timing_metrics['total_gateway_ms']:.2f}ms | OllayaTotal={timing_metrics['step2_ollaya_ms']:.2f}ms "
         f"(PureInference={timing_metrics.get('ollaya_pure_inference_ms')}ms, Network={timing_metrics.get('ollaya_network_ms')}ms)"
     )

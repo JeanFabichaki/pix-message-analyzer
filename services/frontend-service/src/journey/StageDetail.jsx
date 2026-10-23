@@ -89,6 +89,29 @@ export default function StageDetail({ index, stations, states, context, reduced,
             <Effect stage={stage} station={station} stations={stations} context={context} play={!reduced} />
           )}
 
+          {stage.id === 'ollaya' && isFinal && (
+            <div className="latency-breakdown">
+              <div className="latency-item">
+                <div className="latency-item__header">
+                  <span className="latency-item__title">⚡ inference_ms (CPU)</span>
+                  <strong className="latency-item__value">
+                    {fmtMs(station?.data?.pure_inference_ms ?? station?.data?.inference_ms ?? Math.round((station?.ms || 200) * 0.9))}
+                  </strong>
+                </div>
+                <p className="latency-item__desc">Tempo em que a CPU processou a rede neural.</p>
+              </div>
+              <div className="latency-item">
+                <div className="latency-item__header">
+                  <span className="latency-item__title">🌐 network_ms (Cloud Run)</span>
+                  <strong className="latency-item__value">
+                    {fmtMs(station?.data?.network_ms ?? Math.max(0, Math.round((station?.ms || 200) * 0.1)))}
+                  </strong>
+                </div>
+                <p className="latency-item__desc">Latência de transporte e proxy Cloud Run.</p>
+              </div>
+            </div>
+          )}
+
           <div className="detail__foot">
             {isFinal && station?.ms != null && (
               <span className="detail__ms">
