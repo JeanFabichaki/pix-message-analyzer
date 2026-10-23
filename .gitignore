@@ -29,6 +29,8 @@ dist/
 Thumbs.db
 *.log
 logs/
+.logs/
+.pids/
 .run_pids
 
 # Tool Caches

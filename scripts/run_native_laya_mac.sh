@@ -34,7 +34,7 @@ export LAYA_HOST="0.0.0.0"
 export LAYA_PORT="8000"
 export LAYA_DEFAULT_MODEL="pix-threats"
 export LAYA_MODELS="pix-threats"
-export LAYA_EXTRA_MODELS="{\"pix-threats\":\"$MODEL_DIR\",\"laya:pix-threats\":\"$MODEL_DIR\"}"
+export LAYA_EXTRA_MODELS="{\"pix-threats\":\"$MODEL_DIR\"}"
 export LAYA_PRELOAD="1"
 export TOKENIZERS_PARALLELISM="false"
 
