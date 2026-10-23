@@ -27,21 +27,19 @@ if [ -z "$CONNECTION_NAME" ]; then
     exit 1
 fi
 
-# 1. Deploy Laya GPU Model Server no Cloud Run
+# 1. Deploy Laya Model Server no Cloud Run
 echo ""
-echo ">>> [1/5] Implantando pix-ollaya-gpu (NVIDIA L4, Zero Cold Start)..."
-gcloud beta run deploy pix-ollaya-gpu \
+echo ">>> [1/5] Implantando pix-ollaya-gpu (Zero Cold Start)..."
+gcloud run deploy pix-ollaya-gpu \
     --image="${AR_BASE}/pix-ollaya-gpu:latest" \
     --region="$REGION" \
-    --gpu="$GPU_COUNT" \
-    --gpu-type="$GPU_TYPE" \
     --cpu=4 \
-    --memory=16Gi \
+    --memory=8Gi \
     --min-instances="$MIN_INSTANCES" \
     --max-instances=3 \
     --execution-environment=gen2 \
     --no-cpu-throttling \
-    --port=11435 \
+    --port=8000 \
     --allow-unauthenticated \
     --project="$PROJECT_ID" \
     --quiet

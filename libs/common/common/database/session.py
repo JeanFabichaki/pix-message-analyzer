@@ -30,6 +30,7 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
 
         # Migração idempotente para bases existentes (SQLite e PostgreSQL)
+        is_postgres = "postgresql" in str(settings.DATABASE_URL)
         for col_name, col_type in [
             ("gemini_model", "VARCHAR(64)"),
             ("prompt_tokens", "INTEGER DEFAULT 0"),
@@ -39,9 +40,12 @@ async def init_db():
             ("cost_brl", "FLOAT DEFAULT 0.0"),
         ]:
             try:
-                await conn.execute(text(f"ALTER TABLE threat_logs ADD COLUMN {col_name} {col_type}"))
+                if is_postgres:
+                    await conn.execute(text(f"ALTER TABLE threat_logs ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
+                else:
+                    await conn.execute(text(f"ALTER TABLE threat_logs ADD COLUMN {col_name} {col_type}"))
             except Exception:
-                # Coluna já existe ou não aplicável
+                # Coluna já existe no SQLite
                 pass
 
     # Inserção de seeds iniciais para os testes da PoC

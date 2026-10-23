@@ -1,26 +1,28 @@
-# Servidor Laya GPU nativo em PyTorch CUDA para o Cloud Run
 FROM python:3.11-slim
 
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
     curl \
  && rm -rf /var/lib/apt/lists/*
 
-# Instala PyTorch com suporte a CUDA 12.1 para aceleração por Tensor Cores na NVIDIA L4
+# Instala PyTorch com suporte a CUDA 12.1 e pacote de serviço do Laya
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cu121 \
  && pip install --no-cache-dir "laya[serve]>=0.4.7"
 
+# Copia os pesos retreinados do modelo para detecção de ameaças
 COPY finetune/models/pix-threats /models/pix-threats
 
 ENV LAYA_HOST=0.0.0.0 \
     LAYA_PORT=8000 \
-    LAYA_DEVICE=cuda \
-    CUDA_VISIBLE_DEVICES=0 \
-    TOKENIZERS_PARALLELISM=false \
-    MODEL_DIR=/models/pix-threats
+    PORT=8000 \
+    LAYA_DEVICE=cpu \
+    LAYA_DEFAULT_MODEL=pix-threats \
+    LAYA_MODELS=pix-threats \
+    LAYA_EXTRA_MODELS='{"pix-threats":"/models/pix-threats"}' \
+    LAYA_PRELOAD=1 \
+    TOKENIZERS_PARALLELISM=false
 
 EXPOSE 8000
 
-CMD ["laya-serve", "--model-dir", "/models/pix-threats"]
+CMD ["laya-serve"]

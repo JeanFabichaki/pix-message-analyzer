@@ -1,0 +1,71 @@
+steps:
+  # 1. User Service
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '$_AR_BASE/user-service:latest'
+      - '-f'
+      - 'services/user-service/Dockerfile'
+      - '.'
+    id: 'build-user-service'
+
+  # 2. Gemini Investigation Agent
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '$_AR_BASE/gemini-investigation-agent:latest'
+      - '-f'
+      - 'agents/gemini-investigation-agent/Dockerfile'
+      - '.'
+    id: 'build-gemini-agent'
+
+  # 3. Pix Gateway Service
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '$_AR_BASE/pix-gateway-service:latest'
+      - '-f'
+      - 'services/pix-gateway-service/Dockerfile'
+      - '.'
+    id: 'build-pix-gateway'
+
+  # 4. Frontend Service (Nginx Prod)
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '$_AR_BASE/pix-frontend:latest'
+      - '-f'
+      - 'deploy/docker/Dockerfile.frontend.prod'
+      - '.'
+    id: 'build-frontend'
+
+  # 5. Laya GPU Service (laya-serve com PyTorch CUDA)
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '$_AR_BASE/pix-ollaya-gpu:latest'
+      - '-f'
+      - 'deploy/docker/Dockerfile.laya-serve.gpu'
+      - '.'
+    id: 'build-ollaya-gpu'
+
+images:
+  - '$_AR_BASE/user-service:latest'
+  - '$_AR_BASE/gemini-investigation-agent:latest'
+  - '$_AR_BASE/pix-gateway-service:latest'
+  - '$_AR_BASE/pix-frontend:latest'
+  - '$_AR_BASE/pix-ollaya-gpu:latest'
+
+substitutions:
+  _AR_BASE: 'us-central1-docker.pkg.dev/pix-guard-poc/pix-guard-repo'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1800s'

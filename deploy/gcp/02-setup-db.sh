@@ -29,6 +29,7 @@ else
     echo "[INFO] Criando instância Cloud SQL PostgreSQL 16 '$DB_INSTANCE_NAME' (pode levar 4 a 6 minutos)..."
     gcloud sql instances create "$DB_INSTANCE_NAME" \
         --database-version=POSTGRES_16 \
+        --edition=ENTERPRISE \
         --tier="$DB_TIER" \
         --region="$REGION" \
         --root-password="$DB_PASS" \
