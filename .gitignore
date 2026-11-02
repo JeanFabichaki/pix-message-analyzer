@@ -1,6 +1,7 @@
 # Environments & Secrets
 .env
 .env.local
+.env.*.local
 .venv/
 env/
 venv/
@@ -11,6 +12,29 @@ __pycache__/
 *$py.class
 *.so
 .pytest_cache/
+.coverage
+.coverage.*
+coverage/
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Python Builds & Packaging (Local Development)
+*.egg-info/
+.eggs/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.installed.cfg
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
 
 # Databases & Volumes
 *.db
@@ -24,9 +48,22 @@ dist/
 .npm
 .eslintcache
 .vite/
+.turbo/
+.parcel-cache/
+
+# IDEs & Code Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
 
 # OS & Logs
 .DS_Store
+.AppleDouble
+.LSOverride
 Thumbs.db
 *.log
 logs/
@@ -34,9 +71,12 @@ logs/
 .pids/
 .run_pids
 
-# Tool Caches
+# AI Agents & Local Development Tools
+.agents/
+skills-lock.json
 .hallmark/
 .impeccable/
+.cache/
 
 # Checkpoints do Laya retreinado (grandes)
 finetune/models/
