@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import {
   Brain,
-  ClipboardList,
-  Lock,
   AlertTriangle,
   ShieldCheck,
   History,
@@ -16,13 +14,12 @@ import {
   Quote,
   Coins,
 } from 'lucide-react';
-import DotMeter from '../components/ui/DotMeter';
 import Skeleton from '../components/ui/Skeleton';
 import { ASYNC_STAGES } from './stages';
 import { CRITICALITY_LABEL, categoryLabel, fmtMs, formatCostUSD, formatCostBRL, formatTokens } from './format';
 import { dur, ease, spring } from '../motion/tokens';
 
-const ICONS = { laudo: Brain, ficha: ClipboardList };
+const ICONS = { laudo: Brain };
 
 function TypeReveal({ text, play }) {
   const words = String(text || '').split(/\s+/).filter(Boolean);
@@ -73,7 +70,7 @@ export default function AfterDelivery({ masked, investigation, ficha, reduced, t
   const isBypass = Boolean(
     analysis?.bypassed || data?.bypassed || data?.status === 'BYPASS' || analysis?.categoria === 'bypass'
   );
-  const [laudo, fichaStage] = ASYNC_STAGES;
+  const [laudo] = ASYNC_STAGES;
 
   const historyAnalyzed = data?.history_analyzed || [];
   const targetMsg = data?.target_message || targetMessage;
@@ -109,7 +106,7 @@ export default function AfterDelivery({ masked, investigation, ficha, reduced, t
             </>
           )}
           {masked && investigation.status === 'timeout' && (
-            <p className="after-card__muted">O laudo ainda está em processamento. Consulte o Histórico em instantes.</p>
+            <p className="after-card__muted">O laudo ainda está em processamento. Aguarde alguns instantes.</p>
           )}
           {masked && analysis && !isBypass && (
             <>
@@ -302,24 +299,6 @@ export default function AfterDelivery({ masked, investigation, ficha, reduced, t
                 </span>
               </div>
             </div>
-          )}
-        </Card>
-
-        <Card stage={fichaStage} index={1} play={play} tone={ficha.blocked ? 'danger' : 'default'}>
-          <DotMeter
-            count={ficha.count}
-            limit={ficha.limit}
-            blocked={ficha.blocked}
-            pendingNext={masked && investigation.status === 'pending'}
-          />
-          {ficha.blocked ? (
-            <p className="after-card__text after-card__text--danger">
-              <Lock size={14} aria-hidden="true" /> Conta com bloqueio cautelar aplicado pelo analista de fraudes.
-            </p>
-          ) : (
-            <p className="after-card__muted">
-              {ficha.count} ocorrência(s) acumulada(s). O bloqueio de conta é decisão do analista humano com base no laudo pericial.
-            </p>
           )}
         </Card>
       </div>

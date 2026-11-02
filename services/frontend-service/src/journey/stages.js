@@ -43,15 +43,8 @@ export const ASYNC_STAGES = [
     id: 'laudo',
     n: 5,
     title: 'Laudo detalhado',
-    sub: 'IA de investigação (Gemini)',
+    sub: 'IA de investigação forense (Google Gemini)',
     tech: 'gemini-investigation-agent · POST /investigate',
-  },
-  {
-    id: 'ficha',
-    n: 6,
-    title: 'Ficha de quem enviou',
-    sub: 'Governança sob análise do analista',
-    tech: 'threat_logs · Histórico para decisão de bloqueio de conta pelo analista',
   },
 ];
 

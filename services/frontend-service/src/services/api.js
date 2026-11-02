@@ -129,71 +129,12 @@ export async function getUser(userId) {
   return await res.json();
 }
 
-export async function listUsers() {
-  const primary = `${USER_BASE}/users`;
-  const fallback = `${DIRECT_USER}/users`;
-  try {
-    const res = await safeFetch(primary, fallback);
-    if (!res.ok) return [];
-    return await res.json();
-  } catch (e) {
-    return [];
-  }
-}
-
-export async function unblockUser(userId) {
-  const primary = `${USER_BASE}/users/${userId}/unblock`;
-  const fallback = `${DIRECT_USER}/users/${userId}/unblock`;
-  const res = await safeFetch(primary, fallback, { method: 'POST' });
-  if (!res.ok) throw new Error('Falha ao desbloquear usuário');
-  return await res.json();
-}
-
 export async function resetUserThreats(userId) {
   const primary = `${USER_BASE}/users/${userId}/reset-threats`;
   const fallback = `${DIRECT_USER}/users/${userId}/reset-threats`;
   const res = await safeFetch(primary, fallback, { method: 'POST' });
   if (!res.ok) throw new Error('Falha ao resetar ocorrências');
   return await res.json();
-}
-
-export async function getAuditThreats() {
-  const primary = `${USER_BASE}/audit/threats`;
-  const fallback = `${DIRECT_USER}/audit/threats`;
-  try {
-    const res = await safeFetch(primary, fallback);
-    if (!res.ok) return [];
-    return await res.json();
-  } catch (e) {
-    return [];
-  }
-}
-
-export async function getAuditMetrics() {
-  const primary = `${USER_BASE}/audit/metrics`;
-  const fallback = `${DIRECT_USER}/audit/metrics`;
-  try {
-    const res = await safeFetch(primary, fallback);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (e) {
-    return null;
-  }
-}
-
-export async function clearAllAuditHistory() {
-  const primary = `${USER_BASE}/audit/clear-history`;
-  const fallback = `${DIRECT_USER}/audit/clear-history`;
-  const res = await safeFetch(primary, fallback, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-  });
-  if (!res.ok) throw new Error('Falha ao limpar histórico de auditoria');
-  const data = await res.json();
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('pix-history-cleared', { detail: data }));
-  }
-  return data;
 }
 
 export async function getUserThreatLogs(userId) {

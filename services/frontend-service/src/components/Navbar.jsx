@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Activity, GitCompare, History, Route, ShieldCheck, Sparkles, TriangleAlert } from 'lucide-react';
+import { Activity, GitCompare, Route, ShieldCheck, Sparkles, TriangleAlert } from 'lucide-react';
 import { getGatewayHealth } from '../services/api';
 import EngineSwitch from './EngineSwitch';
 import { useMotionPrefs } from '../motion/MotionProvider';
@@ -9,7 +9,6 @@ import { spring } from '../motion/tokens';
 export const TABS = [
   { id: 'journey', label: 'Jornada', Icon: Route },
   { id: 'live', label: 'Ao vivo', Icon: Activity },
-  { id: 'history', label: 'Histórico', Icon: History },
   { id: 'compare', label: 'Comparar', Icon: GitCompare },
 ];
 
@@ -44,9 +43,9 @@ export default function Navbar({ activeTab, onChange }) {
         <header className="navbar" role="banner">
           <div className="brand">
             <span className="brand__icon" aria-hidden="true">
-              <ShieldCheck size={20} strokeWidth={2.4} />
+              <ShieldCheck size={17} strokeWidth={2.4} />
             </span>
-            <div>
+            <div className="brand__text">
               <h1 className="brand__title">Pix Guard</h1>
               <p className="brand__sub">Como uma mensagem de Pix é verificada antes de chegar</p>
             </div>
@@ -69,7 +68,7 @@ export default function Navbar({ activeTab, onChange }) {
                   >
                     {active && <motion.span layoutId="tab-pill" className="tab__pill" transition={spring.soft} />}
                     <span className="tab__content">
-                      <Icon size={16} aria-hidden="true" />
+                      <Icon size={15} aria-hidden="true" />
                       <span>{label}</span>
                       <kbd className="tab__key" aria-hidden="true">
                         {i + 1}
@@ -90,7 +89,7 @@ export default function Navbar({ activeTab, onChange }) {
               aria-pressed={manualReduced}
               title="Reduz as animações, útil em projetores e para quem prefere menos movimento"
             >
-              <Sparkles size={14} aria-hidden="true" /> Animações: {reduced ? 'reduzidas' : 'ligadas'}
+              <Sparkles size={13} aria-hidden="true" /> Animações: {reduced ? 'reduzidas' : 'ligadas'}
             </button>
             <span className={`status ${pill[0]}`} role="status">
               <span className="status__dot" aria-hidden="true" />

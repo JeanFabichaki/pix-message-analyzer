@@ -32,7 +32,7 @@ ollaya_tuned_client = OllayaClient(
     model=settings.LAYA_TUNED_MODEL,
     instructions=TUNED_INSTRUCTIONS,
     criteria=TUNED_CRITERIA,
-    decomposed=False,
+    decomposed=True,
     threat_threshold=0.40,
 )
 investigation_client = InvestigationClient()
@@ -46,21 +46,21 @@ interceptor = PixInterceptor(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async def _warmup_tuned():
+    async def _warmup_models():
         for attempt in range(1, 13):
             try:
-                ms = await ollaya_tuned_client.warmup(timeout=60.0)
-                logger.info(f"Laya retreinado nativo aquecido em {ms} ms.")
+                ms_tuned = await ollaya_tuned_client.warmup(timeout=60.0)
+                ms_base = await ollaya_client.warmup(timeout=60.0)
+                logger.info(f"Laya retreinado ({ms_tuned} ms) e Laya original ({ms_base} ms) aquecidos com sucesso.")
                 return
             except Exception as ex:
-                logger.warning(f"Tentativa {attempt}/12 aquecendo Laya retreinado: {ex}")
+                logger.warning(f"Tentativa {attempt}/12 aquecendo modelos Laya: {ex}")
                 await asyncio.sleep(5)
         logger.error(
-            f"IA Laya retreinado INDISPONÍVEL: {ollaya_tuned_client.last_error}. "
-            f"Enquanto isso, os Pix serão aprovados SEM análise."
+            f"Modelos Laya INDISPONÍVEIS: tuned={ollaya_tuned_client.last_error}, base={ollaya_client.last_error}."
         )
 
-    warmup_task = asyncio.create_task(_warmup_tuned())
+    warmup_task = asyncio.create_task(_warmup_models())
     yield
     warmup_task.cancel()
     await ollaya_client.aclose()

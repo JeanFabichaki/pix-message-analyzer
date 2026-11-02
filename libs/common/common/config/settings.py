@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     PIX_MASKED_MESSAGE: str = "Mensagem retida por conter conteúdo inadequado sob análise de segurança."
 
     # Ollaya Decision Model Server (ollaya.dev)
-    OLLAYA_BASE_URL: str = "http://127.0.0.1:11435"
-    OLLAYA_CLUSTER_URLS: str = ""
+    OLLAYA_BASE_URL: str = "http://127.0.0.1:8000"
+    OLLAYA_CLUSTER_URLS: str = "http://127.0.0.1:8000"
     OLLAYA_MODEL: str = "laya:multilingual"
     OLLAYA_TIMEOUT_SECONDS: float = 25.0
 

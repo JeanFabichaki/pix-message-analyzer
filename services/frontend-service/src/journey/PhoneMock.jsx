@@ -1,10 +1,11 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Lock, Send, ShieldCheck, Smartphone, BellRing } from 'lucide-react';
+import { Lock, Send, ShieldCheck, Smartphone, BellRing, History, RotateCcw } from 'lucide-react';
 import CountUp from '../components/ui/CountUp';
 import DotMeter from '../components/ui/DotMeter';
 import { dur, ease, spring } from '../motion/tokens';
-import { RECEIVER, formatBRL } from './scenarios';
+import { SCENARIOS, RECEIVER, formatBRL } from './scenarios';
+import { SCENARIO_ICONS } from './scenarioIcons';
 
 export function SenderPhone({
   scenario,
@@ -20,6 +21,8 @@ export function SenderPhone({
   onBurst,
   burstTotal,
   onReactivate,
+  onPickScenario,
+  replayActive,
 }) {
   const editable = Boolean(scenario.editable);
   const isReplay = scenario.id === 'replay';
@@ -31,94 +34,168 @@ export function SenderPhone({
         <span className="phone__bar-title">
           <Smartphone size={15} aria-hidden="true" /> Quem envia
         </span>
-        <span className={`chip ${suspended ? 'chip--danger' : 'chip--safe'}`}>
-          {suspended ? (
-            <>
-              <Lock size={12} aria-hidden="true" /> Conta suspensa
-            </>
-          ) : (
-            'Conta ativa'
+        <div className="phone__bar-meta">
+          {ficha && (ficha.count > 0 || suspended) && (
+            <div className="phone__threat-meter" title={`${ficha.count} ocorrência(s)`}>
+              <DotMeter count={ficha.count} limit={ficha.limit} blocked={ficha.blocked} />
+              {onReactivate && (
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--xxs"
+                  onClick={onReactivate}
+                  disabled={busy}
+                  title="Zerar contagem"
+                >
+                  <RotateCcw size={12} aria-hidden="true" />
+                </button>
+              )}
+            </div>
           )}
-        </span>
+          <span className={`chip chip--sm ${suspended ? 'chip--danger' : 'chip--safe'}`}>
+            {suspended ? (
+              <>
+                <Lock size={11} aria-hidden="true" /> Suspensa
+              </>
+            ) : (
+              'Ativa'
+            )}
+          </span>
+        </div>
       </header>
 
       <div className="phone__body">
-        <div className="phone__party">
-          <span className="phone__label">De</span>
-          <strong>{scenario.sender.name}</strong>
-          <span className="phone__label">Para</span>
-          <strong>{RECEIVER.name}</strong>
+        {onPickScenario && (
+          <div className="phone__scenario-picker">
+            <div className="scenarios scenarios--phone" role="radiogroup" aria-label="Casos prontos">
+              {SCENARIOS.map((sc) => {
+                const Icon = SCENARIO_ICONS[sc.icon];
+                const active = scenario.id === sc.id;
+                return (
+                  <button
+                    key={sc.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    className={`scenario scenario--phone ${active ? 'is-active' : ''}`}
+                    onClick={() => onPickScenario(sc)}
+                    disabled={busy && !active}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="scenario-pill-phone"
+                        className="scenario__pill"
+                        transition={spring.soft}
+                      />
+                    )}
+                    <span className="scenario__content">
+                      {Icon && <Icon size={13} aria-hidden="true" />}
+                      <span>{sc.title}</span>
+                    </span>
+                  </button>
+                );
+              })}
+              {replayActive && (
+                <span className="scenario scenario--phone is-active scenario--replay">
+                  <span className="scenario__content">
+                    <History size={13} aria-hidden="true" />
+                    <span>Reprodução</span>
+                  </span>
+                </span>
+              )}
+            </div>
+            {!replayActive && scenario && (
+              <p className="phone__scenario-note">
+                <strong>{scenario.path}:</strong> {scenario.expects}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="phone__tx-strip">
+          <div className="phone__tx-parties">
+            <span className="phone__party-tag">
+              <span className="phone__label-mini">De</span>
+              <strong>{scenario.sender.name}</strong>
+            </span>
+            <span className="phone__party-arrow">→</span>
+            <span className="phone__party-tag">
+              <span className="phone__label-mini">Para</span>
+              <strong>{RECEIVER.name}</strong>
+            </span>
+          </div>
+
+          <div className="phone__tx-amount">
+            {editable ? (
+              <span className="phone__amount-input-compact">
+                <span aria-hidden="true">R$</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0.01"
+                  step="0.01"
+                  value={amount}
+                  onChange={(e) => onAmountChange(e.target.value)}
+                  aria-label="Valor do Pix em reais"
+                />
+              </span>
+            ) : (
+              <strong className="phone__amount-tag num">{formatBRL(amount)}</strong>
+            )}
+          </div>
         </div>
 
-        <label className="phone__amount">
-          <span className="phone__label">Valor do Pix</span>
-          {editable ? (
-            <span className="phone__amount-input">
-              <span aria-hidden="true">R$</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                min="0.01"
-                step="0.01"
-                value={amount}
-                onChange={(e) => onAmountChange(e.target.value)}
-                aria-label="Valor do Pix em reais"
-              />
-            </span>
-          ) : (
-            <span className="phone__amount-value num">{formatBRL(amount)}</span>
-          )}
-        </label>
-
         <div className="phone__message">
-          <span className="phone__label">Mensagem</span>
+          <div className="phone__message-top">
+            <span className="phone__label-mini">Mensagem do Pix</span>
+            {editable && <span className="phone__hint-mini">Editável</span>}
+          </div>
           {editable ? (
             <textarea
               value={message}
               onChange={(e) => onMessageChange(e.target.value)}
               placeholder="Digite a mensagem do Pix…"
-              rows={4}
+              rows={3}
+              className="phone__textarea-compact"
               aria-label="Mensagem do Pix"
             />
           ) : (
-            <p className="phone__message-text">“{message}”</p>
+            <p className="phone__message-text-compact">“{message}”</p>
           )}
         </div>
 
-        <motion.button
-          type="button"
-          className="btn btn--primary btn--block"
-          onClick={onSend}
-          disabled={sendDisabled}
-          whileTap={{ scale: 0.97 }}
-          transition={spring.pop}
-        >
-          {busy ? (
-            <span>{burstProgress ? `Enviando ${burstProgress.done} de ${burstProgress.total}…` : 'Em análise…'}</span>
-          ) : (
-            <>
-              <span>Enviar Pix</span>
-              <Send size={16} aria-hidden="true" />
-            </>
-          )}
-        </motion.button>
-        {onBurst && (
-          <button type="button" className="btn btn--secondary btn--block" onClick={onBurst} disabled={busy}>
-            Enviar {burstTotal}× em sequência
-          </button>
-        )}
-        {isReplay && <p className="phone__hint phone__hint--muted">Reprodução de um Pix já processado.</p>}
-
-        {ficha && (
-          <div className="phone__ficha">
-            <span className="phone__label">Ocorrências de quem envia</span>
-            <DotMeter count={ficha.count} limit={ficha.limit} blocked={ficha.blocked} />
-            {(ficha.count > 0 || suspended) && onReactivate && (
-              <button type="button" className="btn btn--ghost btn--xs" onClick={onReactivate} disabled={busy}>
-                Zerar contagem (demonstração)
-              </button>
+        <div className="phone__actions-row">
+          <motion.button
+            type="button"
+            className="btn btn--primary btn--compact btn--block"
+            onClick={onSend}
+            disabled={sendDisabled}
+            whileTap={{ scale: 0.97 }}
+            transition={spring.pop}
+          >
+            {busy ? (
+              <span>{burstProgress ? `Enviando ${burstProgress.done}/${burstProgress.total}…` : 'Em análise…'}</span>
+            ) : (
+              <>
+                <span>Enviar Pix</span>
+                <Send size={15} aria-hidden="true" />
+              </>
             )}
-          </div>
+          </motion.button>
+          {onBurst && (
+            <button
+              type="button"
+              className="btn btn--secondary btn--compact"
+              onClick={onBurst}
+              disabled={busy}
+              title={`Enviar ${burstTotal} transações em rajada para testar reincidência`}
+            >
+              {burstTotal}× Rajada
+            </button>
+          )}
+        </div>
+        {isReplay && <p className="phone__hint phone__hint--muted">Reprodução de um Pix já processado.</p>}
+        {suspended && (
+          <p className="phone__hint phone__hint--danger">Conta suspensa. Clique no ícone de reset no topo para testar.</p>
         )}
       </div>
     </section>

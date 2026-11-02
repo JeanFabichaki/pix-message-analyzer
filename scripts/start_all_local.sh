@@ -53,7 +53,8 @@ echo "[6/6] Iniciando Frontend React (Vite) na porta 3000..."
 .venv/bin/python -c "
 import subprocess
 p = subprocess.Popen(
-    ['$DIR/services/frontend-service/node_modules/.bin/vite', '--host', '0.0.0.0', '--port', '3000', '$DIR/services/frontend-service'],
+    ['$DIR/services/frontend-service/node_modules/.bin/vite', '--host', '0.0.0.0', '--port', '3000'],
+    cwd='$DIR/services/frontend-service',
     start_new_session=True,
     stdin=subprocess.DEVNULL,
     stdout=open('$DIR/.logs/frontend.log', 'w'),
@@ -65,7 +66,7 @@ with open('$DIR/.pids/frontend.pid', 'w') as f:
 
 echo ""
 echo "Aguardando serviços ficarem prontos..."
-for i in {1..20}; do
+for i in {1..35}; do
     if curl -s http://127.0.0.1:8000/health >/dev/null 2>&1 && \
        curl -s http://127.0.0.1:8001/health >/dev/null 2>&1 && \
        curl -s http://127.0.0.1:8002/health >/dev/null 2>&1 && \

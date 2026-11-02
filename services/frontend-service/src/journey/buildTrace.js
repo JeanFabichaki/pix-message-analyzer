@@ -50,27 +50,4 @@ export function totalMsOf(source) {
   return typeof t.total_gateway_ms === 'number' ? t.total_gateway_ms : null;
 }
 
-/** Reconstrói uma jornada aproximada a partir de um registro da auditoria (que não guarda o trace). */
-export function stationsFromAuditLog(log) {
-  const rationale = log?.gemini_rationale || '';
-  const evaded = rationale.startsWith('[Anti-Bypass');
-  const score = typeof log?.ollaya_score === 'number' ? log.ollaya_score : null;
-  const trace = [
-    { step: 'amount_rule', status: 'pass', detail: 'Valor dentro do limite e com mensagem.' },
-    {
-      step: 'anti_evasion',
-      status: evaded ? 'detect' : 'pass',
-      detail: evaded ? 'Disfarce detectado e desfeito.' : 'Nenhum disfarce encontrado.',
-    },
-    {
-      step: 'ollaya',
-      status: 'detect',
-      detail: 'A IA rápida identificou a ameaça.',
-      data: { score, category: log?.ollaya_category },
-    },
-    { step: 'delivery', status: 'detect', detail: 'Mensagem substituída pelo aviso padrão.' },
-  ];
-  return buildStations({ trace });
-}
-
 export { MASK_FALLBACK };

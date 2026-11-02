@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ChevronRight, FastForward, History, Play, RotateCcw, Send, SkipForward } from 'lucide-react';
-import { SCENARIO_ICONS } from '../journey/scenarioIcons';
-import { SenderPhone, ReceiverPhone } from '../journey/PhoneMock';
+import { ChevronRight, FastForward, Play, RotateCcw, Send, SkipForward } from 'lucide-react';
+import { SenderPhone } from '../journey/PhoneMock';
 import JourneyTrack from '../journey/JourneyTrack';
 import StageDetail from '../journey/StageDetail';
 import AfterDelivery from '../journey/AfterDelivery';
@@ -23,42 +22,6 @@ const EMPTY_STATIONS = SYNC_STAGES.map((s) => ({ id: s.id, status: 'void', ms: n
 function isTyping() {
   const tag = document.activeElement?.tagName?.toLowerCase();
   return tag === 'input' || tag === 'textarea' || tag === 'select';
-}
-
-function ScenarioPicker({ activeId, onPick, disabled, replayActive }) {
-  return (
-    <div className="scenarios" role="radiogroup" aria-label="Casos prontos">
-      {SCENARIOS.map((sc) => {
-        const Icon = SCENARIO_ICONS[sc.icon];
-        const active = activeId === sc.id;
-        return (
-          <button
-            key={sc.id}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            className={`scenario ${active ? 'is-active' : ''}`}
-            onClick={() => onPick(sc)}
-            disabled={disabled && !active}
-          >
-            {active && <motion.span layoutId="scenario-pill" className="scenario__pill" transition={spring.soft} />}
-            <span className="scenario__content">
-              <Icon size={16} aria-hidden="true" />
-              <span>{sc.title}</span>
-            </span>
-          </button>
-        );
-      })}
-      {replayActive && (
-        <span className="scenario is-active scenario--replay">
-          <span className="scenario__content">
-            <History size={16} aria-hidden="true" />
-            <span>Reprodução</span>
-          </span>
-        </span>
-      )}
-    </div>
-  );
 }
 
 export default function Screen1Journey({ replay, onReplayConsumed, active = true }) {
@@ -314,17 +277,11 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
       </div>
 
       <div className="journey__head">
-        <div>
-          <h2 className="page__title">A viagem de uma mensagem Pix</h2>
-        </div>
+        <h2 className="page__title">A viagem de uma mensagem Pix</h2>
+        <span className="page__lead">
+          Triagem síncrona em milissegundos e laudo pericial forense com IA.
+        </span>
       </div>
-
-      <ScenarioPicker activeId={scenario.id} onPick={handlePick} disabled={busy} replayActive={replayActive} />
-      {!replayActive && (
-        <p className="scenario-note" key={scenario.id}>
-          <strong>Caminho:</strong> {scenario.path}. {scenario.expects}
-        </p>
-      )}
 
       <div className="journey__stage">
         <SenderPhone
@@ -341,6 +298,8 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
           onBurst={scenario.burst ? handleBurst : null}
           burstTotal={scenario.burst}
           onReactivate={handleReactivate}
+          onPickScenario={handlePick}
+          replayActive={replayActive}
         />
 
         <div className="journey__center">
@@ -473,17 +432,6 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
             )}
           </AnimatePresence>
         </div>
-
-        <ReceiverPhone
-          phase={phase === 'waiting' ? 'running' : phase}
-          delivered={tl.delivered}
-          blocked={Boolean(run?.blocked)}
-          amount={run?.payload?.amount ?? amount}
-          senderName={scenario.sender.name}
-          message={run?.finalMessage ?? ''}
-          masked={Boolean(run?.masked)}
-          realMs={run?.realMs}
-        />
       </div>
 
       <AnimatePresence>

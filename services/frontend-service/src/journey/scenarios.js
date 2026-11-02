@@ -57,6 +57,16 @@ export const SCENARIOS = [
     sender: { id: 'usr_sutil_01', name: 'Marcos R.', cpf: '11223344556' },
   },
   {
+    id: 'marido_ex',
+    icon: 'UserX',
+    title: 'Ex inconformado',
+    path: 'Pega na IA rápida (estação 3)',
+    expects: 'Mensagens de perseguição e intimidação de ex-marido/companheiro são bloqueadas.',
+    amount: 0.01,
+    message: 'Se você não voltar comigo eu acabo com você, não vai ficar com outro',
+    sender: { id: 'usr_ex_marido_01', name: 'Ex Inconformado', cpf: '44556677889' },
+  },
+  {
     id: 'reincidente',
     icon: 'Repeat',
     title: 'Reincidente',

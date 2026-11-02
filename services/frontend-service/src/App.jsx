@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 import Navbar, { TABS } from './components/Navbar';
 import Screen1Journey from './components/Screen1Journey';
 import ScreenLive from './components/ScreenLive';
-import ScreenHistory from './components/ScreenHistory';
 import ScreenCompare from './components/ScreenCompare';
 import { dur, ease } from './motion/tokens';
 
@@ -23,7 +22,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Um Pix escolhido no Ao vivo ou no Histórico é reproduzido na Jornada.
+  // Um Pix escolhido no Ao vivo é reproduzido na Jornada.
   const handleInspect = useCallback((payload) => {
     setReplay(payload);
     setTab('journey');
@@ -50,12 +49,11 @@ export default function App() {
       <main id="main-content" tabIndex={-1} className="app__main">
         {panel('journey', <Screen1Journey replay={replay} onReplayConsumed={() => setReplay(null)} active={tab === 'journey'} />)}
         {panel('live', <ScreenLive active={tab === 'live'} onInspect={handleInspect} />)}
-        {panel('history', <ScreenHistory active={tab === 'history'} onInspect={handleInspect} />)}
         {panel('compare', <ScreenCompare active={tab === 'compare'} />)}
       </main>
       <footer className="app__footer" role="contentinfo">
         <span>
-          Pix Guard · prova de conceito · Regra de análise: mensagens de Pix de até R$ 10,00 · Teclas 1 a 4 trocam de
+          Pix Guard · prova de conceito · Regra de análise: mensagens de Pix de até R$ 10,00 · Teclas 1 a 3 trocam de
           tela
         </span>
       </footer>

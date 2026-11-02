@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """Servidor Direto e Ultrarrápido para o Laya (FP32 Puro com Apple Silicon GPU / MPS).
 
-Elimina os overheads do laya-serve padrão:
-1. Sem ThreadPool/Locks genéricos de Router multimodelo.
-2. Mantém o Agent residente na GPU Metal (device='mps') com precisão FP32 integral.
-3. Força trava de sequência `max_len=64` (otimização específica para Pix de até 140 chars).
-4. Executa warmup completo de shaders Metal no startup.
-5. Latência de inferência pura reduzida para ~11ms - 15ms.
+Hospeda ambos os modelos nativamente na GPU Metal do macOS:
+1. Laya Retreinado ('pix-threats'): Checkpoint finetunado para ameaças e extorsão em Pix.
+2. Laya Original ('laya:multilingual'): Checkpoint base multilíngue sem treinamento (baseline).
+
+Características de alta performance:
+- Sem ThreadPool/Locks genéricos de Router multimodelo.
+- Mantém ambos os Agents residentes na GPU Metal (device='mps') com precisão FP32 integral.
+- Força trava de sequência `max_len=64` (otimização específica para Pix de até 140 chars).
+- Executa warmup completo de shaders Metal para ambos os modelos no startup.
+- Heartbeat loop para evitar downclocking de energia e app nap do Apple Silicon.
+- Latência de inferência pura reduzida para ~11ms - 15ms.
 """
 import asyncio
 import logging
@@ -28,12 +33,16 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 logger = logging.getLogger("laya-direct")
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
-MODEL_PATH = os.getenv("LAYA_MODEL_PATH", str(ROOT_DIR / "finetune" / "models" / "pix-threats"))
+TUNED_MODEL_PATH = os.getenv("LAYA_MODEL_PATH", str(ROOT_DIR / "finetune" / "models" / "pix-threats"))
+BASE_MODEL_NAME = os.getenv("LAYA_BASE_MODEL", "convaiinnovations/laya")
+BASE_MODEL_SUBFOLDER = os.getenv("LAYA_BASE_SUBFOLDER", "multilingual")
+
 PORT = int(os.getenv("LAYA_PORT", "8000"))
 HOST = os.getenv("LAYA_HOST", "0.0.0.0")
 
-# Instância global do Agent residente em GPU
-agent_instance: Optional[Agent] = None
+# Instâncias globais dos Agents residentes em GPU Metal (MPS)
+agent_tuned: Optional[Agent] = None
+agent_base: Optional[Agent] = None
 device_name: str = "cpu"
 last_request_time: float = time.perf_counter()
 
@@ -82,31 +91,36 @@ def collate_fixed(batch, pad_id: int, min_len: int = 64, min_k: int = 2):
 
 
 @torch.no_grad()
-def infer_fast(state: str, questions: dict) -> dict:
-    """Execução direta e ultraotimizada sem hooks ou camadas intermediárias."""
+def infer_fast(agent: Agent, state: str, questions: dict) -> dict:
+    """Execução direta e ultraotimizada no agente selecionado sem hooks ou overhead."""
     global last_request_time
     last_request_time = time.perf_counter()
     t0 = last_request_time
     ids = list(questions.keys())
     t1 = time.perf_counter()
-    internal = {qid: agent_instance._to_internal(questions[qid]) for qid in ids}
+    normalized = {}
+    for qid in ids:
+        q_copy = dict(questions[qid]) if isinstance(questions[qid], dict) else {}
+        if "instructions" not in q_copy or q_copy["instructions"] is None:
+            q_copy["instructions"] = ""
+        normalized[qid] = q_copy
+    internal = {qid: agent._to_internal(normalized[qid]) for qid in ids}
     t2 = time.perf_counter()
-    encoded = [agent_instance._encode_state(state, ids, internal, max_len=64)]
+    encoded = [agent._encode_state(state, ids, internal, max_len=64)]
     t3 = time.perf_counter()
-    b = collate_fixed(encoded, agent_instance.tok.pad_token_id, min_len=64, min_k=2)
+    b = collate_fixed(encoded, agent.tok.pad_token_id, min_len=64, min_k=2)
     t4 = time.perf_counter()
-    logits, act = agent_instance._forward(b)
+    logits, act = agent._forward(b)
     t5 = time.perf_counter()
     if device_name == "mps":
         torch.mps.synchronize()
     t6 = time.perf_counter()
-    answers = agent_instance._decode_answers(logits, act, encoded[0], ids, internal, 0)
+    answers = agent._decode_answers(logits, act, encoded[0], ids, internal, 0)
     t7 = time.perf_counter()
 
     logger.info(
-        f"⏱️ [INFER_FAST BREAKDOWN] Total={(t7-t0)*1000:.2f}ms | "
-        f"Internal={(t2-t1)*1000:.2f}ms | Encode={(t3-t2)*1000:.2f}ms | Collate={(t4-t3)*1000:.2f}ms | "
-        f"Forward={(t5-t4)*1000:.2f}ms | MPSSync={(t6-t5)*1000:.2f}ms | Decode={(t7-t6)*1000:.2f}ms | "
+        f"⏱️ [INFER_FAST] Model={getattr(agent, 'model_name_or_path', 'agent')} | "
+        f"Total={(t7-t0)*1000:.2f}ms | Forward={(t5-t4)*1000:.2f}ms | MPSSync={(t6-t5)*1000:.2f}ms | "
         f"BatchLen={b['input_ids'].shape[1]}"
     )
 
@@ -125,7 +139,7 @@ def infer_fast(state: str, questions: dict) -> dict:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global agent_instance, device_name, last_request_time
+    global agent_tuned, agent_base, device_name, last_request_time
 
     # 1. Detecta o melhor acelerador de hardware (Apple Silicon MPS prioritário no Mac)
     if torch.backends.mps.is_available():
@@ -135,29 +149,36 @@ async def lifespan(app: FastAPI):
     else:
         device_name = "cpu"
 
-    logger.info("=" * 65)
-    logger.info("  ⚡ INICIANDO SERVIDOR LAYA DIRETO (ALTA PERFORMANCE)")
-    logger.info(f"  Dispositivo: {device_name.upper()} (Metal Performance Shaders)")
-    logger.info(f"  Modelo FP32: {MODEL_PATH}")
-    logger.info("=" * 65)
+    logger.info("=" * 70)
+    logger.info("  ⚡ INICIANDO SERVIDOR DUAL LAYA DIRETO NO MACOS (GPU METAL - MPS)")
+    logger.info(f"  Acelerador: {device_name.upper()} (Apple Silicon Metal Performance Shaders)")
+    logger.info(f"  1) Laya Retreinado : {TUNED_MODEL_PATH}")
+    logger.info(f"  2) Laya Original   : {BASE_MODEL_NAME} (subfolder={BASE_MODEL_SUBFOLDER})")
+    logger.info("=" * 70)
 
-    # 2. Carrega pesos em FP32 diretamente na VRAM unificada
-    t_load = time.perf_counter()
-    agent_instance = Agent(MODEL_PATH, device=device_name)
-    load_ms = (time.perf_counter() - t_load) * 1000
-    logger.info(f"Modelo carregado em {load_ms:.2f}ms na GPU {device_name.upper()}.")
+    # 2. Carrega ambos os modelos em FP32 diretamente na memória unificada do Mac
+    t_load1 = time.perf_counter()
+    agent_tuned = Agent(TUNED_MODEL_PATH, device=device_name)
+    load_tuned_ms = (time.perf_counter() - t_load1) * 1000
+    logger.info(f"✅ Laya Retreinado carregado em {load_tuned_ms:.2f}ms na GPU {device_name.upper()}.")
+
+    t_load2 = time.perf_counter()
+    agent_base = Agent(BASE_MODEL_NAME, subfolder=BASE_MODEL_SUBFOLDER, device=device_name)
+    load_base_ms = (time.perf_counter() - t_load2) * 1000
+    logger.info(f"✅ Laya Original carregado em {load_base_ms:.2f}ms na GPU {device_name.upper()}.")
 
     # 3. Warmup completo: pré-compila shaders Metal para todos os buckets de comprimento do Pix
-    logger.info("Executando warmup dos shaders Metal na GPU (todos os buckets do Pix)...")
+    logger.info("Executando warmup dos shaders Metal na GPU (ambos os modelos)...")
     shapes = []
     for m in [2, 3]:
         for l in [8, 16, 24, 32, 40, 48, 56, 64]:
             shapes.append((1, l, m))
-    
-    t_w = agent_instance.warmup(shapes=shapes)
-    logger.info(f" -> Compilação de shaders Metal concluída em {t_w * 1000:.2f}ms")
 
-    # 4. Warmup profundo com os formatos exatos de critérios do Gateway Pix
+    t_w1 = agent_tuned.warmup(shapes=shapes)
+    t_w2 = agent_base.warmup(shapes=shapes)
+    logger.info(f" -> Shaders Metal compilados em {t_w1 * 1000:.2f}ms (retreinado) e {t_w2 * 1000:.2f}ms (original)")
+
+    # 4. Warmup com perguntas reais do Gateway Pix
     warmup_queries = [
         {
             "threat": {
@@ -167,11 +188,21 @@ async def lifespan(app: FastAPI):
             }
         },
         {
-            "threat": {
+            "ameaca_violencia": {
                 "type": "choice",
-                "instructions": "A mensagem de Pix contém ameaça, extorsão ou intimidação?",
-                "criteria": {"threat": "ameaça", "safe": "normal"},
-            }
+                "instructions": "A mensagem de Pix contém ameaça de violência física, morte ou agressão?",
+                "criteria": {"threat": "ameaça ou agressão física", "safe": "conversa normal"},
+            },
+            "extorsao_chantagem": {
+                "type": "choice",
+                "instructions": "A mensagem de Pix contém extorsão, chantagem ou exigência forçada sob ameaça?",
+                "criteria": {"threat": "chantagem ou extorsão", "safe": "conversa normal"},
+            },
+            "coercao_financeira": {
+                "type": "choice",
+                "instructions": "A mensagem de Pix contém cobrança hostil abusiva, intimidação a familiares ou coerção?",
+                "criteria": {"threat": "coerção ou intimidação", "safe": "conversa normal"},
+            },
         },
     ]
     warmup_phrases = [
@@ -181,13 +212,14 @@ async def lifespan(app: FastAPI):
     ]
     for q in warmup_queries:
         for phrase in warmup_phrases:
-            infer_fast(phrase, q)
+            infer_fast(agent_tuned, phrase, q)
+            infer_fast(agent_base, phrase, q)
 
     # 5. Heartbeat Loop: mantém a GPU Metal ativa e previne clock downscaling de energia do Apple Silicon
     ka_ids = list(warmup_queries[0].keys())
-    ka_internal = {qid: agent_instance._to_internal(warmup_queries[0][qid]) for qid in ka_ids}
-    ka_enc = [agent_instance._encode_state("keepalive", ka_ids, ka_internal, max_len=64)]
-    ka_b = collate_fixed(ka_enc, agent_instance.tok.pad_token_id, min_len=64, min_k=2)
+    ka_internal = {qid: agent_tuned._to_internal(warmup_queries[0][qid]) for qid in ka_ids}
+    ka_enc = [agent_tuned._encode_state("keepalive", ka_ids, ka_internal, max_len=64)]
+    ka_b = collate_fixed(ka_enc, agent_tuned.tok.pad_token_id, min_len=64, min_k=2)
 
     async def keep_gpu_warm():
         """Mantém a GPU Metal aquecida a cada 1.5s se não houver requisições de clientes."""
@@ -197,20 +229,21 @@ async def lifespan(app: FastAPI):
             if time.perf_counter() - last_request_time >= 1.5:
                 try:
                     with torch.no_grad():
-                        agent_instance._infer(ka_b)
+                        agent_tuned._infer(ka_b)
+                        agent_base._infer(ka_b)
                         if device_name == "mps":
                             torch.mps.synchronize()
                 except Exception:
                     pass
 
     keepalive_task = asyncio.create_task(keep_gpu_warm())
-    logger.info("✅ Servidor pronto com Keep-Alive de GPU Metal ativo (latência sub-20ms contínua)!")
+    logger.info("🚀 Servidor DUAL pronto com Keep-Alive de GPU Metal ativo (ambos os modelos sub-20ms)!")
     yield
     keepalive_task.cancel()
     logger.info("Encerrando servidor Laya Direto.")
 
 
-app = FastAPI(title="Laya Direct MPS Server", lifespan=lifespan)
+app = FastAPI(title="Laya Direct Dual MPS Server", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -224,11 +257,24 @@ app.add_middleware(
 async def health():
     return {
         "status": "ok",
-        "loaded": ["pix-threats", "laya:pix-threats", "laya:multilingual"],
+        "loaded": [
+            "pix-threats",
+            "laya:pix-threats",
+            "laya:multilingual",
+            "multilingual",
+            "laya",
+            "laya_tuned",
+        ],
         "device": device_name,
         "device_is_preference": False,
-        "checkpoint_devices": {"pix-threats": device_name},
-        "cpu_fallbacks": {"pix-threats": {"count": 0, "last_reason": None}},
+        "checkpoint_devices": {
+            "pix-threats": device_name,
+            "laya:multilingual": device_name,
+        },
+        "cpu_fallbacks": {
+            "pix-threats": {"count": 0, "last_reason": None},
+            "laya:multilingual": {"count": 0, "last_reason": None},
+        },
     }
 
 
@@ -239,25 +285,34 @@ async def list_models():
             {"name": "pix-threats"},
             {"name": "laya:pix-threats"},
             {"name": "laya:multilingual"},
+            {"name": "multilingual"},
+            {"name": "laya"},
+            {"name": "laya_tuned"},
         ]
     }
 
 
 @app.post("/v1/systemone")
 async def systemone(request: Request):
-    if agent_instance is None:
-        raise HTTPException(status_code=503, detail="Laya model not initialized")
+    if agent_tuned is None or agent_base is None:
+        raise HTTPException(status_code=503, detail="Laya models not fully initialized")
 
     body = await request.json()
     state = body.get("state", "")
     questions = body.get("questions")
+    req_model = str(body.get("model", "")).lower()
 
     if not isinstance(questions, dict):
         raise HTTPException(status_code=400, detail="Missing or invalid 'questions' dictionary")
 
-    # Medição estrita de inferência neural na GPU Apple Silicon com infer_fast
+    # Roteia para o modelo Original ou Retreinado com precisão FP32 no Apple Silicon Metal
+    if "multilingual" in req_model or req_model in ("laya", "base", "original", "laya:multilingual"):
+        active_agent = agent_base
+    else:
+        active_agent = agent_tuned
+
     t0 = time.perf_counter()
-    result = infer_fast(state, questions)
+    result = infer_fast(active_agent, state, questions)
     infer_ms = (time.perf_counter() - t0) * 1000.0
 
     return JSONResponse(

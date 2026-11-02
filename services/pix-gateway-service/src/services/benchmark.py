@@ -23,6 +23,7 @@ CATEGORY_LABELS = {
     "cobranca_agressiva": "Cobrança com ameaça",
     "extorsao_violenta": "Extorsão com intimidação",
     "stalking": "Perseguição (stalking)",
+    "marido_abandonado_ex": "Ameaça de ex/marido inconformado",
     "pagamento": "Pagamento comum",
     "idioma_violento": "Gíria que parece ameaça",
     "cobranca_educada": "Cobrança educada",

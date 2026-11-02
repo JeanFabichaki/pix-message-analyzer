@@ -9,6 +9,7 @@ export const CATEGORY_LABEL = {
   extorsao: 'Extorsão',
   violencia_fisica: 'Violência física',
   stalking_perseguicao: 'Perseguição',
+  marido_abandonado_ex: 'Ex/marido inconformado (ameaça)',
   injuria_difamacao: 'Injúria ou difamação',
   outros: 'Outros',
   ameaca_explicita_perseguicao: 'Perseguição ou coação',
