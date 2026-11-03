@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Code2 } from 'lucide-react';
+import { Code2, ShieldAlert } from 'lucide-react';
 import { SYNC_STAGES, STATUS_LABEL, verdictLabel } from './stages';
 import StageIcon from './StageIcon';
 import StatusIcon from '../components/ui/StatusIcon';
@@ -49,6 +49,7 @@ export default function StageDetail({ index, stations, states, context, reduced,
   const station = stations[index];
   const state = states[index];
   const isFinal = FINAL.has(state);
+  const isDeliveryBlocked = stage.id === 'delivery' && state === 'detect';
   const text =
     state === 'running'
       ? stage.running
@@ -58,10 +59,12 @@ export default function StageDetail({ index, stations, states, context, reduced,
           : 'A mensagem ainda não chegou a esta estação.'
         : state === 'void'
           ? 'A mensagem foi barrada antes de chegar aqui.'
-          : station?.detail || '';
+          : isDeliveryBlocked
+            ? 'Envio do Pix bloqueado preventivamente por conter ameaça. O valor não foi transferido.'
+            : station?.detail || '';
 
   return (
-    <div className={`detail detail--${state}`}>
+    <div className={`detail detail--${state} ${isDeliveryBlocked ? 'detail--delivery-blocked' : ''}`}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={stage.id}
@@ -72,13 +75,23 @@ export default function StageDetail({ index, stations, states, context, reduced,
         >
           <div className="detail__head">
             <span className="detail__icon">
-              {isFinal ? <StatusIcon status={state} size={20} /> : <StageIcon id={stage.id} size={20} />}
+              {isFinal ? (
+                isDeliveryBlocked ? (
+                  <ShieldAlert size={20} className="detail__icon--blocked" aria-hidden="true" />
+                ) : (
+                  <StatusIcon status={state} size={20} />
+                )
+              ) : (
+                <StageIcon id={stage.id} size={20} />
+              )}
             </span>
             <div className="detail__titles">
-              <span className="detail__kicker">Etapa {stage.n} de {SYNC_STAGES.length}</span>
+              <span className="detail__kicker">
+                {isDeliveryBlocked ? 'Etapa 4 de 4 · Proteção Ativa' : `Etapa ${stage.n} de ${SYNC_STAGES.length}`}
+              </span>
               <h3>{stage.title}</h3>
             </div>
-            <span className={`chip chip--${state}`}>
+            <span className={`chip ${isDeliveryBlocked ? 'chip--danger' : `chip--${state}`}`}>
               {isFinal ? verdictLabel(stage.id, state) : STATUS_LABEL[state]}
             </span>
           </div>

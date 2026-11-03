@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Banknote, ShieldCheck, Lock } from 'lucide-react';
+import { Banknote, ShieldCheck, ShieldAlert, Lock, Ban, FileText } from 'lucide-react';
 import CountUp from '../components/ui/CountUp';
 import { dur, ease, spring } from '../motion/tokens';
 import { formatBRL } from './scenarios';
@@ -120,31 +120,79 @@ export function AmountRuler({ amount, limit, play }) {
 
 /** Quando ameaça é identificada, o envio do Pix é bloqueado e a mensagem original é preservada para perícia. */
 export function MessageSwap({ original, amount, play }) {
+  const formattedAmount = amount === null || amount === undefined ? 'O valor' : formatBRL(amount);
+
   return (
-    <div className="swap swap--blocked">
-      <div className="swap__box">
-        <span className="decode__label">Mensagem sob Ameaça (Preservada para Perícia)</span>
-        <p className="swap__original">“{original}”</p>
-      </div>
-      <div className="swap__box swap__box--after swap__box--blocked">
-        <span className="decode__label">Desfecho de Segurança</span>
-        <motion.p
-          className="swap__masked swap__masked--blocked"
-          initial={play ? { opacity: 0, y: 8 } : false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: play ? 0.3 : 0, duration: dur.base, ease }}
-        >
-          <Lock size={16} aria-hidden="true" /> Envio do Pix BLOQUEADO
-        </motion.p>
-      </div>
+    <div className="blocked-outcome" role="alert" aria-label="Notificação de Pix Bloqueado">
+      {/* 1. Alerta Principal de Segurança: Alto contraste, sem verde */}
       <motion.div
-        className="swap__money swap__money--blocked"
-        initial={play ? { opacity: 0, x: -10 } : false}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: play ? 0.5 : 0, ...spring.soft }}
+        className="blocked-outcome__card"
+        initial={play ? { opacity: 0, y: 8 } : false}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: play ? 0.2 : 0, duration: dur.base, ease }}
       >
-        <Lock size={16} aria-hidden="true" />{' '}
-        {amount === null || amount === undefined ? 'O valor' : formatBRL(amount)} foi retido e NÃO transferido ao destinatário.
+        <div className="blocked-outcome__head">
+          <div className="blocked-outcome__icon" aria-hidden="true">
+            <ShieldAlert size={24} />
+          </div>
+          <div className="blocked-outcome__headline">
+            <div className="blocked-outcome__title-row">
+              <h4 className="blocked-outcome__title">Envio do Pix Bloqueado</h4>
+              <span className="blocked-outcome__badge">
+                <Ban size={12} aria-hidden="true" /> Transferência Cancelada
+              </span>
+            </div>
+            <p className="blocked-outcome__desc">
+              Esta operação foi barrada imediatamente pelo sistema de segurança porque a mensagem anexada contém linguagem de intimidação, coação ou ameaça.
+            </p>
+          </div>
+        </div>
+
+        {/* 2. Resumo Claro para o Usuário Comum */}
+        <div className="blocked-outcome__grid">
+          <div className="blocked-outcome__item blocked-outcome__item--safe">
+            <div className="blocked-outcome__item-icon">
+              <ShieldCheck size={18} aria-hidden="true" />
+            </div>
+            <div className="blocked-outcome__item-body">
+              <span className="blocked-outcome__item-title">Saldo 100% Protegido</span>
+              <p className="blocked-outcome__item-text">
+                <strong className="num">{formattedAmount}</strong> não saiu da sua conta. Nenhum valor foi debitado ou transferido.
+              </p>
+            </div>
+          </div>
+
+          <div className="blocked-outcome__item blocked-outcome__item--not-delivered">
+            <div className="blocked-outcome__item-icon">
+              <Ban size={18} aria-hidden="true" />
+            </div>
+            <div className="blocked-outcome__item-body">
+              <span className="blocked-outcome__item-title">Destinatário Não Notificado</span>
+              <p className="blocked-outcome__item-text">
+                A mensagem agressiva foi descartada da entrega. Nada chegou ao destinatário.
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* 3. Evidência Retida para Perícia e Auditoria */}
+      <motion.div
+        className="blocked-outcome__evidence"
+        initial={play ? { opacity: 0, y: 8 } : false}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: play ? 0.38 : 0, duration: dur.base, ease }}
+      >
+        <div className="blocked-outcome__evidence-header">
+          <div className="blocked-outcome__evidence-label-group">
+            <FileText size={14} aria-hidden="true" className="blocked-outcome__evidence-icon" />
+            <span className="blocked-outcome__evidence-label">
+              Mensagem retida para auditoria pericial e compliance
+            </span>
+          </div>
+          <span className="blocked-outcome__evidence-tag">Ameaça Interceptada</span>
+        </div>
+        <p className="blocked-outcome__original-text">“{original}”</p>
       </motion.div>
     </div>
   );

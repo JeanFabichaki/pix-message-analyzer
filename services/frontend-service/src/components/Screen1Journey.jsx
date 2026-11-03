@@ -30,9 +30,9 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
   const timeline = useJourneyTimeline({ reduced });
   const { state: tl } = timeline;
 
-  const [scenario, setScenario] = useState(SCENARIOS[2]);
-  const [amount, setAmount] = useState(SCENARIOS[2].amount);
-  const [message, setMessage] = useState(SCENARIOS[2].message);
+  const [scenario, setScenario] = useState(SCENARIOS[0]);
+  const [amount, setAmount] = useState(SCENARIOS[0].amount);
+  const [message, setMessage] = useState(SCENARIOS[0].message);
   const [run, setRun] = useState(null);
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);

@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Lock, Send, ShieldCheck, Smartphone, BellRing, History, RotateCcw } from 'lucide-react';
+import { Lock, Send, ShieldCheck, Smartphone, BellRing, History, RotateCcw, ChevronDown, Check } from 'lucide-react';
 import CountUp from '../components/ui/CountUp';
 import DotMeter from '../components/ui/DotMeter';
 import { dur, ease, spring } from '../motion/tokens';
-import { SCENARIOS, RECEIVER, formatBRL } from './scenarios';
+import { SCENARIOS, DEFAULT_SENDER, RECEIVER, formatBRL } from './scenarios';
 import { SCENARIO_ICONS } from './scenarioIcons';
 
 export function SenderPhone({
@@ -24,6 +24,42 @@ export function SenderPhone({
   onPickScenario,
   replayActive,
 }) {
+  const [comboboxOpen, setComboboxOpen] = useState(false);
+  const comboboxRef = useRef(null);
+
+  useEffect(() => {
+    if (!comboboxOpen) return;
+    const handleClickOutside = (e) => {
+      if (comboboxRef.current && !comboboxRef.current.contains(e.target)) {
+        setComboboxOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
+  }, [comboboxOpen]);
+
+  const handleComboboxKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      setComboboxOpen(false);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!comboboxOpen) {
+        setComboboxOpen(true);
+      } else {
+        const currentIndex = SCENARIOS.findIndex((s) => s.id === scenario.id);
+        const nextIndex =
+          e.key === 'ArrowDown'
+            ? (currentIndex + 1) % SCENARIOS.length
+            : (currentIndex - 1 + SCENARIOS.length) % SCENARIOS.length;
+        onPickScenario(SCENARIOS[nextIndex]);
+      }
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setComboboxOpen((prev) => !prev);
+    }
+  };
+
+  const SelectedIcon = replayActive ? History : SCENARIO_ICONS[scenario?.icon];
   const editable = Boolean(scenario.editable);
   const isReplay = scenario.id === 'replay';
   const sendDisabled = busy || isReplay || (editable && !String(message).trim());
@@ -65,44 +101,107 @@ export function SenderPhone({
 
       <div className="phone__body">
         {onPickScenario && (
-          <div className="phone__scenario-picker">
-            <div className="scenarios scenarios--phone" role="radiogroup" aria-label="Casos prontos">
-              {SCENARIOS.map((sc) => {
-                const Icon = SCENARIO_ICONS[sc.icon];
-                const active = scenario.id === sc.id;
-                return (
-                  <button
-                    key={sc.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    className={`scenario scenario--phone ${active ? 'is-active' : ''}`}
-                    onClick={() => onPickScenario(sc)}
-                    disabled={busy && !active}
-                  >
-                    {active && (
-                      <motion.span
-                        layoutId="scenario-pill-phone"
-                        className="scenario__pill"
-                        transition={spring.soft}
-                      />
-                    )}
-                    <span className="scenario__content">
-                      {Icon && <Icon size={13} aria-hidden="true" />}
-                      <span>{sc.title}</span>
+          <div className="phone__scenario-picker" ref={comboboxRef}>
+            <div className="phone__combobox-wrap">
+              <span id="scenario-combobox-label" className="phone__label-mini">
+                Tipo de envio
+              </span>
+              <button
+                type="button"
+                id="scenario-combobox-button"
+                role="combobox"
+                aria-haspopup="listbox"
+                aria-expanded={comboboxOpen}
+                aria-controls="scenario-combobox-listbox"
+                aria-labelledby="scenario-combobox-label scenario-combobox-button"
+                className={`phone__combobox-trigger ${comboboxOpen ? 'is-open' : ''}`}
+                onClick={() => !busy && setComboboxOpen((prev) => !prev)}
+                onKeyDown={handleComboboxKeyDown}
+                disabled={busy}
+              >
+                <span className="phone__combobox-trigger-content">
+                  {SelectedIcon && (
+                    <span className="phone__combobox-icon-badge">
+                      <SelectedIcon size={14} aria-hidden="true" />
                     </span>
-                  </button>
-                );
-              })}
-              {replayActive && (
-                <span className="scenario scenario--phone is-active scenario--replay">
-                  <span className="scenario__content">
-                    <History size={13} aria-hidden="true" />
-                    <span>Reprodução</span>
+                  )}
+                  <span className="phone__combobox-trigger-text">
+                    {replayActive ? 'Reprodução' : scenario.title}
                   </span>
                 </span>
-              )}
+                <ChevronDown
+                  size={16}
+                  aria-hidden="true"
+                  className={`phone__combobox-chevron ${comboboxOpen ? 'is-open' : ''}`}
+                />
+              </button>
+
+              <AnimatePresence>
+                {comboboxOpen && (
+                  <motion.ul
+                    id="scenario-combobox-listbox"
+                    role="listbox"
+                    aria-labelledby="scenario-combobox-label"
+                    className="phone__combobox-menu"
+                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    {replayActive && (
+                      <li
+                        role="option"
+                        aria-selected={true}
+                        className="phone__combobox-option is-active phone__combobox-option--replay"
+                      >
+                        <span className="phone__combobox-option-icon">
+                          <History size={14} aria-hidden="true" />
+                        </span>
+                        <div className="phone__combobox-option-body">
+                          <span className="phone__combobox-option-title">Reprodução</span>
+                          <span className="phone__combobox-option-sub">Pix histórico reencenado</span>
+                        </div>
+                        <Check size={15} aria-hidden="true" className="phone__combobox-check" />
+                      </li>
+                    )}
+                    {SCENARIOS.map((sc) => {
+                      const Icon = SCENARIO_ICONS[sc.icon];
+                      const active = !replayActive && scenario.id === sc.id;
+                      return (
+                        <li
+                          key={sc.id}
+                          role="option"
+                          aria-selected={active}
+                          className={`phone__combobox-option ${active ? 'is-active' : ''}`}
+                          onClick={() => {
+                            onPickScenario(sc);
+                            setComboboxOpen(false);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onPickScenario(sc);
+                              setComboboxOpen(false);
+                            }
+                          }}
+                          tabIndex={0}
+                        >
+                          <span className="phone__combobox-option-icon">
+                            {Icon && <Icon size={14} aria-hidden="true" />}
+                          </span>
+                          <div className="phone__combobox-option-body">
+                            <span className="phone__combobox-option-title">{sc.title}</span>
+                            <span className="phone__combobox-option-sub">{sc.path}</span>
+                          </div>
+                          {active && <Check size={15} aria-hidden="true" className="phone__combobox-check" />}
+                        </li>
+                      );
+                    })}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
             </div>
+
             {!replayActive && scenario && (
               <p className="phone__scenario-note">
                 <strong>{scenario.path}:</strong> {scenario.expects}
@@ -115,7 +214,7 @@ export function SenderPhone({
           <div className="phone__tx-parties">
             <span className="phone__party-tag">
               <span className="phone__label-mini">De</span>
-              <strong>{scenario.sender.name}</strong>
+              <strong>{scenario?.sender?.name || DEFAULT_SENDER.name}</strong>
             </span>
             <span className="phone__party-arrow">→</span>
             <span className="phone__party-tag">
@@ -243,7 +342,7 @@ export function ReceiverPhone({ phase, delivered, blocked, amount, senderName, m
               </motion.div>
 
               <motion.div
-                className="receiver-amount"
+                className="receiver-amount receiver-amount--blocked"
                 variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { delay: 0.15 } } }}
               >
                 <span className="phone__label">Valor transferido</span>
@@ -293,7 +392,7 @@ export function ReceiverPhone({ phase, delivered, blocked, amount, senderName, m
               </motion.div>
 
               <motion.div
-                className="receiver-amount"
+                className="receiver-amount receiver-amount--blocked"
                 variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { delay: 0.15 } } }}
               >
                 <span className="phone__label">Valor recebido</span>

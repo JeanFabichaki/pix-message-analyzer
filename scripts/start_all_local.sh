@@ -20,7 +20,7 @@ echo "================================================================="
 
 # 0. Garante a base de dados SQLite
 echo "[1/6] Verificando base de dados local..."
-.venv/bin/python scripts/seed_db.py --target local > /dev/null 2>&1 || true
+.venv/bin/python scripts/seed_db.py --target sqlite > /dev/null 2>&1 || true
 
 # 1. Iniciar Laya FP32 Nativo (Apple Silicon GPU)
 echo "[2/6] Iniciando Laya FP32 Nativo (Apple Silicon GPU MPS) na porta 8000..."
