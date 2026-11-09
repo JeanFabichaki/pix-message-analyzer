@@ -36,7 +36,9 @@ _load_service(ROOT / "agents" / "gemini-investigation-agent")
 from src.clients.user_client import UserClient
 from src.analyzer import GeminiThreatAnalyzer, FORENSIC_SYSTEM_INSTRUCTION
 from src.rules.threshold import record_and_evaluate_limit
+from src.main import analyzer as gemini_analyzer
 from src.main import app as gemini_agent_app
+from src.main import prompt_protection
 
 # 3. Carrega Pix Gateway Service
 _load_service(ROOT / "services" / "pix-gateway-service")

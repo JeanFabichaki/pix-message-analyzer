@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-2.5-flash"
     MOCK_GEMINI: bool = False
 
+    # Proteção da investigação assíncrona (Application Default Credentials)
+    GOOGLE_CLOUD_PROJECT: str = ""
+    MODEL_ARMOR_LOCATION: str = "southamerica-east1"
+    MODEL_ARMOR_TEMPLATE_ID: str = ""
+    DLP_LOCATION: str = "southamerica-east1"
+
     # Tarifas de Custo do Gemini (em USD por 1M de tokens) e Câmbio
     GEMINI_PROMPT_RATE_PER_1M_USD: float = 0.10      # $0.10 por 1M de tokens de entrada (Gemini 2.5 Flash)
     GEMINI_COMPLETION_RATE_PER_1M_USD: float = 0.40  # $0.40 por 1M de tokens de saída (Gemini 2.5 Flash)

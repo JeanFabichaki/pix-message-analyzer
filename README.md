@@ -68,10 +68,12 @@ O pipeline protege a liquidação financeira sem violar o SLA regulatório do Ba
 ### Os Dois Estágios Operacionais:
 
 1. **Estágio Síncrono de Borda (Sub-15ms — Laya Dual MPS Server):**
-   - Transações com valor $\le R\$\,10{,}00$ contendo mensagem passam pela normalização anti-bypass e por 3 perguntas semânticas simultâneas no modelo Laya.
+   - Transações com valor $\le R\$\,10{,}00$ contendo mensagem passam pela normalização anti-bypass e por 3 perguntas semânticas simultâneas no modelo Laya. O gateway usa regex local para mascarar identificadores reconhecidos na entrada do modelo.
    - Detectada a ameaça, o envio do Pix é **imediatamente bloqueado** (`status: "BLOCKED"`), resguardando a vítima e retendo o texto original para perícia criminal.
-2. **Estágio Assíncrono de Investigação e Governança (Gemini 2.5 Flash + User Service):**
+2. **Estágio Assíncrono de Investigação e Governança (Google ADK + Gemini + User Service):**
    - Disparado em segundo plano (`BackgroundTasks`) sem impactar a latência do cliente.
+   - O [workflow do Google ADK](agents/gemini-investigation-agent/src/investigation_workflow.py) consulta o histórico, submete as mensagens ao **Model Armor** para detectar prompt injection e jailbreak e usa o **Sensitive Data Protection (Cloud DLP)** para mascarar CPF, RG, telefone, e-mail, cartão, nomes e endereços detectados. O Gemini recebe a versão mascarada via Google Gen AI SDK. O mascaramento local de chaves Pix e dados bancários complementa o DLP.
+   - Em caso de bloqueio ou falha da proteção, a investigação registra `BYPASS` com o motivo e interrompe o envio ao Gemini. O ADK usa uma sessão em memória por investigação e a API retorna os tempos de Model Armor, Cloud DLP e Gemini separadamente.
    - O Gemini pericia até 10 mensagens anteriores do remetente, identificando escalada comportamental, evidências materiais e recomendação para o analista de fraudes.
    - A governança de bloqueio permanente da conta/chave Pix é prerrogativa do analista humano com base no laudo técnico emitido.
 
@@ -182,7 +184,7 @@ Para obter o máximo desempenho de inferência (**~11 ms a 16 ms** de tempo neur
    ```bash
    cp .env.example .env
    ```
-   *(Opcional: insira sua `GEMINI_API_KEY` para ativar a investigação assíncrona real. Se não informada, o sistema opera em modo BYPASS automático).*
+   Para executar a investigação assíncrona, configure `GEMINI_API_KEY`, `GOOGLE_CLOUD_PROJECT` e `MODEL_ARMOR_TEMPLATE_ID`. Model Armor e Cloud DLP usam endpoints regionais de São Paulo por padrão (`southamerica-east1`).
 
 3. **Inicie todos os microsserviços com um único comando:**
    ```bash
@@ -202,6 +204,12 @@ Para obter o máximo desempenho de inferência (**~11 ms a 16 ms** de tempo neur
    ```
 
 ---
+
+#### Configuração das APIs de proteção
+
+1. Habilite `modelarmor.googleapis.com` e `dlp.googleapis.com` no projeto e crie um template do Model Armor na região configurada. Na POC, o detector de prompt injection e jailbreak usa confiança alta para reduzir falsos positivos em mensagens de ameaça. [Configuração do template](https://docs.cloud.google.com/model-armor/manage-templates)
+2. Configure [Application Default Credentials](https://docs.cloud.google.com/docs/authentication/provide-credentials-adc). No Mac, use `gcloud auth application-default login`. Em execução no Google Cloud, use a conta de serviço associada ao agente. A identidade precisa dos papéis `roles/modelarmor.user` e `roles/dlp.user` e da permissão `serviceusage.services.use` no projeto informado.
+3. Se executar localmente via Docker, monte as credenciais em modo somente leitura no contêiner do agente e aponte `GOOGLE_APPLICATION_CREDENTIALS` para o caminho montado.
 
 ### 3.2. Execução via Docker Compose (Linux, CI ou Servidores)
 
@@ -340,7 +348,7 @@ Para viabilizar inferência sub-15ms em ambiente de desenvolvimento e demonstra�
 | **Isolamento Estrutural XML** | [`agents/.../analyzer.py`](agents/gemini-investigation-agent/src/analyzer.py) | Encapsula as mensagens sob análise dentro de `<mensagens_suspeitas_nao_confiaveis>`, neutralizando tentativas de Indirect Prompt Injection. |
 | **Safety Settings `BLOCK_NONE`** | [`agents/.../analyzer.py`](agents/gemini-investigation-agent/src/analyzer.py) | Impede que a API do Gemini aborte por auto-bloqueio (`finish_reason: SAFETY`) ao periciar ameaças de morte reais. |
 | **Structured JSON Outputs** | [`libs/common/.../schemas/threat.py`](libs/common/common/schemas/threat.py) | Obriga o retorno no schema Pydantic tipado, garantindo campos de evidências, padrão comportamental e recomendação sem alucinação. |
-| **Série Temporal de até 10 Mensagens** | [`agents/.../main.py`](agents/gemini-investigation-agent/src/main.py) | Permite identificar intimidação continuada e perseguição fragmentada em múltiplos micropagamentos de centavos. |
+| **Série Temporal de até 10 Mensagens** | [`agents/.../investigation_workflow.py`](agents/gemini-investigation-agent/src/investigation_workflow.py) | Permite identificar intimidação continuada e perseguição fragmentada em múltiplos micropagamentos de centavos. |
 | **FinOps e Monitoramento de Custos** | [`agents/.../analyzer.py`](agents/gemini-investigation-agent/src/analyzer.py) | Rastreia tokens de entrada e saída por chamada, calculando o custo exato em dólares e reais para governança financeira. |
 
 ---

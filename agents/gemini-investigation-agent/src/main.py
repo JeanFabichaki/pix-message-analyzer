@@ -1,5 +1,4 @@
 import logging
-import uuid
 from typing import List, Dict, Any, Optional
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, status
@@ -11,27 +10,29 @@ from sqlalchemy import select
 from common.config.settings import settings
 from common.database.session import get_db, init_db
 from common.database.models import ThreatLog
-from common.schemas.threat import (
-    InvestigationDispatchPayload,
-    GeminiThreatAnalysis,
-)
+from common.schemas.threat import InvestigationDispatchPayload
 from src.analyzer import GeminiThreatAnalyzer
+from src.clients.prompt_protection import PromptProtection
 from src.clients.user_client import UserClient
-from src.rules.threshold import record_and_evaluate_limit
+from src.investigation_workflow import run_investigation
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("gemini-investigation-agent")
 
 analyzer = GeminiThreatAnalyzer()
 user_client = UserClient()
+prompt_protection = PromptProtection()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Iniciando gemini-investigation-agent...")
     await init_db()
-    yield
-    logger.info("Encerrando gemini-investigation-agent.")
+    try:
+        yield
+    finally:
+        await prompt_protection.close()
+        logger.info("Encerrando gemini-investigation-agent.")
 
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -62,8 +63,6 @@ async def health():
     }
 
 
-import time
-
 latest_investigations: Dict[str, dict] = {}
 
 @app.post("/investigate")
@@ -71,94 +70,8 @@ async def investigate(
     payload: InvestigationDispatchPayload,
     db: AsyncSession = Depends(get_db),
 ):
-    t_start = time.perf_counter()
-    logger.info(
-        f"Nova investigação recebida para tx={payload.transaction_id}, user={payload.user_id}: '{payload.text}'"
-    )
-
-    # 1. Recupera histórico recente (até 10 mensagens anteriores) para contextualização de perseguição/coação continuada
-    history = payload.history
-    if history is None and db is not None:
-        try:
-            hist_stmt = (
-                select(ThreatLog.original_message)
-                .where(ThreatLog.user_id == payload.user_id)
-                .order_by(ThreatLog.created_at.desc())
-                .limit(10)
-            )
-            hist_res = await db.execute(hist_stmt)
-            history = list(reversed(hist_res.scalars().all()))
-        except Exception as e:
-            logger.warning(f"Não foi possível buscar histórico de mensagens para {payload.user_id}: {e}")
-            history = []
-
-    # 2. Análise semântica profunda com Gemini (usando forma canônica se houver evasão para assertividade)
-    t_gemini_start = time.perf_counter()
-    analysis_text = payload.canonical_text if (payload.evasion_detected and payload.canonical_text) else payload.text
-    analysis: GeminiThreatAnalysis = await analyzer.analyze(analysis_text, history=history)
-    gemini_duration_ms = round((time.perf_counter() - t_gemini_start) * 1000, 2)
-
-    # 2. Construção do registro de auditoria
-    ollaya_score = payload.ollaya_data.get("score") if payload.ollaya_data else None
-    ollaya_category = payload.ollaya_data.get("category") if payload.ollaya_data else None
-
-    rationale = analysis.resumo_analise
-    if payload.evasion_detected and payload.canonical_text and not analysis.bypassed:
-        rationale = f"[Anti-Bypass: Evasão Detectada | Canônico: '{payload.canonical_text}']: {rationale}"
-
-    cost_data = analysis.cost
-    threat_log = ThreatLog(
-        id=str(uuid.uuid4()),
-        user_id=payload.user_id,
-        transaction_id=payload.transaction_id,
-        direction=payload.direction,
-        original_message=payload.text,
-        ollaya_score=ollaya_score,
-        ollaya_category=ollaya_category,
-        gemini_criticality=None if analysis.bypassed else analysis.criticidade,
-        gemini_category="bypass" if analysis.bypassed else analysis.categoria,
-        gemini_rationale=rationale,
-        gemini_model=cost_data.model if cost_data else analyzer.model_name,
-        prompt_tokens=cost_data.prompt_tokens if cost_data else 0,
-        completion_tokens=cost_data.completion_tokens if cost_data else 0,
-        total_tokens=cost_data.total_tokens if cost_data else 0,
-        cost_usd=cost_data.cost_usd if cost_data else 0.0,
-        cost_brl=cost_data.cost_brl if cost_data else 0.0,
-    )
-
-    # 3. Persistência e avaliação de limite de reincidência
-    t_gov_start = time.perf_counter()
-    total_threats, blocked = await record_and_evaluate_limit(
-        user_id=payload.user_id,
-        threat_log=threat_log,
-        user_client=user_client,
-        session=db,
-    )
-    governance_duration_ms = round((time.perf_counter() - t_gov_start) * 1000, 2)
-
-    total_investigation_ms = round((time.perf_counter() - t_start) * 1000, 2)
-
-    result_payload = {
-        "status": "BYPASS" if analysis.bypassed else "PROCESSED",
-        "threat_log_id": threat_log.id,
-        "transaction_id": payload.transaction_id,
-        "user_id": payload.user_id,
-        "analysis": analysis.model_dump(),
-        "cost": cost_data.model_dump() if cost_data else None,
-        "history_analyzed": history or [],
-        "target_message": payload.text,
-        "history_count": len(history or []),
-        "bypassed": analysis.bypassed,
-        "bypass_reason": analysis.bypass_reason,
-        "total_threats": total_threats,
-        "account_blocked": blocked,
-        "block_limit": settings.THREAT_BLOCK_LIMIT,
-        "timing": {
-            "gemini_ms": gemini_duration_ms,
-            "governance_ms": max(governance_duration_ms, 0.5),
-            "total_ms": total_investigation_ms,
-        },
-    }
+    logger.info("Nova investigação para tx=%s", payload.transaction_id)
+    result_payload = await run_investigation(payload, db, analyzer, user_client, prompt_protection)
 
     latest_investigations[payload.transaction_id] = result_payload
     # Limita tamanho do cache em memória a 200 itens

@@ -5,6 +5,7 @@ from fastapi import BackgroundTasks
 from common.config.settings import settings
 from common.schemas.pix import PixTransactionRequest, TraceStep
 from common.schemas.threat import OllayaClassificationResult
+from common.utils.anonymizer import mask_pii
 from common.utils.deobfuscator import deobfuscate_text
 from src.clients.ollaya_client import OllayaClient
 from src.clients.investigation import InvestigationClient
@@ -177,7 +178,17 @@ class PixInterceptor:
             data={"original": tx.description, "canonical": canonical_text, "evasion_detected": evasion_detected},
         )
 
-        # 3. Avaliação pelo Ollaya (Laya) passando o texto canônico desofuscado para máxima acurácia
+        # Mascara antes de desofuscar a entrada do Laya, pois a normalização
+        # remove pontuação que identifica e-mails, telefones e chaves Pix.
+        analysis_text = mask_pii(tx.description)
+        if evasion_detected:
+            if analysis_text == tx.description:
+                analysis_text = canonical_text
+            else:
+                analysis_text, _ = deobfuscate_text(analysis_text)
+            analysis_text = mask_pii(analysis_text)
+
+        # 3. Avaliação pelo Ollaya (Laya)
         t_ollaya_start = time.perf_counter()
         ollaya_failed = False
         try:
@@ -185,7 +196,6 @@ class PixInterceptor:
                 engine_client = self.ollaya_tuned
             else:
                 engine_client = self.ollaya
-            analysis_text = canonical_text if evasion_detected else tx.description
             ollaya_response = await engine_client.classify(analysis_text)
         except Exception as ex:
             logger.warning(f"Resiliência de Borda: Ollaya indisponível ou timeout ({ex}). Aprovando com fallback seguro.")

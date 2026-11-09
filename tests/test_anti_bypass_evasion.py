@@ -59,6 +59,41 @@ def test_deobfuscator_clean_text_untouched():
     assert clean2 == "pix de 50 reais referente ao churrasco"
 
 
+def test_deobfuscator_preserves_pii_cpf_and_phone():
+    """Valida que CPF e telefone com pontuações não sofrem remoção de pontos/traços e não ativam falso positivo de evasão."""
+    # Exemplo fornecido pelo usuário com CPF formatado e telefone com DDD entre parênteses
+    msg = "Pague logo ou vou vazar seu CPF 123.456.789-00 e telefone (11) 98765-4321 para todo mundo"
+    clean, detected = deobfuscate_text(msg)
+    assert detected is False, f"Não deveria detectar evasão em texto com PII legítimo: {clean}"
+    assert "123.456.789-00" in clean, f"CPF formatado deve ser mantido intacto: {clean}"
+    assert "(11) 98765-4321" in clean, f"Telefone formatado deve ser mantido intacto: {clean}"
+    assert clean == "pague logo ou vou vazar seu cpf 123.456.789-00 e telefone (11) 98765-4321 para todo mundo"
+
+    # Variação com aspas inteligentes
+    msg_quotes = "“Pague logo ou vou vazar seu CPF 123.456.789-00 e telefone (11) 98765-4321 para todo mundo”"
+    clean_q, detected_q = deobfuscate_text(msg_quotes)
+    assert detected_q is False
+    assert clean_q == "pague logo ou vou vazar seu cpf 123.456.789-00 e telefone (11) 98765-4321 para todo mundo"
+
+    # Outros formatos legítimos de identificadores: CNPJ, e-mail e chave Pix UUID
+    msg_pii_misc = "CNPJ 12.345.678/0001-90, email vitima.teste@banco.com.br e pix 123e4567-e89b-12d3-a456-426614174000"
+    clean_misc, detected_misc = deobfuscate_text(msg_pii_misc)
+    assert detected_misc is False
+    assert "12.345.678/0001-90" in clean_misc
+    assert "vitima.teste@banco.com.br" in clean_misc
+    assert "123e4567-e89b-12d3-a456-426614174000" in clean_misc
+
+
+def test_deobfuscator_mixed_evasion_with_pii():
+    """Valida que quando há tentativa real de evasão combinada com PII, a evasão é detectada mas o PII permanece intacto."""
+    mixed_msg = "v0u v4z4r s3u cpf 123.456.789-00 e telefone (11) 98765-4321"
+    clean, detected = deobfuscate_text(mixed_msg)
+    assert detected is True, "Deve detectar tentativa de evasão nas palavras ofuscadas"
+    assert "123.456.789-00" in clean, "CPF deve ser preservado para o DLP"
+    assert "(11) 98765-4321" in clean, "Telefone deve ser preservado para o DLP"
+    assert clean == "vou vazar seu cpf 123.456.789-00 e telefone (11) 98765-4321"
+
+
 def test_deobfuscator_complex_and_zero_width():
     """Valida evasão mista combinando zero-width spaces, leetspeak e separadores."""
     # Zero-width spaces intercalados

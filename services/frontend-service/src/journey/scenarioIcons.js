@@ -1,4 +1,4 @@
-import { Banknote, Brain, Coffee, PencilLine, Repeat, Shuffle, Siren, UserX } from 'lucide-react';
+import { Banknote, Brain, Coffee, PencilLine, Repeat, Shuffle, Siren, UserX, ShieldAlert, FileLock2, LockKeyhole } from 'lucide-react';
 
 export const SCENARIO_ICONS = {
   Coffee,
@@ -9,4 +9,7 @@ export const SCENARIO_ICONS = {
   Repeat,
   PencilLine,
   UserX,
+  ShieldAlert,
+  FileLock2,
+  LockKeyhole,
 };

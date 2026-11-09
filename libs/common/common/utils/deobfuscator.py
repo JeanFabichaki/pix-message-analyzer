@@ -51,25 +51,86 @@ INVISIBLE_CHARS = [
     "\u200f",  # right-to-left mark
 ]
 
+# Regexes para proteção de dados sensíveis e estruturados (PII e formatos padrão brasileiros).
+# Pontos, traços, barras e parênteses legítimos em CPF, CNPJ, telefone, e-mail e chave Pix
+# NÃO devem ser considerados evasão/disfarce e devem ser preservados intactos para Model Armor e Cloud DLP.
+CPF_FORMATTED_REGEX = re.compile(r"\b\d{3}\.\d{3}\.\d{3}-\d{2}\b")
+CNPJ_FORMATTED_REGEX = re.compile(r"\b\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b")
+PHONE_REGEX = re.compile(
+    r"(?<!\w)(?:\+?55\s*)?(?:\([1-9]{2}\)\s*|[1-9]{2}[\s-]?)?"
+    r"(?:9[.\s-]?\d{4}[.\s-]?\d{4}|[2-5]\d{3}[.\s-]?\d{4})(?!\w)"
+)
+EMAIL_REGEX = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
+UUID_PIX_REGEX = re.compile(
+    r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"
+)
+BANK_ACCOUNT_REGEX = re.compile(
+    r"\b(?:ag(?:[eê]ncia)?[:\s]*\d{1,5})[\s,]+(?:c(?:onta)?[:\s/]*\d{4,10}-?[0-9xX]?)\b",
+    re.IGNORECASE,
+)
+
+PROTECT_PATTERNS = [
+    CPF_FORMATTED_REGEX,
+    CNPJ_FORMATTED_REGEX,
+    EMAIL_REGEX,
+    UUID_PIX_REGEX,
+    PHONE_REGEX,
+    BANK_ACCOUNT_REGEX,
+]
+
+
+def _make_placeholder(idx: int) -> str:
+    """Gera marcadores alfabéticos unificados como PROTECTEDTOKENA, evitando transições de caixa ou leet."""
+    chars = []
+    n = idx
+    while True:
+        chars.append(chr(ord("A") + (n % 26)))
+        n //= 26
+        if n == 0:
+            break
+    return "PROTECTEDTOKEN" + "".join(reversed(chars))
+
 
 def deobfuscate_text(text: str) -> Tuple[str, bool]:
     """Decodifica e desofusca texto para forma canônica legível em português.
     Retorna uma tupla: (texto_canonico, houve_tentativa_de_evasao).
     
     Técnicas tratadas:
-    1. Remoção de caracteres invisíveis e zero-width.
-    2. Detecção de spongecase / alternância artificial de maiúsculas.
-    3. Decodificação de Leetspeak (ex: 0->o, 3->e, 4->a, @->a, $->s, 1->i, 7->t).
-    4. Remoção de separadores intrassilábicos (ex: v.o.u -> vou, v_o_u -> vou).
-    5. Junção de letras isoladas separadas por espaços (ex: v o u   t e   p e g a r -> vou te pegar).
-    6. Colapso de repetições exageradas de caracteres preservando dígrafos do português (rr, ss).
-    7. Normalização Unicode de acentos e diacríticos.
+    1. Preservação de PII estruturada (CPF, telefone com DDD, CNPJ, e-mail) para DLP/Armor.
+    2. Remoção de caracteres invisíveis e zero-width.
+    3. Detecção de spongecase / alternância artificial de maiúsculas.
+    4. Decodificação de Leetspeak (ex: 0->o, 3->e, 4->a, @->a, $->s, 1->i, 7->t).
+    5. Remoção de separadores intrassilábicos (ex: v.o.u -> vou, v_o_u -> vou).
+    6. Junção de letras isoladas separadas por espaços (ex: v o u   t e   p e g a r -> vou te pegar).
+    7. Colapso de repetições exageradas de caracteres preservando dígrafos do português (rr, ss).
+    8. Normalização Unicode de acentos e diacríticos.
     """
     if not text or not text.strip():
         return "", False
 
     t = text
     evasion_detected = False
+
+    # 0. Extrai e protege formatos estruturados legítimos de PII (CPF, CNPJ, telefone, e-mail, chaves Pix)
+    # para evitar que pontos, traços e parênteses legítimos sejam removidos ou distorçam a detecção de evasão.
+    all_matches = []
+    for pattern in PROTECT_PATTERNS:
+        for m in pattern.finditer(t):
+            all_matches.append((m.start(), m.end(), m.group(0)))
+    all_matches.sort(key=lambda x: (x[0], -x[1]))
+
+    filtered_matches = []
+    last_end = -1
+    for start, end, match_str in all_matches:
+        if start >= last_end:
+            filtered_matches.append((start, end, match_str))
+            last_end = end
+
+    protected_map = {}
+    for i, (start, end, match_str) in enumerate(reversed(filtered_matches)):
+        token = _make_placeholder(len(filtered_matches) - 1 - i)
+        protected_map[token] = match_str
+        t = t[:start] + token + t[end:]
 
     # 1. Limpeza de caracteres invisíveis
     for inv in INVISIBLE_CHARS:
@@ -78,10 +139,12 @@ def deobfuscate_text(text: str) -> Tuple[str, bool]:
             evasion_detected = True
 
     # 2. Detecção de alternância excessiva de caixa (spongecase / leetcase: ex: "vOuTePeGaR" ou "pEgAr")
+    # Considera apenas caracteres alfabéticos para não disparar falso positivo em pontuações, aspas ou parênteses
     words = t.split()
     for w in words:
-        if len(w) >= 3:
-            transitions = sum(1 for i in range(len(w) - 1) if w[i].isupper() != w[i + 1].isupper())
+        letters = [c for c in w if c.isalpha()]
+        if len(letters) >= 3:
+            transitions = sum(1 for i in range(len(letters) - 1) if letters[i].isupper() != letters[i + 1].isupper())
             if transitions >= 2:  # ex: vOu -> 2 transições
                 evasion_detected = True
                 break
@@ -144,17 +207,23 @@ def deobfuscate_text(text: str) -> Tuple[str, bool]:
         "2": "z",
     }
 
-    # Substitui leetspeak token a token, preservando números puros legítimos (ex: "50", "100.00")
+    # Substitui leetspeak token a token, preservando números puros legítimos (ex: "50", "100.00", "(11)")
     tokens = t_lower.split()
     processed_tokens = []
     for tok in tokens:
-        # Se for um valor numérico puro (ex: "50", "10", "2.50", "1000"), preserva
-        if re.match(r"^\d+([.,]\d+)?$", tok):
+        # Se for token protegido de PII, preserva diretamente sem alteração
+        if any(tok.startswith(k.lower()) for k in protected_map):
+            processed_tokens.append(tok)
+            continue
+
+        # Números puros (mesmo com pontuação externa como "(11)" ou "50,") não são leetspeak
+        core_num = tok.strip("()[]\"'\u201c\u201d\u2018\u2019,.?!;:")
+        if re.match(r"^\d+([.,]\d+)?$", core_num):
             processed_tokens.append(tok)
             continue
 
         # Horários e unidades legítimas (ex: "18h", "10kg", "2x") não são leetspeak
-        if re.match(r"^\d+[a-z]{1,3}$", tok):
+        if re.match(r"^\d+[a-z]{1,3}$", core_num):
             processed_tokens.append(tok)
             continue
 
@@ -186,5 +255,9 @@ def deobfuscate_text(text: str) -> Tuple[str, bool]:
     # 8. Remoção de pontuações residuais e colapso de espaços
     t = re.sub(r"[^\w\s]", " ", t)
     t = re.sub(r"\s+", " ", t).strip()
+
+    # 9. Restauração das entidades estruturadas protegidas com sua formatação original
+    for token, original in protected_map.items():
+        t = re.sub(re.escape(token), lambda _: original, t, flags=re.IGNORECASE)
 
     return t, evasion_detected

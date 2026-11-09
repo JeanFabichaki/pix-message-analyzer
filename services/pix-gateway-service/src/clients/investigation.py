@@ -34,7 +34,7 @@ class InvestigationClient:
         )
 
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(url, json=payload.model_dump())
                 resp.raise_for_status()
                 logger.info(

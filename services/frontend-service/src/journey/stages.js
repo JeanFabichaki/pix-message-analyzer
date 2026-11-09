@@ -40,11 +40,28 @@ export const STAGE_INDEX = Object.fromEntries(SYNC_STAGES.map((s, i) => [s.id, i
 // Estações que rodam em segundo plano após a triagem síncrona.
 export const ASYNC_STAGES = [
   {
-    id: 'laudo',
+    id: 'armor',
     n: 5,
-    title: 'Laudo detalhado',
-    sub: 'IA de investigação forense (Google Gemini)',
-    tech: 'gemini-investigation-agent · POST /investigate',
+    title: 'Model Armor',
+    short: 'Armor',
+    sub: 'Filtro Anti-Prompt Injection & Jailbreak (Google Cloud)',
+    tech: 'google-cloud-modelarmor · sanitize_user_prompt (southamerica-east1)',
+  },
+  {
+    id: 'dlp',
+    n: 6,
+    title: 'Cloud DLP',
+    short: 'DLP',
+    sub: 'Sensitive Data Protection & Mascaramento PII (LGPD)',
+    tech: 'google-cloud-dlp · deidentify_content (southamerica-east1)',
+  },
+  {
+    id: 'laudo',
+    n: 7,
+    title: 'Laudo Forense',
+    short: 'Gemini',
+    sub: 'Perícia em Série Temporal & Governança (Google ADK + Gemini)',
+    tech: 'gemini-investigation-agent · Workflow ADK + Google Gen AI SDK',
   },
 ];
 

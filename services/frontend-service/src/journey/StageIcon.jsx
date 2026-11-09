@@ -1,11 +1,14 @@
 import React from 'react';
-import { Scale, ScanText, Search, Bot, MailCheck } from 'lucide-react';
+import { Scale, ScanText, Bot, MailCheck, ShieldCheck, FileLock2, Brain, Search } from 'lucide-react';
 
 const ICONS = {
   amount_rule: Scale,
   anti_evasion: ScanText,
   ollaya: Bot,
   delivery: MailCheck,
+  armor: ShieldCheck,
+  dlp: FileLock2,
+  laudo: Brain,
 };
 
 export default function StageIcon({ id, size = 22 }) {

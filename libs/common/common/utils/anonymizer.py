@@ -31,26 +31,10 @@ BANK_ACCOUNT_REGEX = re.compile(
 )
 
 
-def anonymize_text(text: Optional[str]) -> str:
-    """Higieniza dados sensíveis (PII / Sigilo Bancário) antes do envio para modelos em nuvem (Gemini).
-    
-    Substitui:
-    - CPFs por [CPF_OCULTO]
-    - Telefones por [TEL_OCULTO]
-    - E-mails por [EMAIL_OCULTO]
-    - Chaves aleatórias Pix por [CHAVE_PIX_OCULTA]
-    - Contas e agências por [DADO_BANCARIO_OCULTO]
-    
-    Garante compliance estrito com a LGPD (Lei 13.709/2018) e Lei Complementar 105/2001 (Sigilo Bancário)
-    sem descaracterizar a intenção ou semântica forense da mensagem.
-    """
-    if not text or not text.strip():
-        return ""
-
-    t = text
-
+def mask_pii(text: str) -> str:
+    """Mascara formatos conhecidos de dados pessoais, chaves Pix e contas bancárias."""
     # 1. Agência / conta bancária
-    t = BANK_ACCOUNT_REGEX.sub("[DADO_BANCARIO_OCULTO]", t)
+    t = BANK_ACCOUNT_REGEX.sub("[DADO_BANCARIO_OCULTO]", text)
 
     # 2. E-mails
     t = EMAIL_REGEX.sub("[EMAIL_OCULTO]", t)
@@ -65,9 +49,9 @@ def anonymize_text(text: Optional[str]) -> str:
     t = PHONE_REGEX.sub("[TEL_OCULTO]", t)
 
     # 6. CPFs de 11 dígitos brutos isolados
-    t = CPF_RAW_REGEX.sub("[CPF_OCULTO]", t)
+    return CPF_RAW_REGEX.sub("[CPF_OCULTO]", t)
 
-    # 7. Colapso de múltiplos espaços residuais
-    t = re.sub(r"\s+", " ", t).strip()
 
-    return t
+def anonymize_text(text: Optional[str]) -> str:
+    """Mascara identificadores e normaliza espaços para o prompt forense."""
+    return re.sub(r"\s+", " ", mask_pii(text or "")).strip()
