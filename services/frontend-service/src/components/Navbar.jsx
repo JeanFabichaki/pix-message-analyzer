@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Activity, GitCompare, Route, ShieldCheck, Sparkles, TriangleAlert } from 'lucide-react';
+import { Activity, GitCompare, Route, ClipboardList, ShieldCheck, Sparkles, TriangleAlert } from 'lucide-react';
 import { getGatewayHealth } from '../services/api';
 import EngineSwitch from './EngineSwitch';
 import { useMotionPrefs } from '../motion/MotionProvider';
@@ -10,6 +10,7 @@ export const TABS = [
   { id: 'journey', label: 'Jornada', Icon: Route },
   { id: 'live', label: 'Ao vivo', Icon: Activity },
   { id: 'compare', label: 'Comparar', Icon: GitCompare },
+  { id: 'operator', label: 'Operação', Icon: ClipboardList },
 ];
 
 export default function Navbar({ activeTab, onChange }) {
@@ -46,7 +47,6 @@ export default function Navbar({ activeTab, onChange }) {
               <ShieldCheck size={17} strokeWidth={2.4} />
             </span>
             <div className="brand__text">
-              <h1 className="brand__title">Pix Guard</h1>
               <p className="brand__sub">Como uma mensagem de Pix é verificada antes de chegar</p>
             </div>
           </div>

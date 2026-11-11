@@ -4,11 +4,33 @@ import Navbar, { TABS } from './components/Navbar';
 import Screen1Journey from './components/Screen1Journey';
 import ScreenLive from './components/ScreenLive';
 import ScreenCompare from './components/ScreenCompare';
+import ScreenOperator from './components/ScreenOperator';
 import { dur, ease } from './motion/tokens';
 
 export default function App() {
   const [tab, setTab] = useState('journey');
   const [replay, setReplay] = useState(null);
+  const [operatorCase, setOperatorCase] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [simulatedBlocks, setSimulatedBlocks] = useState({});
+
+  const recordTransaction = useCallback((payload, source) => {
+    setTransactions((previous) => [
+      ...previous.filter((item) => item.transaction_id !== payload.transaction_id),
+      { ...payload, blocked: Boolean(source.blocked || source.original_masked || source.was_masked || source.status === 'BLOCKED'), created_at: new Date().toISOString() },
+    ]);
+  }, []);
+
+  const openOperator = useCallback((context) => {
+    setOperatorCase(context);
+    setTab('operator');
+    window.scrollTo({ top: 0 });
+    requestAnimationFrame(() => document.getElementById('operator-title')?.focus());
+  }, []);
+
+  const changeSimulatedBlock = useCallback((senderId, decision) => {
+    setSimulatedBlocks((previous) => ({ ...previous, [senderId]: decision }));
+  }, []);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -47,13 +69,14 @@ export default function App() {
     <div className="app">
       <Navbar activeTab={tab} onChange={setTab} />
       <main id="main-content" tabIndex={-1} className="app__main">
-        {panel('journey', <Screen1Journey replay={replay} onReplayConsumed={() => setReplay(null)} active={tab === 'journey'} />)}
+        {panel('journey', <Screen1Journey replay={replay} onReplayConsumed={() => setReplay(null)} active={tab === 'journey'} onOpenOperator={openOperator} onTransaction={recordTransaction} />)}
         {panel('live', <ScreenLive active={tab === 'live'} onInspect={handleInspect} />)}
         {panel('compare', <ScreenCompare active={tab === 'compare'} />)}
+        {panel('operator', <ScreenOperator key={operatorCase?.run.txId || 'empty'} context={operatorCase} active={tab === 'operator'} transactions={transactions} simulatedBlock={simulatedBlocks[operatorCase?.sender.id]} onSimulateBlock={changeSimulatedBlock} onBack={() => setTab('journey')} />)}
       </main>
       <footer className="app__footer" role="contentinfo">
         <span>
-          Pix Guard · prova de conceito · Regra de análise: mensagens de Pix de até R$ 10,00 · Teclas 1 a 3 trocam de
+          Prova de conceito · Regra de análise: mensagens de Pix de até R$ 10,00 · Teclas 1 a 4 trocam de
           tela
         </span>
       </footer>

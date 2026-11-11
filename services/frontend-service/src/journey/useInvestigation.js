@@ -5,7 +5,7 @@ const INTERVAL_MS = 700;
 const MAX_TRIES = 22; // ~15s
 
 /** Consulta o laudo do Gemini até ele existir (a investigação roda em segundo plano). */
-export function useInvestigation(transactionId, enabled) {
+export function useInvestigation(transactionId, enabled, refreshKey = 0) {
   const [state, setState] = useState({ status: 'idle', data: null });
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export function useInvestigation(transactionId, enabled) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [transactionId, enabled]);
+  }, [transactionId, enabled, refreshKey]);
 
   return state;
 }

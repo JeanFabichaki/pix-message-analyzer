@@ -137,14 +137,15 @@ export async function resetUserThreats(userId) {
   return await res.json();
 }
 
-export async function getUserThreatLogs(userId) {
+export async function getUserThreatLogs(userId, { throwOnError = false } = {}) {
   const primary = `${AGENT_BASE}/threats/user/${userId}`;
   const fallback = `${DIRECT_AGENT}/threats/user/${userId}`;
   try {
     const res = await safeFetch(primary, fallback);
-    if (!res.ok) return [];
+    if (!res.ok) throw new Error('Histórico de ocorrências indisponível');
     return await res.json();
   } catch (e) {
+    if (throwOnError) throw e;
     return [];
   }
 }

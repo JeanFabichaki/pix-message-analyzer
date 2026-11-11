@@ -1,4 +1,4 @@
-// Gerador de dados transacionais sintéticos para simulação e teste de vazão da API real do Pix Guard
+// Gerador de dados transacionais sintéticos para simulação e teste de vazão da API de análise de Pix
 
 const BENIGN_MESSAGES = [
   'Pagamento do cafe com a equipe',

@@ -24,7 +24,7 @@ function isTyping() {
   return tag === 'input' || tag === 'textarea' || tag === 'select';
 }
 
-export default function Screen1Journey({ replay, onReplayConsumed, active = true }) {
+export default function Screen1Journey({ replay, onReplayConsumed, active = true, onOpenOperator, onTransaction }) {
   const { reduced } = useMotionPrefs();
   const { toast } = useToast();
   const timeline = useJourneyTimeline({ reduced });
@@ -111,12 +111,13 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
       setBusy(false);
       return;
     }
+    if (result.ok) onTransaction?.(payload, result.source);
     await finishWith(payload, result);
     if (token === sendIdRef.current) {
       setBusy(false);
       refreshGovernance(scenario.sender.id);
     }
-  }, [busy, scenario, amount, message, timeline, finishWith, toast, refreshGovernance]);
+  }, [busy, scenario, amount, message, timeline, finishWith, toast, refreshGovernance, onTransaction]);
 
   const handleBurst = useCallback(async () => {
     if (busy) return;
@@ -136,6 +137,7 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
         toast('Não consegui falar com o gateway.', 'danger');
         break;
       }
+      if (result.ok) onTransaction?.(payload, result.source);
       last = { payload, result };
       if (!result.ok) break;
       if (result.source.original_masked || result.source.blocked || result.source.status === 'BLOCKED') {
@@ -150,7 +152,7 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
       setBusy(false);
       refreshGovernance(scenario.sender.id);
     }
-  }, [busy, scenario, amount, message, timeline, finishWith, toast, refreshGovernance]);
+  }, [busy, scenario, amount, message, timeline, finishWith, toast, refreshGovernance, onTransaction]);
 
   const handlePick = useCallback(
     (sc) => {
@@ -440,9 +442,13 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
             key={run.txId}
             masked={run.masked}
             investigation={investigation}
-            ficha={ficha}
             reduced={reduced}
             targetMessage={run?.payload?.description || message}
+            onOpenOperator={() => onOpenOperator?.({
+              sender: scenario.sender,
+              run,
+              investigation,
+            })}
           />
         )}
       </AnimatePresence>
