@@ -6,8 +6,10 @@ import ScreenLive from './components/ScreenLive';
 import ScreenCompare from './components/ScreenCompare';
 import ScreenOperator from './components/ScreenOperator';
 import { dur, ease } from './motion/tokens';
+import './presentation.css';
 
 export default function App() {
+  const presentation = new URLSearchParams(window.location.search).get('interface') === 'v2';
   const [tab, setTab] = useState('journey');
   const [replay, setReplay] = useState(null);
   const [operatorCase, setOperatorCase] = useState(null);
@@ -66,20 +68,20 @@ export default function App() {
   );
 
   return (
-    <div className="app">
-      <Navbar activeTab={tab} onChange={setTab} />
+    <div className={`app ${presentation ? 'app--presentation' : ''}`}>
+      <Navbar activeTab={tab} onChange={setTab} presentation={presentation} />
       <main id="main-content" tabIndex={-1} className="app__main">
-        {panel('journey', <Screen1Journey replay={replay} onReplayConsumed={() => setReplay(null)} active={tab === 'journey'} onOpenOperator={openOperator} onTransaction={recordTransaction} />)}
+        {panel('journey', <Screen1Journey presentation={presentation} replay={replay} onReplayConsumed={() => setReplay(null)} active={tab === 'journey'} onOpenOperator={openOperator} onTransaction={recordTransaction} />)}
         {panel('live', <ScreenLive active={tab === 'live'} onInspect={handleInspect} />)}
         {panel('compare', <ScreenCompare active={tab === 'compare'} />)}
         {panel('operator', <ScreenOperator key={operatorCase?.run.txId || 'empty'} context={operatorCase} active={tab === 'operator'} transactions={transactions} simulatedBlock={simulatedBlocks[operatorCase?.sender.id]} onSimulateBlock={changeSimulatedBlock} onBack={() => setTab('journey')} />)}
       </main>
-      <footer className="app__footer" role="contentinfo">
+      {tab !== 'operator' && <footer className="app__footer" role="contentinfo">
         <span>
           Prova de conceito · Regra de análise: mensagens de Pix de até R$ 10,00 · Teclas 1 a 4 trocam de
           tela
         </span>
-      </footer>
+      </footer>}
     </div>
   );
 }

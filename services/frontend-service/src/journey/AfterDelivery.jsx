@@ -16,6 +16,7 @@ import Skeleton from '../components/ui/Skeleton';
 import { ASYNC_STAGES } from './stages';
 import { fmtMs } from './format';
 import { dur, ease } from '../motion/tokens';
+import { protectionStates, protectionNeedsAttention, PROTECTION_LABELS } from './protectionState';
 
 const ICONS = {
   armor: ShieldCheck,
@@ -136,6 +137,9 @@ export default function AfterDelivery({ masked, investigation, reduced, targetMe
   const isTimeout = masked && investigation.status === 'timeout';
 
   const timing = data?.timing || {};
+  const protection = protectionStates(data);
+  const armorAttention = isReady && protectionNeedsAttention(protection.armor);
+  const dlpAttention = isReady && protectionNeedsAttention(protection.dlp);
 
   // Se o bypass aconteceu especificamente no Model Armor ou no DLP:
   const bypassReason = String(analysis?.bypass_reason || data?.bypass_reason || '');
@@ -197,7 +201,7 @@ export default function AfterDelivery({ masked, investigation, reduced, targetMe
           <div className="after__clean-text">
             <strong>Triagem de Borda Concluída com Sucesso (sub-15ms)</strong>
             <p>
-              O Pix foi aprovado pelo modelo de decisão rápida local (Laya) sem detecção de ameaça. Para governança financeira e otimização de custos (FinOps), o pipeline de investigação assíncrona em nuvem (Model Armor, Cloud DLP e Gemini) é acionado exclusivamente quando há identificação de risco ou suspeita de evasão.
+              A mensagem foi aprovada pelo Decision Model local sem detecção de ameaça. Para governança financeira e otimização de custos (FinOps), o pipeline de investigação assíncrona em nuvem (Model Armor, Cloud DLP e Gemini) é acionado exclusivamente quando há identificação de risco ou suspeita de evasão.
             </p>
           </div>
         </div>
@@ -205,19 +209,19 @@ export default function AfterDelivery({ masked, investigation, reduced, targetMe
         <>
           {/* Stepper horizontal do Workflow ADK em segundo plano */}
           <div className="after__workflow-stepper">
-            <div className={`after__step-node ${isReady ? 'is-complete' : isPending ? 'is-active' : ''}`}>
+            <div className={`after__step-node ${isReady && protection.armor === 'error' ? 'is-error' : armorAttention ? 'is-warning' : isReady && protection.armor === 'checked' ? 'is-complete' : isPending ? 'is-active' : ''}`}>
               <div className="after__step-num">5</div>
               <div className="after__step-info">
                 <span className="after__step-label">Model Armor</span>
                 <span className="after__step-sub">
                   {isPending && 'Inspecionando prompt…'}
-                  {isReady && !isArmorBypass && (
+                  {isReady && !armorAttention && (
                     <span className="after__step-status is-safe">
                       <ShieldCheck size={11} aria-hidden="true" /> 0 Injeção
                       {typeof timing.model_armor_ms === 'number' && ` · ${fmtMs(timing.model_armor_ms)}`}
                     </span>
                   )}
-                  {isArmorBypass && <span className="after__step-status is-warn">Bypass Armor</span>}
+                  {armorAttention && <span className="after__step-status is-warn">{PROTECTION_LABELS[protection.armor]}</span>}
                   {isTimeout && 'Aguardando…'}
                 </span>
               </div>
@@ -227,19 +231,19 @@ export default function AfterDelivery({ masked, investigation, reduced, targetMe
               <ArrowRight size={14} aria-hidden="true" />
             </div>
 
-            <div className={`after__step-node ${isReady ? 'is-complete' : isPending ? 'is-active' : ''}`}>
+            <div className={`after__step-node ${isReady && protection.dlp === 'error' ? 'is-error' : dlpAttention ? 'is-warning' : isReady && protection.dlp === 'checked' ? 'is-complete' : isPending ? 'is-active' : ''}`}>
               <div className="after__step-num">6</div>
               <div className="after__step-info">
                 <span className="after__step-label">Cloud DLP</span>
                 <span className="after__step-sub">
                   {isPending && 'Sanitizando PII…'}
-                  {isReady && !isDlpBypass && (
+                  {isReady && !dlpAttention && (
                     <span className="after__step-status is-safe">
                       <LockKeyhole size={11} aria-hidden="true" /> LGPD Sanitizado
                       {typeof timing.cloud_dlp_ms === 'number' && ` · ${fmtMs(timing.cloud_dlp_ms)}`}
                     </span>
                   )}
-                  {isDlpBypass && <span className="after__step-status is-warn">Bypass DLP</span>}
+                  {dlpAttention && <span className="after__step-status is-warn">{PROTECTION_LABELS[protection.dlp]}</span>}
                   {isTimeout && 'Aguardando…'}
                 </span>
               </div>
@@ -276,7 +280,7 @@ export default function AfterDelivery({ masked, investigation, reduced, targetMe
               index={0}
               play={play}
               tone={isArmorBypass ? 'bypass' : isReady ? 'ready' : 'default'}
-              extraClass="after-card--armor"
+              extraClass={`after-card--armor ${armorAttention ? 'after-card--intervention' : ''} ${protection.armor === 'error' ? 'after-card--protection-error' : ''}`}
             >
               <div className="chips">
                 {isPending && <span className="chip chip--running">Inspecionando Conteúdo…</span>}
@@ -386,7 +390,7 @@ export default function AfterDelivery({ masked, investigation, reduced, targetMe
               index={1}
               play={play}
               tone={isDlpBypass ? 'bypass' : isReady ? 'ready' : 'default'}
-              extraClass="after-card--dlp"
+              extraClass={`after-card--dlp ${dlpAttention ? 'after-card--intervention' : ''} ${protection.dlp === 'error' ? 'after-card--protection-error' : ''}`}
             >
               <div className="chips">
                 {isPending && <span className="chip chip--running">De-identificando PII…</span>}

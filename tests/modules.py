@@ -53,5 +53,5 @@ from src.clients.investigation import InvestigationClient
 from src.clients.user_client import GatewayUserClient
 from src.services.interceptor import PixInterceptor
 from src.services.benchmark import BenchmarkRunner
-from src.main import app as pix_gateway_app
+from src.main import app as pix_gateway_app, ollaya_client, ollaya_tuned_client
 

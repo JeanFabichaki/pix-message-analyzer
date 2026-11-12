@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, BackgroundTasks
 from common.schemas.pix import PixTransactionRequest, PixTransactionResponse
 from common.database.models import TransactionDirection
-from src.clients.ollaya_client import OllayaClient, TUNED_INSTRUCTIONS, TUNED_CRITERIA
+from src.clients.ollaya_client import OllayaClient, TUNED_INSTRUCTIONS, TUNED_CRITERIA, THREAT_THRESHOLD
 from src.clients.investigation import InvestigationClient
 from src.clients.user_client import GatewayUserClient
 from src.services.interceptor import PixInterceptor
@@ -25,7 +25,7 @@ ollaya_client = OllayaClient(
     base_urls=settings.OLLAYA_CLUSTER_URLS or settings.OLLAYA_BASE_URL,
     model=settings.OLLAYA_MODEL,
     decomposed=True,
-    threat_threshold=0.65,
+    threat_threshold=THREAT_THRESHOLD,
 )
 ollaya_tuned_client = OllayaClient(
     base_urls=settings.LAYA_TUNED_CLUSTER_URLS or settings.LAYA_TUNED_BASE_URL or settings.OLLAYA_BASE_URL,
@@ -33,7 +33,7 @@ ollaya_tuned_client = OllayaClient(
     instructions=TUNED_INSTRUCTIONS,
     criteria=TUNED_CRITERIA,
     decomposed=True,
-    threat_threshold=0.40,
+    threat_threshold=THREAT_THRESHOLD,
 )
 investigation_client = InvestigationClient()
 user_client = GatewayUserClient()
@@ -101,9 +101,9 @@ async def list_engines():
     return {
         "default": "laya_tuned",
         "engines": [
-            {"id": "laya_tuned", "label": "Laya retreinado", "model": ollaya_tuned_client.model, "available": tuned_ok,
+            {"id": "laya_tuned", "label": "Decision Model treinado", "model": ollaya_tuned_client.model, "available": tuned_ok, "threshold": ollaya_tuned_client.threat_threshold,
              "description": "Retreinado nativamente para ameaças e extorsão em mensagens de Pix."},
-            {"id": "laya", "label": "Laya original", "model": ollaya_client.model, "available": base_ok,
+            {"id": "laya", "label": "Decision Model original", "model": ollaya_client.model, "available": base_ok, "threshold": ollaya_client.threat_threshold,
              "description": "Modelo padrão do Ollaya, sem treino específico."},
         ],
     }

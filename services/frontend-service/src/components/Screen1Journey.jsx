@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ChevronRight, FastForward, Play, RotateCcw, Send, SkipForward } from 'lucide-react';
+import { FastForward, RotateCcw, Send, SkipForward } from 'lucide-react';
 import { SenderPhone } from '../journey/PhoneMock';
 import JourneyTrack from '../journey/JourneyTrack';
 import StageDetail from '../journey/StageDetail';
 import AfterDelivery from '../journey/AfterDelivery';
+import JourneyPresentation from './JourneyPresentation';
 import { useJourneyTimeline } from '../journey/useJourneyTimeline';
 import { useInvestigation, waitForInvestigation } from '../journey/useInvestigation';
 import { buildStations, totalMsOf } from '../journey/buildTrace';
@@ -14,7 +15,7 @@ import { fmtMs } from '../journey/format';
 import { getUser, getUserThreatLogs, resetUserThreats, sendPixSafe } from '../services/api';
 import { useMotionPrefs } from '../motion/MotionProvider';
 import { useToast } from './ui/Toast';
-import { dur, ease, spring } from '../motion/tokens';
+import { dur, ease } from '../motion/tokens';
 
 const DEFAULT_LIMIT = 5;
 const EMPTY_STATIONS = SYNC_STAGES.map((s) => ({ id: s.id, status: 'void', ms: null, detail: null, data: null }));
@@ -24,7 +25,7 @@ function isTyping() {
   return tag === 'input' || tag === 'textarea' || tag === 'select';
 }
 
-export default function Screen1Journey({ replay, onReplayConsumed, active = true, onOpenOperator, onTransaction }) {
+export default function Screen1Journey({ presentation = false, replay, onReplayConsumed, active = true, onOpenOperator, onTransaction }) {
   const { reduced } = useMotionPrefs();
   const { toast } = useToast();
   const timeline = useJourneyTimeline({ reduced });
@@ -37,13 +38,13 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
   const [burstProgress, setBurstProgress] = useState(null);
-  const [stepMode, setStepMode] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [gov, setGov] = useState({ count: 0, blocked: false });
   const [replayActive, setReplayActive] = useState(false);
   const sendIdRef = useRef(0);
 
-  const investigation = useInvestigation(run?.txId, Boolean(run?.masked));
+  const [investigationRefresh, setInvestigationRefresh] = useState(0);
+  const investigation = useInvestigation(run?.txId, Boolean(run?.masked), investigationRefresh);
   const inv = investigation.data;
 
   const refreshGovernance = useCallback(async (senderId) => {
@@ -91,9 +92,9 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
         realMs: totalMsOf(source),
         finalMessage: result.ok ? source.description : null,
       });
-      await timeline.play(stations, { stepMode, speed: playSpeed });
+      await timeline.play(stations, { speed: playSpeed });
     },
-    [speed, stepMode, timeline]
+    [speed, timeline]
   );
 
   const handleSend = useCallback(async () => {
@@ -212,7 +213,7 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
       finalMessage: replay.finalMessage,
       replayed: true,
     });
-    timeline.play(replay.stations, { stepMode, speed }).then(() => {
+    timeline.play(replay.stations, { speed }).then(() => {
       if (token === sendIdRef.current) setBusy(false);
     });
     onReplayConsumed?.();
@@ -233,18 +234,15 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
     setSelected(null);
     setBusy(true);
     const token = ++sendIdRef.current;
-    await timeline.play(run.stations, { stepMode, speed });
+    await timeline.play(run.stations, { speed });
     if (token === sendIdRef.current) setBusy(false);
-  }, [run, timeline, stepMode, speed]);
+  }, [run, timeline, speed]);
 
   useEffect(() => {
     if (!active) return undefined;
     const onKey = (e) => {
       if (isTyping()) return;
-      if ((e.key === 'ArrowRight' || e.key === ' ') && phase === 'waiting') {
-        e.preventDefault();
-        timeline.next();
-      } else if (e.key === 'Escape' && (phase === 'running' || phase === 'waiting')) {
+      if (e.key === 'Escape' && phase === 'running') {
         handleSkip();
       } else if ((e.key === 'r' || e.key === 'R') && finished && run) {
         handleReplayAnimation();
@@ -271,6 +269,20 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
 
   const senderSuspended = ficha.blocked;
   const amountLabel = formatBRL(run?.payload?.amount ?? amount);
+
+  if (presentation) return (
+    <JourneyPresentation
+      scenario={scenario} amount={amount} message={message} onPick={handlePick}
+      onAmountChange={setAmount} onMessageChange={setMessage}
+      onSend={scenario.burst ? handleBurst : handleSend} busy={busy} burstProgress={burstProgress}
+      suspended={senderSuspended} onReactivate={handleReactivate}
+      run={run} timeline={tl} finished={finished} investigation={investigation}
+      stations={stations} selected={selected} onSelect={setSelected}
+      onSkip={handleSkip} onReplay={handleReplayAnimation}
+      onRetry={() => setInvestigationRefresh((value) => value + 1)}
+      onOpenOperator={() => onOpenOperator?.({ sender: scenario.sender, run, investigation })}
+    />
+  );
 
   return (
     <div className="page journey">
@@ -307,28 +319,6 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
         <div className="journey__center">
           <div className="card journey__track-card">
             <div className="controls" role="group" aria-label="Controles da animação">
-              <div className="segmented" role="radiogroup" aria-label="Modo de reprodução">
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={!stepMode}
-                  className={!stepMode ? 'is-active' : ''}
-                  onClick={() => setStepMode(false)}
-                  disabled={busy}
-                >
-                  <Play size={14} aria-hidden="true" /> Automático
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={stepMode}
-                  className={stepMode ? 'is-active' : ''}
-                  onClick={() => setStepMode(true)}
-                  disabled={busy}
-                >
-                  <ChevronRight size={14} aria-hidden="true" /> Passo a passo
-                </button>
-              </div>
               <div className="segmented" role="radiogroup" aria-label="Velocidade">
                 {[1, 2].map((v) => (
                   <button
@@ -348,21 +338,7 @@ export default function Screen1Journey({ replay, onReplayConsumed, active = true
               <div className="controls__spacer" />
 
               <AnimatePresence mode="popLayout" initial={false}>
-                {phase === 'waiting' && (
-                  <motion.button
-                    key="next"
-                    type="button"
-                    className="btn btn--primary btn--sm"
-                    onClick={timeline.next}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={spring.pop}
-                  >
-                    Próxima etapa <ChevronRight size={16} aria-hidden="true" />
-                  </motion.button>
-                )}
-                {(phase === 'running' || phase === 'waiting') && (
+                {phase === 'running' && (
                   <motion.button
                     key="skip"
                     type="button"

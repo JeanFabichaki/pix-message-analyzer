@@ -41,8 +41,8 @@ DECOMPOSED_QUESTIONS = {
 }
 
 # Limiares de decisão calibrados para modelo encoder em borda (Laya multilingual):
-# - Corte padrão para modelos compactos: 0.65 (evita falsos alarmes em linguagem coloquial)
-THREAT_CUTOFF_THRESHOLD = 0.65
+# - Mesmo corte para os modelos original e treinado, inclusive nas perguntas decompostas.
+THREAT_CUTOFF_THRESHOLD = THREAT_THRESHOLD
 # - Zona cinzenta para transações suspeitas ou de valor mais alto: 0.45 a 0.65
 GRAY_ZONE_MIN = 0.45
 GRAY_ZONE_MAX = 0.65
@@ -285,7 +285,7 @@ class OllayaClient:
             max_key = max(decomposed_scores, key=decomposed_scores.get)
             max_score = decomposed_scores[max_key]
 
-            # Calibração estrita: corte em 0.65; zona cinzenta entre 0.45 e 0.65
+            # Aplica o corte configurado; a zona cinzenta é calculada separadamente.
             is_threat = max_score >= self.threat_threshold
             in_gray_zone = (GRAY_ZONE_MIN <= max_score < GRAY_ZONE_MAX)
 

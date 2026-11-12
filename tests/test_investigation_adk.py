@@ -110,6 +110,7 @@ async def test_investigation_screens_masks_and_persists_report(db_session, cloud
     assert response.status_code == 200
     result = response.json()
     assert result["status"] == "PROCESSED"
+    assert result["protection_actions"] == {"model_armor": "checked", "cloud_dlp": "masked"}
     assert result["history_analyzed"] == [previous]
     assert result["cost"]["total_tokens"] == 100
     assert result["total_threats"] == 2
@@ -183,6 +184,8 @@ async def test_protection_failure_skips_gemini_and_persists_bypass(
     assert response.status_code == 200
     result = response.json()
     assert result["status"] == "BYPASS"
+    assert result["protection_actions"]["model_armor"] == ("checked" if failure in ("dlp_timeout", "incomplete") else "blocked" if failure == "match" else "error")
+    assert result["protection_actions"]["cloud_dlp"] == ("error" if failure in ("dlp_timeout", "incomplete") else "not_run")
     assert reason in result["bypass_reason"]
     assert "dados do provedor" not in result["bypass_reason"]
     assert result["cost"]["total_tokens"] == 0
@@ -232,9 +235,30 @@ async def test_historical_injection_does_not_block_current_clean_threat(db_sessi
     # A investigação deve ser PROCESSED, não BYPASS!
     assert result["status"] == "PROCESSED"
     assert result["bypassed"] is False
+    assert result["protection_actions"]["model_armor"] == "history_filtered"
+    assert result["protection_actions"]["cloud_dlp"] == "checked"
     assert result["evasion_detected"] is True
     assert result["canonical_message"] == "vou te pegar na saida do trabalho se nao me pagar hoje"
     # Gemini deve ter sido chamado para periciar a ameaça
     assert result["analysis"]["is_valid_threat"] is True
     assert result["cost"]["total_tokens"] > 0
 
+
+@pytest.mark.asyncio
+async def test_dlp_history_only_masking_keeps_current_message_checked(db_session, cloud_calls):
+    target = "Pague logo ou vou te expor."
+    previous = "Contato anterior: pessoa@example.com"
+    db_session.add(ThreatLog(user_id="usr_abc123", transaction_id="history-only-pii", direction=TransactionDirection.CASH_OUT, original_message=previous))
+    await db_session.commit()
+    cloud_calls.dlp.return_value = dlp_v2.DeidentifyContentResponse(item={"table": {
+        "headers": [{"name": "message"}],
+        "rows": [{"values": [{"string_value": target}]}, {"values": [{"string_value": "Contato anterior: [EMAIL_ADDRESS]"}]}],
+    }})
+    async with AsyncClient(transport=ASGITransport(app=gemini_agent_app), base_url="http://test") as client:
+        response = await client.post("/investigate", json={"user_id": "usr_abc123", "transaction_id": "target-with-clean-text", "direction": "CASH_OUT", "text": target})
+    assert response.status_code == 200
+    result = response.json()
+    assert result["protection_actions"]["cloud_dlp"] == "checked"
+    assert result["dlp_message"] == target
+    assert result["dlp_history"] == ["Contato anterior: [EMAIL_ADDRESS]"]
+    assert "[EMAIL_ADDRESS]" in cloud_calls.gemini.await_args.kwargs["contents"]

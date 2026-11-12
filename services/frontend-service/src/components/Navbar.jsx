@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Activity, GitCompare, Route, ClipboardList, ShieldCheck, Sparkles, TriangleAlert } from 'lucide-react';
+import { Activity, GitCompare, Route, ClipboardList, Sparkles, TriangleAlert, Settings } from 'lucide-react';
 import { getGatewayHealth } from '../services/api';
 import EngineSwitch from './EngineSwitch';
 import { useMotionPrefs } from '../motion/MotionProvider';
@@ -13,7 +13,7 @@ export const TABS = [
   { id: 'operator', label: 'Operação', Icon: ClipboardList },
 ];
 
-export default function Navbar({ activeTab, onChange }) {
+export default function Navbar({ activeTab, onChange, presentation = false }) {
   const { reduced, manualReduced, toggle } = useMotionPrefs();
   const [health, setHealth] = useState(null);
 
@@ -25,7 +25,7 @@ export default function Navbar({ activeTab, onChange }) {
     };
     check();
     const id = setInterval(check, 10000);
-    return () => {
+      return () => {
       cancelled = true;
       clearInterval(id);
     };
@@ -33,7 +33,27 @@ export default function Navbar({ activeTab, onChange }) {
 
   const online = health === null ? null : health.reachable;
   const aiDown = Boolean(health?.reachable && health.ollaya?.status === 'degraded');
-  const pill = online === null ? ['', 'Verificando…'] : !online ? ['status--off', 'Gateway fora do ar'] : aiDown ? ['status--warn', 'IA rápida fora do ar'] : ['status--on', 'Gateway online'];
+  const pill = online === null ? ['', 'Verificando…'] : !online ? ['status--off', 'Gateway fora do ar'] : aiDown ? ['status--warn', 'Decision Model fora do ar'] : ['status--on', 'Gateway online'];
+
+  const settingsControls = (
+    <>
+            {!presentation && <EngineSwitch />}
+            <button
+              type="button"
+              className="btn btn--ghost btn--xs"
+              onClick={toggle}
+              aria-pressed={manualReduced}
+              title="Reduz as animações, útil em projetores e para quem prefere menos movimento"
+            >
+              <Sparkles size={13} aria-hidden="true" /> Animações: {reduced ? 'reduzidas' : 'ligadas'}
+            </button>
+            <span className={`status ${pill[0]}`} role="status">
+              <span className="status__dot" aria-hidden="true" />
+              {pill[1]}
+            </span>
+    </>
+  );
+
 
   return (
     <>
@@ -42,15 +62,6 @@ export default function Navbar({ activeTab, onChange }) {
       </a>
       <div className="navbar-shell">
         <header className="navbar" role="banner">
-          <div className="brand">
-            <span className="brand__icon" aria-hidden="true">
-              <ShieldCheck size={17} strokeWidth={2.4} />
-            </span>
-            <div className="brand__text">
-              <p className="brand__sub">Como uma mensagem de Pix é verificada antes de chegar</p>
-            </div>
-          </div>
-
           <nav aria-label="Telas">
             <div className="tabs" role="tablist">
               {TABS.map(({ id, label, Icon }, i) => {
@@ -81,20 +92,15 @@ export default function Navbar({ activeTab, onChange }) {
           </nav>
 
           <div className="navbar__right">
-            <EngineSwitch />
-            <button
-              type="button"
-              className="btn btn--ghost btn--xs"
-              onClick={toggle}
-              aria-pressed={manualReduced}
-              title="Reduz as animações, útil em projetores e para quem prefere menos movimento"
-            >
-              <Sparkles size={13} aria-hidden="true" /> Animações: {reduced ? 'reduzidas' : 'ligadas'}
-            </button>
-            <span className={`status ${pill[0]}`} role="status">
-              <span className="status__dot" aria-hidden="true" />
-              {pill[1]}
-            </span>
+            <a className="interface-link" href={presentation ? '/?interface=v1' : '/?interface=v2'}>
+              {presentation ? 'Interface v1' : 'Experimentar v2'}
+            </a>
+            {presentation ? (
+              <details className="navbar__settings navbar__settings--popover">
+                <summary><Settings size={18} aria-hidden="true" /> Ajustes</summary>
+                <div className="navbar__settings-content">{settingsControls}</div>
+              </details>
+            ) : settingsControls}
           </div>
         </header>
       </div>
@@ -102,8 +108,8 @@ export default function Navbar({ activeTab, onChange }) {
         <div className="alert-banner" role="alert">
           <TriangleAlert size={18} aria-hidden="true" />
           <div>
-            <strong>A IA rápida (Ollaya) não está respondendo.</strong> Os Pix estão sendo aprovados <u>sem análise</u>{' '}
-            até ela voltar.
+            <strong>O Decision Model não está respondendo.</strong> As mensagens estão passando <u>sem análise</u>{' '}
+            até ele voltar.
             {health.ollaya.last_error && <span className="alert-banner__detail"> Detalhe: {health.ollaya.last_error}</span>}
             {/MODEL_NOT_FOUND|not found/i.test(health.ollaya.last_error || '') && (
               <span className="alert-banner__detail"> Rode <code>make pull-model</code> para baixar o modelo.</span>

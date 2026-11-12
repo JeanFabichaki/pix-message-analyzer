@@ -337,17 +337,17 @@ export function ReceiverPhone({ phase, delivered, blocked, amount, senderName, m
                   show: { opacity: 1, y: 0, transition: { ...spring.soft } },
                 }}
               >
-                <span className="notif__title">Envio Bloqueado</span>
-                <span className="notif__sub">Transação retida pelo sistema</span>
+                <span className="notif__title">Mensagem reprovada</span>
+                <span className="notif__sub">Conteúdo retido para análise</span>
               </motion.div>
 
               <motion.div
                 className="receiver-amount receiver-amount--blocked"
                 variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { delay: 0.15 } } }}
               >
-                <span className="phone__label">Valor transferido</span>
+                <span className="phone__label">Avaliação da mensagem</span>
                 <span className="receiver-amount__value" style={{ color: 'var(--color-danger, #ef4444)' }}>
-                  R$ 0,00
+                  Reprovada
                 </span>
               </motion.div>
 
@@ -359,9 +359,9 @@ export function ReceiverPhone({ phase, delivered, blocked, amount, senderName, m
                 }}
               >
                 <span className="chat-bubble__tag" style={{ color: 'var(--color-danger, #ef4444)' }}>
-                  <Lock size={12} aria-hidden="true" /> Pix não transferido
+                  <Lock size={12} aria-hidden="true" /> Mensagem não entregue
                 </span>
-                <p>O Pix continha ameaça ou intimidação e foi bloqueado preventivamente.</p>
+                <p>A mensagem continha ameaça ou intimidação e foi reprovada.</p>
               </motion.div>
 
               {typeof realMs === 'number' && (
@@ -372,7 +372,7 @@ export function ReceiverPhone({ phase, delivered, blocked, amount, senderName, m
                     show: { opacity: 1, scale: 1, transition: { ...spring.pop, delay: 0.7 } },
                   }}
                 >
-                  Tempo até bloqueio: <strong className="num">{realMs.toFixed(1).replace('.', ',')} ms</strong>
+                  Tempo da avaliação: <strong className="num">{realMs.toFixed(1).replace('.', ',')} ms</strong>
                 </motion.div>
               )}
             </motion.div>
@@ -387,7 +387,7 @@ export function ReceiverPhone({ phase, delivered, blocked, amount, senderName, m
                   show: { opacity: 1, y: 0, transition: { ...spring.soft } },
                 }}
               >
-                <span className="notif__title">Você recebeu um Pix</span>
+                <span className="notif__title">Mensagem aprovada</span>
                 <span className="notif__sub">de {senderName}</span>
               </motion.div>
 
@@ -395,7 +395,7 @@ export function ReceiverPhone({ phase, delivered, blocked, amount, senderName, m
                 className="receiver-amount receiver-amount--blocked"
                 variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { delay: 0.15 } } }}
               >
-                <span className="phone__label">Valor recebido</span>
+                <span className="phone__label">Valor do Pix</span>
                 <span className="receiver-amount__value">
                   {amount === null || amount === undefined ? (
                     <small className="receiver-amount__missing">valor não registrado</small>

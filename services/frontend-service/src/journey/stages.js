@@ -12,25 +12,25 @@ export const SYNC_STAGES = [
   {
     id: 'anti_evasion',
     n: 2,
-    title: 'Remover disfarces',
-    short: 'Disfarce',
+    title: 'Desofuscação',
+    short: 'Desofuscação',
     running: 'Procurando letras trocadas, símbolos e separadores no texto…',
     tech: 'common.utils.deobfuscator · deobfuscate_text',
   },
   {
     id: 'ollaya',
     n: 3,
-    title: 'IA rápida',
-    short: 'IA',
-    running: 'A IA rápida (Ollaya) está lendo a mensagem…',
+    title: 'Decision Model',
+    short: 'Decision Model',
+    running: 'O Decision Model está analisando a mensagem…',
     tech: 'ollaya-client · POST /v1/systemone',
   },
   {
     id: 'delivery',
     n: 4,
-    title: 'Desfecho Pix',
-    short: 'Desfecho',
-    running: 'Decidindo se o Pix é aprovado ou bloqueado…',
+    title: 'Avaliação da mensagem',
+    short: 'Avaliação',
+    running: 'Decidindo se a mensagem é aprovada ou reprovada…',
     tech: 'interceptor · Bloqueio se ameaça ou aprovação imediata',
   },
 ];
@@ -80,7 +80,7 @@ export const VERDICT_LABEL = {
   amount_rule: { pass: 'Analisar', skip: 'Dispensado' },
   anti_evasion: { pass: 'Texto limpo', detect: 'Disfarce' },
   ollaya: { pass: 'Segura', detect: 'Ameaça', skip: 'Não precisou', error: 'Fora do ar' },
-  delivery: { pass: 'Aprovado', detect: 'Bloqueado' },
+  delivery: { pass: 'Aprovada', detect: 'Reprovada' },
 };
 
 export function verdictLabel(stageId, status) {
@@ -88,8 +88,8 @@ export function verdictLabel(stageId, status) {
 }
 
 export const DECIDED_BY_LABEL = {
-  none: 'Nenhuma estação precisou agir: o Pix foi aprovado normalmente.',
+  none: 'Nenhuma estação identificou ameaça na mensagem.',
   skipped: 'A regra de valor dispensou a análise desta mensagem.',
-  ollaya: 'A IA rápida identificou a ameaça e bloqueou o envio do Pix (estação 3).',
-  ollaya_fallback: 'A IA rápida estava fora do ar; o Pix foi aprovado por segurança.',
+  ollaya: 'O Decision Model identificou a ameaça e reprovou a mensagem (estação 3).',
+  ollaya_fallback: 'O Decision Model estava fora do ar; a mensagem ficou sem análise.',
 };

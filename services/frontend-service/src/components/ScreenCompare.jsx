@@ -3,18 +3,19 @@ import { motion } from 'motion/react';
 import { FlaskConical, Play, ShieldAlert, ShieldCheck, Target, Siren, Sparkles, ChevronDown, ChevronUp, Timer } from 'lucide-react';
 import { getBenchmark, getBenchmarkDatasets, startBenchmark, generateGeminiBenchmarkMessages } from '../services/api';
 import { dur, ease } from '../motion/tokens';
+import ComparisonSummary from './ComparisonSummary';
 
 
 const ENGINES = [
-  { id: 'laya', name: 'Laya original', cls: 'base' },
-  { id: 'laya_tuned', name: 'Laya retreinado', cls: 'tuned' },
+  { id: 'laya', name: 'Decision Model original', cls: 'base' },
+  { id: 'laya_tuned', name: 'Decision Model treinado', cls: 'tuned' },
 ];
 const SIZES = [
   { id: 200, label: 'Rápido (200 mensagens)' },
   { id: 0, label: 'Completo' },
 ];
 const TABS = [
-  { id: 'wins_tuned', label: 'Só o retreinado acertou' },
+  { id: 'wins_tuned', label: 'Só o treinado acertou' },
   { id: 'wins_base', label: 'Só o original acertou' },
   { id: 'both_wrong', label: 'Os dois erraram' },
 ];
@@ -97,7 +98,7 @@ function MetricRow({ title, hint, a, b }) {
         <span>{hint}</span>
       </div>
       <Bar value={a} cls="base" label={`Original: ${pct(a)}`} />
-      <Bar value={b} cls="tuned" label={`Retreinado: ${pct(b)}`} />
+      <Bar value={b} cls="tuned" label={`Treinado: ${pct(b)}`} />
     </div>
   );
 }
@@ -185,10 +186,10 @@ export default function ScreenCompare({ active }) {
   const S = rep?.summary;
 
   return (
-    <div className="page compare">
+    <div className="page compare compare--simple">
       <div className="page__head">
         <div>
-          <h2 className="page__title">Comparar: Laya original × retreinado</h2>
+          <h2 className="page__title">Comparar modelos</h2>
           <p className="page__lead">
             As mesmas mensagens passam pelos dois modelos e você vê quem acerta mais. As mensagens de teste não foram
             usadas no treino.
@@ -199,7 +200,7 @@ export default function ScreenCompare({ active }) {
       <div className="card cmp-setup">
         <div className="cmp-setup__group">
           <div className="cmp-setup__head-row">
-            <span className="cmp-setup__label">1. Escolha as mensagens</span>
+            <span className="cmp-setup__label">Conjunto de mensagens</span>
             <motion.button
               type="button"
               className="btn btn--gemini"
@@ -238,13 +239,15 @@ export default function ScreenCompare({ active }) {
           {geminiResult && dataset === 'gemini' && (
             <div className="cmp-gemini-info">
               <div className="cmp-gemini-info__header">
-                <div>
-                  <strong>✨ 50 Mensagens geradas via Gemini ({geminiResult.model || 'Gemini 3.5 Flash'}):</strong>
-                  <span> {geminiResult.threats_count} ameaças e {geminiResult.safe_count} benignas prontas para o benchmark.</span>
+                <div className="cmp-gemini-info__summary">
+                  <strong>{geminiResult.count} mensagens geradas via Gemini</strong>
+                  <p>{geminiResult.threats_count} ameaças · {geminiResult.safe_count} normais{geminiResult.model && <> · {geminiResult.model}</>}</p>
                 </div>
                 <button
                   type="button"
                   className="btn btn--subtle btn--sm"
+                  aria-expanded={showPreview}
+                  aria-controls="cmp-gemini-preview"
                   onClick={() => setShowPreview(!showPreview)}
                 >
                   {showPreview ? 'Ocultar mensagens' : `Ver as ${geminiResult.count} mensagens`}
@@ -253,21 +256,22 @@ export default function ScreenCompare({ active }) {
               </div>
 
               {showPreview && (
-                <div className="cmp-gemini-preview">
-                  <div className="cmp-gemini-preview__list">
+                <div id="cmp-gemini-preview" className="cmp-gemini-preview" role="region" aria-label="Mensagens geradas pelo Gemini" tabIndex={0}>
+                  <ol className="cmp-gemini-preview__list">
                     {geminiResult.messages.map((m, idx) => (
-                      <div key={m.id || idx} className={`cmp-gemini-card cmp-gemini-card--${m.label}`}>
+                      <li key={m.id || idx} className="cmp-gemini-card">
                         <div className="cmp-gemini-card__head">
                           <span className={`chip ${m.label === 'threat' ? 'chip--danger' : 'chip--safe'}`}>
                             {m.label === 'threat' ? 'Ameaça' : 'Normal'}
                           </span>
                           <span className="cmp-gemini-card__cat">{m.category}</span>
-                          {m.explanation && <span className="cmp-gemini-card__exp">{m.explanation}</span>}
+                          <span className="cmp-gemini-card__number">{idx + 1} de {geminiResult.count}</span>
                         </div>
                         <p className="cmp-gemini-card__text">“{m.text}”</p>
-                      </div>
+                        {m.explanation && <p className="cmp-gemini-card__exp"><strong>Justificativa:</strong> {m.explanation}</p>}
+                      </li>
                     ))}
-                  </div>
+                  </ol>
                 </div>
               )}
             </div>
@@ -277,7 +281,7 @@ export default function ScreenCompare({ active }) {
         </div>
         {dataset === 'test' && (
           <div className="cmp-setup__group">
-            <span className="cmp-setup__label">2. Quantas?</span>
+            <span className="cmp-setup__label">Quantidade de mensagens</span>
             <div className="cmp-choices" role="radiogroup" aria-label="Quantidade">
               {SIZES.map((s) => (
                 <button key={s.id} type="button" role="radio" aria-checked={size === s.id} disabled={running}
@@ -289,7 +293,7 @@ export default function ScreenCompare({ active }) {
           </div>
         )}
         <motion.button type="button" className="btn btn--primary cmp-run" onClick={run} disabled={running} whileTap={{ scale: 0.97 }}>
-          <Play size={16} aria-hidden="true" /> {running ? 'Comparando…' : rep ? 'Rodar de novo' : 'Rodar comparação'}
+          <Play size={16} aria-hidden="true" /> {running ? 'Comparando…' : rep ? 'Comparar novamente' : 'Executar comparação'}
         </motion.button>
       </div>
 
@@ -323,18 +327,9 @@ export default function ScreenCompare({ active }) {
             </div>
           )}
 
-          <div className="cmp-heroes">
-            {ENGINES.map((e) => (
-              <div key={e.id} className={`cmp-hero cmp-hero--${e.cls}`}>
-                <span className="cmp-hero__name">{e.name}</span>
-                <span className="cmp-hero__big num">{S[e.id].tp}<small> de {S[e.id].threats_total}</small></span>
-                <span className="cmp-hero__sub">ameaças detectadas</span>
-                <span className="cmp-hero__alarm"><Siren size={14} aria-hidden="true" /> {S[e.id].fp} falsos alarmes em {S[e.id].safe_total} mensagens normais</span>
-              </div>
-            ))}
-          </div>
+          <ComparisonSummary summary={S} />
 
-          <div className="card cmp-timing">
+          <details className="card cmp-details"><summary>Tempos e latências</summary><div className="cmp-details__body">
             <div className="cmp-timing__head">
               <div className="cmp-timing__title">
                 <Timer size={16} aria-hidden="true" />
@@ -342,7 +337,7 @@ export default function ScreenCompare({ active }) {
               </div>
               <div className="cmp-legend">
                 <span><i className="dot dot--base" /> Original</span>
-                <span><i className="dot dot--tuned" /> Retreinado</span>
+                <span><i className="dot dot--tuned" /> Treinado</span>
               </div>
             </div>
 
@@ -404,11 +399,11 @@ export default function ScreenCompare({ active }) {
                 hint="Vazão de inferência em mensagens por segundo"
               />
             </div>
-          </div>
+          </div></details>
 
-          <div className="card cmp-section">
+          <details className="card cmp-details"><summary>Métricas de qualidade</summary><div className="cmp-details__body">
             <h3><Target size={18} aria-hidden="true" /> Placar geral</h3>
-            <div className="cmp-legend"><span><i className="dot dot--base" /> Original</span><span><i className="dot dot--tuned" /> Retreinado</span></div>
+            <div className="cmp-legend"><span><i className="dot dot--base" /> Original</span><span><i className="dot dot--tuned" /> Treinado</span></div>
             <MetricRow title="Acertos no total" hint="mensagens classificadas corretamente" a={S.laya.accuracy} b={S.laya_tuned.accuracy} />
             <MetricRow title="Ameaças que ele pegou" hint="de todas as ameaças, quantas foram detectadas (recall)" a={S.laya.recall} b={S.laya_tuned.recall} />
             <MetricRow title="Alertas que eram ameaça de verdade" hint="quando ele avisa, com que frequência está certo (precisão)" a={S.laya.precision} b={S.laya_tuned.precision} />
@@ -417,9 +412,21 @@ export default function ScreenCompare({ active }) {
               Sobre a acurácia: como quase tudo é mensagem normal, um modelo que nunca avisasse nada já acertaria
               muito. Por isso o que mais importa é <strong>quantas ameaças ele pegou</strong>.
             </p>
+          </div></details>
+
+          <details className="card cmp-details"><summary>Distribuição dos acertos e erros</summary><div className="cmp-details__body">
+          <div className="cmp-heroes">
+            {ENGINES.map((e) => (
+              <div key={e.id} className={`cmp-hero cmp-hero--${e.cls}`}>
+                <span className="cmp-hero__name">{e.name}</span>
+                <span className="cmp-hero__big num">{S[e.id].tp}<small> de {S[e.id].threats_total}</small></span>
+                <span className="cmp-hero__sub">ameaças detectadas</span>
+                <span className="cmp-hero__alarm"><Siren size={14} aria-hidden="true" /> {S[e.id].fp} falsos alarmes em {S[e.id].safe_total} mensagens normais</span>
+              </div>
+            ))}
           </div>
 
-          <div className="card cmp-section">
+
             <h3><ShieldAlert size={18} aria-hidden="true" /> Onde cada um acertou e errou</h3>
             <div className="cmp-two">
               {ENGINES.map((e) => (
@@ -428,7 +435,7 @@ export default function ScreenCompare({ active }) {
                   <span className="cmp-box__title">Ameaças reais</span>
                   <Split ok={S[e.id].tp} bad={S[e.id].fn} okLabel="detectadas" badLabel="passaram batido" okCls={e.cls} />
                   <span className="cmp-box__title">Mensagens normais</span>
-                  <Split ok={S[e.id].tn} bad={S[e.id].fp} okLabel="liberadas" badLabel="bloqueadas sem motivo" okCls={e.cls} />
+                  <Split ok={S[e.id].tn} bad={S[e.id].fp} okLabel="liberadas" badLabel="reprovadas sem ameaça" okCls={e.cls} />
                   <div className="cmp-box__lat">
                     <div className="cmp-box__lat-main">
                       <Timer size={13} aria-hidden="true" />
@@ -445,11 +452,11 @@ export default function ScreenCompare({ active }) {
                 </div>
               ))}
             </div>
-          </div>
+          </div></details>
 
-          <div className="card cmp-section">
+          <details className="card cmp-details"><summary>Acertos por tipo de mensagem</summary><div className="cmp-details__body">
             <h3><ShieldCheck size={18} aria-hidden="true" /> Acertos por tipo de mensagem</h3>
-            <div className="cmp-legend"><span><i className="dot dot--base" /> Original</span><span><i className="dot dot--tuned" /> Retreinado</span></div>
+            <div className="cmp-legend"><span><i className="dot dot--base" /> Original</span><span><i className="dot dot--tuned" /> Treinado</span></div>
             {rep.by_category.map((c) => (
               <div key={c.category} className="cmp-cat">
                 <div className="cmp-cat__head">
@@ -458,12 +465,12 @@ export default function ScreenCompare({ active }) {
                   <span className="cmp-cat__n num">{c.n} msgs</span>
                 </div>
                 <Bar value={(100 * c.laya) / c.n} cls="base" label="Original" />
-                <Bar value={(100 * c.laya_tuned) / c.n} cls="tuned" label="Retreinado" />
+                <Bar value={(100 * c.laya_tuned) / c.n} cls="tuned" label="Treinado" />
               </div>
             ))}
-          </div>
+          </div></details>
 
-          <div className="card cmp-section">
+          <details className="card cmp-details"><summary>Mensagens de exemplo</summary><div className="cmp-details__body">
             <h3><FlaskConical size={18} aria-hidden="true" /> Mensagens de exemplo</h3>
             <div className="cmp-tabs" role="tablist">
               {TABS.map((t) => (
@@ -482,19 +489,19 @@ export default function ScreenCompare({ active }) {
                     <div className="cmp-ex__meta">
                       <span className="cmp-ex__cat">{x.category} · era {x.label === 'threat' ? 'ameaça' : 'normal'}</span>
                       <span>Original <Verdict pred={x.laya.pred} label={x.label} /></span>
-                      <span>Retreinado <Verdict pred={x.laya_tuned.pred} label={x.label} /></span>
+                      <span>Treinado <Verdict pred={x.laya_tuned.pred} label={x.label} /></span>
                     </div>
                   </li>
                 ))}
               </ul>
             )}
-          </div>
+          </div></details>
 
           <p className="cmp-note cmp-note--foot">
             {rep.dataset === 'test'
               ? 'O teste sintético usa frases do mesmo gerador do treino (com trechos separados), então tende a ser otimista. As mensagens escritas à mão são o teste mais honesto.'
               : 'Poucas mensagens: um erro a mais ou a menos muda bastante a porcentagem.'}{' '}
-            Bateria concluída em {job.elapsed_s}s (Original: {fmtDuration(S.laya.wall_ms)}, Retreinado: {fmtDuration(S.laya_tuned.wall_ms)}).
+            Bateria concluída em {job.elapsed_s}s (Original: {fmtDuration(S.laya.wall_ms)}, Treinado: {fmtDuration(S.laya_tuned.wall_ms)}).
           </p>
         </motion.div>
       )}

@@ -62,6 +62,7 @@ async def run_investigation(
         text = payload.canonical_text
     needs_protection = analyzer.gemini_available and bool(text.strip())
     protected_messages: list[str] = []
+    protection_actions = {"model_armor": "not_run", "cloud_dlp": "not_run"}
 
     # Os nós compartilham dados somente nesta chamada. A sessão do ADK não
     # recebe o texto Pix, o histórico, o laudo nem identificadores do cliente.
@@ -76,7 +77,9 @@ async def run_investigation(
         check_started = time.perf_counter()
         try:
             await protection.screen([text, *history[-10:]])
+            protection_actions["model_armor"] = "checked"
         except PromptProtectionError as exc:
+            protection_actions["model_armor"] = "blocked" if "bloqueou" in str(exc).lower() else "error"
             # Se o lote falhou mas temos histórico, verifica se a mensagem atual (alvo) é limpa
             if history:
                 try:
@@ -89,14 +92,18 @@ async def run_investigation(
                         "Expurgando histórico contaminado para prosseguir com a perícia da nova ameaça."
                     )
                     history = []
-                except PromptProtectionError:
+                    protection_actions["model_armor"] = "history_filtered"
+                except PromptProtectionError as isolated_error:
+                    protection_actions["model_armor"] = "blocked" if "bloqueou" in str(isolated_error).lower() else "error"
                     analysis = analyzer.bypass_analysis(str(exc))
                 except Exception as inner_exc:
+                    protection_actions["model_armor"] = "error"
                     logger.warning("Falha ao validar mensagem isolada no Model Armor (%s)", type(inner_exc).__name__)
                     analysis = analyzer.bypass_analysis("Falha ao verificar o conteúdo no Model Armor.")
             else:
                 analysis = analyzer.bypass_analysis(str(exc))
         except Exception as exc:
+            protection_actions["model_armor"] = "error"
             logger.warning("Falha no Model Armor (%s)", type(exc).__name__)
             analysis = analyzer.bypass_analysis("Falha ao verificar o conteúdo no Model Armor.")
         finally:
@@ -109,9 +116,14 @@ async def run_investigation(
         check_started = time.perf_counter()
         try:
             protected_messages = await protection.deidentify([text, *history[-10:]])
+            # A cor do DLP na jornada representa somente a mensagem atual.
+            # O histórico continua sendo protegido normalmente.
+            protection_actions["cloud_dlp"] = "masked" if protected_messages[0] != text else "checked"
         except PromptProtectionError as exc:
+            protection_actions["cloud_dlp"] = "error"
             analysis = analyzer.bypass_analysis(str(exc))
         except Exception as exc:
+            protection_actions["cloud_dlp"] = "error"
             logger.warning("Falha no Cloud DLP (%s): %s", type(exc).__name__, exc, exc_info=True)
             analysis = analyzer.bypass_analysis("Falha ao mascarar dados pessoais no Cloud DLP.")
         finally:
@@ -187,6 +199,7 @@ async def run_investigation(
             "evasion_detected": payload.evasion_detected,
             "history_count": len(history),
             "bypassed": analysis.bypassed,
+            "protection_actions": protection_actions,
             "bypass_reason": analysis.bypass_reason,
             "total_threats": total_threats,
             "account_blocked": blocked,

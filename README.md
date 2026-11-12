@@ -240,6 +240,13 @@ Para obter o máximo desempenho de inferência (**~11 ms a 16 ms** de tempo neur
 
 Acesse **http://localhost:3000** no navegador. A aplicação foi concebida para oferecer alta densidade de informação, ergonomia visual e acessibilidade total:
 
+As duas interfaces estão disponíveis no mesmo frontend:
+
+- **v1 — interface original:** `http://localhost:3000/?interface=v1` (também é a versão padrão).
+- **v2 — apresentação para gerentes:** `http://localhost:3000/?interface=v2`.
+
+Use os links **Experimentar v2** e **Interface v1** no menu superior para alternar. A troca recarrega a interface e limpa o estado local da demonstração. Na v2, a seleção entre **Decision Model original** e **Decision Model treinado** fica na tela principal; o controle de animação fica em **Ajustes**. Clique nas etapas para ver os tempos medidos e os dados retornados pelo backend, sem sair da jornada. A decisão do Pix aparece primeiro; a investigação assíncrona aparece abaixo para os casos bloqueados. O painel aguarda o resultado real da API e permite abrir a análise do operador. Se houver bypass ou falha nas proteções, sinaliza a necessidade de revisão manual.
+
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │  🛡️ Pix Guard         [ Jornada (1) ]  [ Ao vivo (2) ]  [ Comparar (3) ]   ● Operacional│
@@ -337,7 +344,7 @@ Para viabilizar inferência sub-15ms em ambiente de desenvolvimento e demonstra�
 |---|---|---|
 | **Anti-Bypass / Desofuscação** | [`libs/common/.../deobfuscator.py`](libs/common/common/utils/deobfuscator.py) | Remove leetspeak (`v0u t3 m4t4r`), espaços forçados (`p.a.g.a`), caracteres invisíveis Unicode (`\u200b`) em menos de $0{,}05\text{ ms}$. |
 | **Perguntas Decompostas** | [`services/.../ollaya_client.py`](services/pix-gateway-service/src/clients/ollaya_client.py) | Avalia no mesmo forward pass: ameaça de violência física, extorsão/chantagem e cobrança hostil abusiva. Evita diluição de atenção. |
-| **Threshold 0.65 e Zona Cinzenta** | [`services/.../interceptor.py`](services/pix-gateway-service/src/services/interceptor.py) | Limiar definitivo em $0{,}65$. Transações entre $0{,}45$ e $0{,}65$ com valor $> R\$\,5{,}00$ ou disfarces são preventivamente bloqueadas. |
+| **Mesmo corte para os dois modelos** | [`services/.../ollaya_client.py`](services/pix-gateway-service/src/clients/ollaya_client.py) | Original e treinado usam corte de 0,40: score ≥ 0,40 reprova a mensagem. `in_gray_zone` continua sinalizando a faixa de 0,45 a menos de 0,65, que já está acima do corte atual. |
 | **Precisão Numérica FP32** | [`finetune/Modelfile.laya-fp32`](finetune/Modelfile.laya-fp32) | Evita distorções de arredondamento em ponto flutuante de 16 bits na vizinhança do ponto de corte decisório. |
 
 ### 6.2. Fase Assíncrona (Investigação Forense com Gemini)

@@ -118,12 +118,11 @@ export function AmountRuler({ amount, limit, play }) {
   );
 }
 
-/** Quando ameaça é identificada, o envio do Pix é bloqueado e a mensagem original é preservada para perícia. */
-export function MessageSwap({ original, amount, play }) {
-  const formattedAmount = amount === null || amount === undefined ? 'O valor' : formatBRL(amount);
+/** Quando uma mensagem é reprovada, o conteúdo original é preservado para perícia. */
+export function MessageSwap({ original, play }) {
 
   return (
-    <div className="blocked-outcome" role="alert" aria-label="Notificação de Pix Bloqueado">
+    <div className="blocked-outcome" role="alert" aria-label="Notificação de mensagem reprovada">
       {/* 1. Alerta Principal de Segurança: Alto contraste, sem verde */}
       <motion.div
         className="blocked-outcome__card"
@@ -137,13 +136,13 @@ export function MessageSwap({ original, amount, play }) {
           </div>
           <div className="blocked-outcome__headline">
             <div className="blocked-outcome__title-row">
-              <h4 className="blocked-outcome__title">Envio do Pix Bloqueado</h4>
+              <h4 className="blocked-outcome__title">Mensagem reprovada</h4>
               <span className="blocked-outcome__badge">
-                <Ban size={12} aria-hidden="true" /> Transferência Cancelada
+                <Ban size={12} aria-hidden="true" /> Conteúdo não entregue
               </span>
             </div>
             <p className="blocked-outcome__desc">
-              Esta operação foi barrada imediatamente pelo sistema de segurança porque a mensagem anexada contém linguagem de intimidação, coação ou ameaça.
+              A mensagem foi reprovada pelo sistema de segurança por conter linguagem de intimidação, coação ou ameaça.
             </p>
           </div>
         </div>
@@ -155,9 +154,9 @@ export function MessageSwap({ original, amount, play }) {
               <ShieldCheck size={18} aria-hidden="true" />
             </div>
             <div className="blocked-outcome__item-body">
-              <span className="blocked-outcome__item-title">Saldo 100% Protegido</span>
+              <span className="blocked-outcome__item-title">Conteúdo preservado para análise</span>
               <p className="blocked-outcome__item-text">
-                <strong className="num">{formattedAmount}</strong> não saiu da sua conta. Nenhum valor foi debitado ou transferido.
+                O conteúdo original fica disponível para investigação e análise do operador.
               </p>
             </div>
           </div>
@@ -167,7 +166,7 @@ export function MessageSwap({ original, amount, play }) {
               <Ban size={18} aria-hidden="true" />
             </div>
             <div className="blocked-outcome__item-body">
-              <span className="blocked-outcome__item-title">Destinatário Não Notificado</span>
+              <span className="blocked-outcome__item-title">Mensagem não entregue</span>
               <p className="blocked-outcome__item-text">
                 A mensagem agressiva foi descartada da entrega. Nada chegou ao destinatário.
               </p>

@@ -3,12 +3,13 @@ import { Cpu } from 'lucide-react';
 import { getActiveEngine, getEngines, setActiveEngine } from '../services/api';
 
 const FALLBACK = [
-  { id: 'laya_tuned', label: 'Laya retreinado', available: true },
-  { id: 'laya', label: 'Laya original', available: true },
+  { id: 'laya_tuned', label: 'Decision Model treinado', available: true },
+  { id: 'laya', label: 'Decision Model original', available: true },
 ];
+const MODEL_LABELS = Object.fromEntries(FALLBACK.map(({ id, label }) => [id, label]));
 
-/** Alterna o modelo que faz a triagem das mensagens: Laya original ou Laya retreinado para Pix. */
-export default function EngineSwitch() {
+/** Alterna o Decision Model original ou treinado, preservando os identificadores da API. */
+export default function EngineSwitch({ disabled: busy = false }) {
   const [engine, setEngine] = useState(getActiveEngine());
   const [engines, setEngines] = useState(FALLBACK);
 
@@ -34,7 +35,8 @@ export default function EngineSwitch() {
       <Cpu size={14} aria-hidden="true" className="engine-switch__icon" />
       {engines.map((e) => {
         const selected = engine === e.id;
-        const disabled = !e.available && !selected;
+        const disabled = busy || (!e.available && !selected);
+        const label = MODEL_LABELS[e.id] || String(e.label).replace(/\b(?:ollaya|laya)\b/gi, 'Decision Model');
         return (
           <button
             key={e.id}
@@ -46,11 +48,11 @@ export default function EngineSwitch() {
             onClick={() => setActiveEngine(e.id)}
             title={
               e.available
-                ? e.description || e.label
-                : `${e.label} está fora do ar. Veja finetune/README.md para colocar o modelo em ./finetune/models.`
+                ? (e.description || label).replace(/\b(?:ollaya|laya)\b/gi, 'Decision Model')
+                : `${label} está fora do ar.`
             }
           >
-            {e.label}
+            {label}
             {!e.available && <span className="engine-switch__off"> · offline</span>}
           </button>
         );

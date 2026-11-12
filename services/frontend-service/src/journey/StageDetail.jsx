@@ -60,7 +60,7 @@ export default function StageDetail({ index, stations, states, context, reduced,
         : state === 'void'
           ? 'A mensagem foi barrada antes de chegar aqui.'
           : isDeliveryBlocked
-            ? 'Envio do Pix bloqueado preventivamente por conter ameaça. O valor não foi transferido.'
+            ? 'Mensagem reprovada por conter ameaça. O conteúdo não foi entregue ao destinatário.'
             : station?.detail || '';
 
   return (
