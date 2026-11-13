@@ -30,6 +30,12 @@ services:
       - ./services/user-service/src:/app/services/user-service/src
       - ./libs/common:/app/libs/common
     command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,19 +51,28 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/pix_guard_db
       - USER_SERVICE_URL=http://user-service:8002
+      - GOOGLE_APPLICATION_CREDENTIALS=/var/secrets/google/adc.json
     volumes:
       - ./agents/gemini-investigation-agent/src:/app/agents/gemini-investigation-agent/src
       - ./libs/common:/app/libs/common
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-${HOME}/.config/gcloud/application_default_credentials.json}:/var/secrets/google/adc.json:ro
     command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8003", "--reload"]
     depends_on:
       postgres:
         condition: service_healthy
       user-service:
-        condition: service_started
+        condition: service_healthy
 
   ollaya:
-    image: ghcr.io/ollaya-dev/ollaya:latest
+    image: ghcr.io/ollaya-dev/ollaya:cuda
     container_name: pix-ollaya
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     environment:
       # Descarrega o modelo base após 5 min ocioso para economizar RAM quando o benchmark não estiver ativo
       - OLLAYA_KEEP_ALIVE=5m
@@ -73,8 +88,15 @@ services:
     restart: unless-stopped
 
   ollaya-tuned-1:
-    image: ghcr.io/ollaya-dev/ollaya:latest
+    image: ghcr.io/ollaya-dev/ollaya:cuda
     container_name: pix-ollaya-tuned-1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     environment:
       # Mantém o modelo retreinado sempre residente em RAM para inferência ultrarrápida (<35ms)
       - OLLAYA_KEEP_ALIVE=-1
@@ -90,8 +112,15 @@ services:
     restart: unless-stopped
 
   ollaya-tuned-2:
-    image: ghcr.io/ollaya-dev/ollaya:latest
+    image: ghcr.io/ollaya-dev/ollaya:cuda
     container_name: pix-ollaya-tuned-2
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     environment:
       - OLLAYA_KEEP_ALIVE=-1
       - OLLAYA_MAX_LOADED_MODELS=1
@@ -118,8 +147,9 @@ services:
       - GEMINI_AGENT_URL=http://gemini-investigation-agent:8003
       - OLLAYA_BASE_URL=http://ollaya:11435
       - OLLAYA_CLUSTER_URLS=http://ollaya:11435
-      - LAYA_TUNED_BASE_URL=${LAYA_TUNED_BASE_URL:-http://ollaya-tuned-1:11435}
-      - LAYA_TUNED_CLUSTER_URLS=${LAYA_TUNED_CLUSTER_URLS:-http://ollaya-tuned-1:11435,http://ollaya-tuned-2:11435}
+      # Use nomes DNS da rede Compose; localhost apontaria para o próprio gateway.
+      - LAYA_TUNED_BASE_URL=http://ollaya-tuned-1:11435
+      - LAYA_TUNED_CLUSTER_URLS=http://ollaya-tuned-1:11435,http://ollaya-tuned-2:11435
       - LAYA_TUNED_MODEL=${LAYA_TUNED_MODEL:-laya:pix-threats}
       - OLLAYA_TIMEOUT_SECONDS=25.0
     extra_hosts:

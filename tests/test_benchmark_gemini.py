@@ -73,3 +73,28 @@ async def test_benchmark_runner_dynamic_dataset():
     assert "engine_timings" in job
     assert "laya" in job["engine_timings"]
     assert "laya_tuned" in job["engine_timings"]
+
+
+@pytest.mark.asyncio
+async def test_benchmark_runner_deobfuscates_before_classification():
+    """O benchmark deve aplicar a mesma normalização anti-evasão do fluxo de produção."""
+    from common.schemas.threat import OllayaClassificationResult
+
+    class RecordingClient:
+        def __init__(self):
+            self.texts = []
+
+        async def classify(self, text):
+            self.texts.append(text)
+            return OllayaClassificationResult(is_threat=False, score=0.1, model="test")
+
+    original = RecordingClient()
+    tuned = RecordingClient()
+    runner = BenchmarkRunner(clients={"laya": original, "laya_tuned": tuned}, data_dir=None)
+
+    obfuscated = "olá, 4551n4tur4 do 5tr34m1ng d1v1d1d4 kkk"
+    await runner._classify("laya_tuned", obfuscated)
+    await runner._classify("laya", "Pagamento do café de hoje com a equipe")
+
+    assert tuned.texts == ["ola assinatura do streaming dividida kkk"]
+    assert original.texts == ["Pagamento do café de hoje com a equipe"]

@@ -184,7 +184,12 @@ Para obter o máximo desempenho de inferência (**~11 ms a 16 ms** de tempo neur
    ```bash
    cp .env.example .env
    ```
-   Para executar a investigação assíncrona, configure `GEMINI_API_KEY`, `GOOGLE_CLOUD_PROJECT` e `MODEL_ARMOR_TEMPLATE_ID`. Model Armor e Cloud DLP usam endpoints regionais de São Paulo por padrão (`southamerica-east1`).
+   Para ativar a investigação Gemini via Vertex AI, configure `GOOGLE_CLOUD_PROJECT` e, se necessário,
+   `GOOGLE_CLOUD_LOCATION` no `.env`. Autentique o ambiente com ADC (`gcloud auth application-default login`).
+   No Docker Compose, o ADC padrão de `~/.config/gcloud/application_default_credentials.json` é montado no
+   agente; para outro arquivo, defina `GOOGLE_APPLICATION_CREDENTIALS` no `.env` com o caminho no host.
+   Sem credenciais válidas, o agente opera em modo BYPASS. Model Armor e Cloud DLP também usam ADC; veja
+   [Configuração das APIs de proteção](#configuração-das-apis-de-proteção).
 
 3. **Inicie todos os microsserviços com um único comando:**
    ```bash

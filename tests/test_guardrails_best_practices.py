@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 from unittest.mock import AsyncMock
+from common.config.settings import settings
 from common.utils.anonymizer import anonymize_text
 from common.schemas.pix import PixTransactionRequest
 from common.schemas.threat import OllayaClassificationResult
@@ -13,6 +14,7 @@ from tests.modules import (
     THREAT_CUTOFF_THRESHOLD,
     GRAY_ZONE_MIN,
     GRAY_ZONE_MAX,
+    pix_gateway_app,
 )
 
 
@@ -172,6 +174,24 @@ def test_gemini_safety_settings_block_none():
         pytest.skip("google.genai SDK não instalada no ambiente de execução de teste.")
 
 
+def test_gemini_client_uses_vertex_ai_and_adc(monkeypatch):
+    from google import genai
+
+    client_options = {}
+    monkeypatch.setattr(settings, "GOOGLE_CLOUD_PROJECT", "test-project")
+    monkeypatch.setattr(settings, "GOOGLE_CLOUD_LOCATION", "us-central1")
+    monkeypatch.setattr(genai, "Client", lambda **options: client_options.update(options) or object())
+
+    analyzer = GeminiThreatAnalyzer(use_mock=False)
+
+    assert analyzer._client is not None
+    assert client_options == {
+        "vertexai": True,
+        "project": "test-project",
+        "location": "us-central1",
+    }
+
+
 def test_ollaya_decomposed_payload():
     """Valida que o OllayaClient com decomposed=True envia as 3 perguntas decompostas."""
     client = OllayaClient(model="laya:multilingual", decomposed=True)
@@ -182,6 +202,25 @@ def test_ollaya_decomposed_payload():
     assert "extorsao_chantagem" in payload["questions"]
     assert "coercao_financeira" in payload["questions"]
     assert payload["questions"]["ameaca_violencia"]["criteria"]["threat"] == "ameaça ou agressão física"
+
+
+def test_tuned_model_uses_training_question():
+    engines_route = next(
+        route for route in pix_gateway_app.routes if getattr(route, "path", None) == "/pix/engines"
+    )
+    client = engines_route.endpoint.__globals__["ollaya_tuned_client"]
+    direct_threat = (
+        "Se você não fizer o Pix até 18h sei onde seu filho estuda e sua família vai pagar o pato"
+    )
+    payload = client._payload(direct_threat)
+
+    assert payload["questions"] == {
+        "threat": {
+            "type": "choice",
+            "instructions": "A mensagem de Pix contém ameaça, extorsão ou intimidação?",
+            "criteria": {"threat": "ameaça", "safe": "agradecimento ou conversa normal"},
+        }
+    }
 
 
 @pytest.mark.asyncio

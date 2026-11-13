@@ -29,8 +29,9 @@ class Settings(BaseSettings):
     BENCHMARK_DATA_DIR: str = "/data"
 
 
-    # Google Gemini API
-    GEMINI_API_KEY: str = ""
+    # Google Vertex AI (Application Default Credentials)
+    GOOGLE_CLOUD_PROJECT: str = ""
+    GOOGLE_CLOUD_LOCATION: str = "us-central1"
     GEMINI_MODEL: str = "gemini-2.5-flash"
     MOCK_GEMINI: bool = False
 

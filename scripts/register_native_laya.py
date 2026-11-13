@@ -232,7 +232,7 @@ def main():
         subprocess.run(["docker", "cp", str(final_graph_path), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/{graph_blob}"], check=True)
         subprocess.run(["docker", "cp", str(calib_file), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{calib_digest}"], check=True)
         subprocess.run(["docker", "cp", str(dec_file), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{dec_digest}"], check=True)
-        subprocess.run(["docker", "cp", str(cfg_file), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/{cfg_digest}"], check=True)
+        subprocess.run(["docker", "cp", str(cfg_file), f"{CONTAINER_NAME}:/home/ollaya/.ollaya/models/blobs/sha256-{cfg_digest}"], check=True)
 
         # Garante permissões de leitura para o usuário não-root `ollaya` no container
         subprocess.run(

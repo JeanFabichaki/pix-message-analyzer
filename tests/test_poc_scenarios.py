@@ -257,7 +257,7 @@ async def test_scenario_5_and_6_blocking_trigger_and_governance(db_session):
 async def test_gemini_bypass_mode_without_heuristics():
     """Valida que quando o Gemini não pode ser chamado, o sistema faz BYPASS
     e NÃO inventa classificação por fallback heurístico."""
-    analyzer = GeminiThreatAnalyzer(api_key=None, use_mock=True)
+    analyzer = GeminiThreatAnalyzer(use_mock=True)
     res = await analyzer.analyze("Se você não pagar vou quebrar sua cara")
 
     assert res.bypassed is True

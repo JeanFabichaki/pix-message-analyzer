@@ -1,4 +1,4 @@
-# Validação de tempo: Laya retreinado e Gemini via API
+# Validação de tempo: Laya retreinado e Gemini via Vertex AI
 
 Execute na raiz do projeto, com o Laya retreinado ativo:
 
@@ -6,8 +6,10 @@ Execute na raiz do projeto, com o Laya retreinado ativo:
 .venv/bin/python scripts/validate_laya_vs_gemini.py --repetitions 10
 ```
 
-O script lê `GEMINI_API_KEY`, `GEMINI_MODEL`, `LAYA_TUNED_BASE_URL` e
-`LAYA_TUNED_MODEL` do ambiente ou do `.env`, sem registrar a chave. Os parâmetros
+O script usa Application Default Credentials e lê `GOOGLE_CLOUD_PROJECT`,
+`GOOGLE_CLOUD_LOCATION`, `GEMINI_MODEL`, `LAYA_TUNED_BASE_URL` e
+`LAYA_TUNED_MODEL` do ambiente ou do `.env`. Configure ADC com
+`gcloud auth application-default login`; os parâmetros `--project`, `--location`,
 `--gemini-model`, `--laya-url` e `--laya-model` substituem essas configurações.
 Use `--help` para consultar os demais parâmetros. Se necessário, instale
 `httpx` e `python-dotenv` no ambiente Python.
@@ -62,14 +64,14 @@ saldo ou envio ao BACEN. Não some percentis de etapas nem trate a comparação
 como comprovação de cumprimento ou violação do prazo de um Pix completo.
 
 O resultado compara duas alternativas de implantação, incluindo a rede externa
-do Gemini. Não isola o custo matemático dos modelos, não mede carga e não é SLA.
+do Vertex AI. Não isola o custo matemático dos modelos, não mede carga e não é SLA.
 O ensaio anterior de 18,6 ms da apresentação mede inferência de **uma pergunta**,
 em outra execução. Este ensaio mede HTTP completo com **três perguntas** no
 Laya e não substitui aquele resultado.
 
-Referências oficiais de configuração:
-[saída estruturada](https://ai.google.dev/gemini-api/docs/structured-output) e
-[thinking](https://ai.google.dev/gemini-api/docs/thinking).
+Referências oficiais:
+[Vertex AI generative AI](https://cloud.google.com/vertex-ai/generative-ai/docs) e
+[thinking](https://cloud.google.com/vertex-ai/generative-ai/docs/thinking).
 
 Verificações locais, sem uso de API:
 

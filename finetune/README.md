@@ -246,40 +246,36 @@ próximo ciclo:
 3. Se houver mensagens reais, anonimizá-las e usá-las **só** no teste e no desafio, nunca no treino sem revisão.
 4. Reavaliar o limiar (`th_0.3`, `th_0.4`, `th_0.5`, `th_0.7` estão em `metrics.json`).
 
-## 8. Passo 6: servir o modelo (Docker)
+## 8. Passo 6: instalar e servir os modelos
 
-O `serve/Dockerfile` usa `python:3.11-slim`, instala PyTorch CPU e `laya[serve]>=0.4.7` e roda `laya-serve`, que
-expõe o mesmo contrato `/v1/systemone` do Ollaya. Por isso o gateway usa **o mesmo cliente** para os dois
-modelos; muda só a URL, o nome do modelo e a pergunta.
-
-Variáveis do `laya-serve` usadas (no `docker-compose.yml`, serviço `laya-tuned`):
-
-| variável | valor | para quê |
-|---|---|---|
-| `LAYA_EXTRA_MODELS` | `{"pix-threats":"/models/pix-threats"}` | registra o checkpoint com um nome |
-| `LAYA_MODELS` | `pix-threats` | quais modelos carregar |
-| `LAYA_PRELOAD` | `1` | carrega no início, não na primeira chamada |
-| `LAYA_DEVICE` | `cpu` | sem GPU no container |
-
-O container é opcional: fica no *profile* `tuned` do Compose, então `make up` continua subindo só o Laya
-original. A porta do modelo retreinado é 11436 e a pasta `./finetune/models` entra como volume somente leitura.
+O Compose usa três serviços Ollaya que compartilham o volume nomeado `ollaya_models`.
+`make pull-model` baixa `laya:multilingual` para esse volume e chama
+`scripts/register_native_laya.py` para registrar `laya:pix-threats` quando o checkpoint
+está em `finetune/models/pix-threats/`. `make up-tuned` verifica os arquivos do checkpoint,
+sobe os serviços e executa esse fluxo; `make up` instala o modelo original e também registra
+o retreinado se o checkpoint estiver presente.
 
 ```bash
-make up-tuned   # confere se o checkpoint existe e sobe tudo com o profile 'tuned'
-make up         # só o Laya original
-make down       # derruba tudo, incluindo o profile 'tuned'
+make up-tuned
+docker compose exec ollaya ollaya list
+docker compose exec ollaya-tuned-1 ollaya list
 ```
 
-### 8.1. Alternativa de Alta Performance: Empacotar nativo no Ollaya (~50 ms)
+### 8.1. Execução com GPU NVIDIA
 
-Se você precisa de latência ultrabaixa em C++ sem o overhead do interpretador Python e sem a trava sequencial de 1 worker do `laya-serve`:
+No Linux/WSL2 com driver NVIDIA e Container Toolkit, os três serviços do Compose usam
+`ghcr.io/ollaya-dev/ollaya:cuda` e reservam a GPU. Após uma inferência, `ollaya ps` deve
+mostrar `cuda:0` no campo `DEVICE`. Cada réplica carrega sua própria cópia do modelo na VRAM.
+Para hardware sem NVIDIA, troque a tag `:cuda` por `:latest` e remova a reserva `deploy.resources`.
 
-Basta executar o script automatizado:
 ```bash
-make register-native-laya
+docker compose exec ollaya ollaya ps
+docker compose exec ollaya-tuned-1 ollaya ps
 ```
 
-> **Atenção Técnica Crítica:** O Ollaya executa grafos compilados pelo ONNX Runtime. Dentro do arquivo `.onnx`, cada um dos 168 tensores possui apontamento relativo (`location`) e **deslocamentos absolutos em bytes (`offset`)** para o blob de pesos. Apenas alterar o manifesto OCI faz o modelo continuar lendo os pesos antigos ou com offsets desalinhados (queda de detecção para 2/16). O comando `make register-native-laya` resolve isso extraindo os grafos base, recalculando os offsets a partir do cabeçalho do `model.safetensors` e gerando novos grafos FP32 e FP16 no Ollaya (subindo a detecção para 14/16 e ~502 ms em lote).
+O Ollaya seleciona FP16 para o modelo original quando disponível; o modelo retreinado
+registrado pelo script usa o grafo FP32 quantizado. O `finetune/serve/Dockerfile` é uma
+alternativa independente baseada em PyTorch CPU, não usada pelo Compose principal.
 
 ## 9. Passo 7: escolher o modelo no projeto
 

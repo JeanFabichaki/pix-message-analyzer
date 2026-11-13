@@ -4,6 +4,7 @@ google-genai>=2.30,<3
 google-adk==2.13.0
 google-cloud-modelarmor>=0.7.1,<1
 google-cloud-dlp>=3.40,<4
+google-auth>=2.0.0
 pydantic>=2.7.0
 pydantic-settings>=2.2.0
 sqlalchemy[asyncio]>=2.0.0

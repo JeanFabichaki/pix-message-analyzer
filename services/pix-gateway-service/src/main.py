@@ -32,8 +32,9 @@ ollaya_tuned_client = OllayaClient(
     model=settings.LAYA_TUNED_MODEL,
     instructions=TUNED_INSTRUCTIONS,
     criteria=TUNED_CRITERIA,
-    decomposed=True,
-    threat_threshold=THREAT_THRESHOLD,
+    # O checkpoint foi treinado com uma única pergunta; três perguntas excedem seu contexto em mensagens longas.
+    decomposed=False,
+    threat_threshold=0.40,
 )
 investigation_client = InvestigationClient()
 user_client = GatewayUserClient()

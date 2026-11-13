@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Compare Laya retreinado local e Gemini remoto na triagem textual de Pix.
+"""Compare Laya retreinado local e Gemini no Vertex AI na triagem textual de Pix.
 
-Uso (com Laya já iniciado e GEMINI_API_KEY no .env ou ambiente):
+Uso (com Laya já iniciado e ADC configurado):
     .venv/bin/python scripts/validate_laya_vs_gemini.py --repetitions 10
 
 Dependências: httpx, python-dotenv (presentes no ambiente do projeto).
@@ -33,6 +33,8 @@ from typing import Any
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
+import google.auth
+from google.auth.transport.requests import Request
 import httpx
 from dotenv import load_dotenv
 
@@ -152,7 +154,7 @@ def summarize(rows: list[dict]) -> dict:
 
 def measure(client: httpx.Client, provider: str, message: dict, *, phase: str,
             repetition: int, url: str, payload: dict, questions: dict,
-            threshold: float, secret: str) -> dict:
+            threshold: float, credential_token: str) -> dict:
     row = {"provider": provider, "message_id": message["id"], "phase": phase,
            "repetition": repetition, "expected_is_threat": message["expected_is_threat"],
            "started_at": now(), "ok": False, "is_threat": None}
@@ -175,7 +177,7 @@ def measure(client: httpx.Client, provider: str, message: dict, *, phase: str,
             row["server_inference_ms"] = float(response.headers["x-inference-time-ms"])
         row["ok"] = True
     except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError) as exc:
-        row["error"] = f"{type(exc).__name__}: {exc}".replace(secret, "[REDACTED]")[:500]
+        row["error"] = f"{type(exc).__name__}: {exc}".replace(credential_token, "[REDACTED]")[:500]
     row["elapsed_ms"] = (time.perf_counter() - started) * 1000
     return row
 
@@ -225,6 +227,8 @@ def main() -> int:
     parser.add_argument("--laya-url", default=os.getenv("LAYA_TUNED_BASE_URL", "http://127.0.0.1:8000"))
     parser.add_argument("--laya-model", default=os.getenv("LAYA_TUNED_MODEL", "pix-threats"))
     parser.add_argument("--gemini-model", default=os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite"))
+    parser.add_argument("--project", default=os.getenv("GOOGLE_CLOUD_PROJECT"))
+    parser.add_argument("--location", default=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"))
     parser.add_argument("--thinking-level", choices=["minimal", "low", "medium", "high", "default"], default="minimal")
     parser.add_argument("--threshold", type=float, default=0.40)
     parser.add_argument("--timeout", type=float, default=30)
@@ -233,18 +237,26 @@ def main() -> int:
     args = parser.parse_args()
     if args.repetitions < 1 or args.warmup_rounds < 0 or not 0 <= args.threshold <= 1 or args.timeout <= 0:
         parser.error("Repetições >=1, aquecimento >=0, corte entre 0 e 1 e timeout >0 são obrigatórios")
-    secret = os.getenv("GEMINI_API_KEY", "")
-    if not secret:
-        parser.error("Configure GEMINI_API_KEY no .env ou no ambiente")
     if "multilingual" in args.laya_model or args.laya_model in {"laya", "base", "original"}:
         parser.error("Selecione o checkpoint retreinado, não o modelo original")
+    credentials, adc_project = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+    args.project = args.project or adc_project
+    if not args.project:
+        parser.error("Configure GOOGLE_CLOUD_PROJECT ou use ADC associado a um projeto GCP")
+    credentials.refresh(Request())
+    credential_token = credentials.token
     out = args.output_dir or ROOT / "validation_results/laya_vs_gemini" / datetime.now(TZ).strftime("%Y%m%dT%H%M%S%f")
     out.mkdir(parents=True, exist_ok=False)
     questions = gateway_questions()
     config = gemini_config(args.thinking_level)
     laya_base = args.laya_url.rstrip("/")
-    gemini_url = ("https://generativelanguage.googleapis.com/v1beta/models/"
-                  + quote(args.gemini_model.removeprefix("models/"), safe="") + ":generateContent")
+    gemini_model = quote(args.gemini_model.removeprefix("models/"), safe="")
+    gemini_base_url = (
+        f"https://{quote(args.location, safe='')}-aiplatform.googleapis.com/v1/"
+        f"projects/{quote(args.project, safe='')}/locations/{quote(args.location, safe='')}/"
+        f"publishers/google/models/{gemini_model}"
+    )
+    gemini_url = gemini_base_url + ":generateContent"
     report = {
         "schema_version": 1, "status": "running", "started_at": now(), "messages": MESSAGES,
         "config": {**vars(args), "output_dir": str(out), "concurrency": 1,
@@ -275,13 +287,14 @@ def main() -> int:
     timeout = httpx.Timeout(args.timeout, connect=min(10, args.timeout))
     clients = {
         "laya": httpx.Client(timeout=timeout, transport=httpx.HTTPTransport(retries=0)),
-        "gemini": httpx.Client(timeout=timeout, transport=httpx.HTTPTransport(retries=0), headers={"x-goog-api-key": secret}),
+        "gemini": httpx.Client(timeout=timeout, transport=httpx.HTTPTransport(retries=0),
+                               headers={"Authorization": f"Bearer {credential_token}"}),
     }
     try:
         health = clients["laya"].get(laya_base + "/health")
         health.raise_for_status()
         report["environment"]["laya_health"] = health.json()
-        model = clients["gemini"].get(gemini_url.removesuffix(":generateContent"))
+        model = clients["gemini"].get(gemini_base_url)
         model.raise_for_status()
         report["environment"]["gemini_model_metadata"] = model.json()
         rng = random.Random(args.seed)
@@ -298,7 +311,8 @@ def main() -> int:
                                    if provider == "laya" else gemini_payload(message["text"], questions, config))
                         row = measure(clients[provider], provider, message, phase=phase, repetition=repetition,
                                       url=laya_base + "/v1/systemone" if provider == "laya" else gemini_url,
-                                      payload=payload, questions=questions, threshold=args.threshold, secret=secret)
+                                      payload=payload, questions=questions, threshold=args.threshold,
+                                      credential_token=credential_token)
                         report["measurements"].append(row)
                         save_report(report, out)
                         print(f"{phase} {repetition:02d} {message['id']} {provider:6s}: "
@@ -308,7 +322,7 @@ def main() -> int:
         report["status"] = "completed" if all(r["ok"] for r in report["measurements"]) else "completed_with_errors"
     except (httpx.HTTPError, RuntimeError, ValueError) as exc:
         report["status"] = "failed"
-        report["fatal_error"] = f"{type(exc).__name__}: {exc}".replace(secret, "[REDACTED]")[:500]
+        report["fatal_error"] = f"{type(exc).__name__}: {exc}".replace(credential_token, "[REDACTED]")[:500]
         print(report["fatal_error"], file=sys.stderr)
     finally:
         for client in clients.values():

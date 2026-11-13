@@ -1,8 +1,8 @@
 """Benchmark lado a lado: Laya original x Laya retreinado, usando os dados de teste do fine-tuning.
 
 Cada mensagem é classificada pelos DOIS modelos pelo mesmo caminho que o gateway usa em produção
-(`OllayaClient.classify`, que aplica o limiar de ameaça). Nada aqui toca em banco, usuários ou Gemini.
-Só depende da biblioteca padrão: os clientes são injetados, o que permite testar com dublês.
+(`OllayaClient.classify`, que aplica o limiar de ameaça e recebe texto desofuscado quando necessário).
+Nada aqui toca em banco, usuários ou Gemini; os clientes são injetados para permitir testes com dublês.
 """
 import asyncio
 import json
@@ -11,6 +11,8 @@ import time
 import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from common.utils.deobfuscator import deobfuscate_text
 
 ENGINE_IDS = ("laya", "laya_tuned")
 DATASETS = {
@@ -220,7 +222,9 @@ class BenchmarkRunner:
     async def _classify(self, engine: str, text: str) -> Dict[str, Any]:
         t0 = time.perf_counter()
         try:
-            res = await self.clients[engine].classify(text)
+            canonical_text, evasion_detected = deobfuscate_text(text)
+            analysis_text = canonical_text if evasion_detected else text
+            res = await self.clients[engine].classify(analysis_text)
             return {"pred": bool(res.is_threat), "score": float(res.score), "ms": (time.perf_counter() - t0) * 1000, "error": None}
         except Exception as ex:  # um erro isolado não derruba o benchmark
             return {"pred": False, "score": 0.0, "ms": 0.0, "error": str(ex)[:200]}

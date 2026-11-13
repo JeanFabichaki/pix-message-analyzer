@@ -70,13 +70,10 @@ FORENSIC_SYSTEM_INSTRUCTION = (
 class GeminiThreatAnalyzer:
     def __init__(
         self,
-        api_key: Optional[str] = None,
         model_name: Optional[str] = None,
         use_mock: Optional[bool] = None,
-        **kwargs,
     ):
         self.use_mock = settings.MOCK_GEMINI if use_mock is None else use_mock
-        self.api_key = api_key or settings.GEMINI_API_KEY
         self.model_name = model_name or settings.GEMINI_MODEL
         self._client = None
         self._types = None
@@ -84,18 +81,18 @@ class GeminiThreatAnalyzer:
             self._init_client()
 
     def _init_client(self):
-        if not self.api_key:
-            logger.warning("GEMINI_API_KEY não configurada. Investigação semântica operará em modo BYPASS.")
-            return
-
         try:
             from google import genai
             from google.genai import types
-            self._client = genai.Client(api_key=self.api_key)
+            self._client = genai.Client(
+                vertexai=True,
+                project=settings.GOOGLE_CLOUD_PROJECT or None,
+                location=settings.GOOGLE_CLOUD_LOCATION,
+            )
             self._types = types
-            logger.info(f"Cliente Google GenAI inicializado com sucesso para o modelo {self.model_name}.")
+            logger.info(f"Cliente Google Vertex AI inicializado com sucesso para o modelo {self.model_name}.")
         except Exception as e:
-            logger.warning(f"Não foi possível inicializar google.genai ({e}). Investigação operará em modo BYPASS.")
+            logger.warning(f"Não foi possível inicializar Google Vertex AI com ADC ({e}). Investigação operará em modo BYPASS.")
             self._client = None
             self._types = None
 
@@ -188,7 +185,7 @@ class GeminiThreatAnalyzer:
             )
 
         if not self.gemini_available:
-            reason = "GEMINI_API_KEY não configurada ou cliente não autenticado."
+            reason = "Credenciais ADC não configuradas ou cliente Vertex AI não autenticado."
             logger.info(f"Investigação semântica em BYPASS: {reason}")
             return self.bypass_analysis(reason)
 
